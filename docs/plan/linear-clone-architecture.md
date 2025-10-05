@@ -5,13 +5,13 @@
 Construir um clone do Linear - uma ferramenta moderna de gerenciamento de projetos e issues, focada em velocidade, experiência do usuário excepcional e produtividade para equipes de desenvolvimento.
 
 **Stack Tecnológica:**
-- **Frontend:** Next.js 14+ (App Router)
-- **Backend:** Next.js API Routes / Server Actions
-- **Banco de Dados:** SQLite com Prisma ORM
-- **Estilização:** Tailwind CSS + Radix UI
-- **Autenticação:** NextAuth.js
-- **Estado:** Zustand / React Query
-- **Animações:** Framer Motion
+- ✅ **Frontend:** Next.js 15 (App Router)
+- ✅ **Backend:** Next.js API Routes / Server Actions
+- ✅ **Banco de Dados:** SQLite com Prisma ORM
+- ✅ **Estilização:** Tailwind CSS v4 + Radix UI
+- ✅ **Autenticação:** NextAuth.js v5
+- ⏳ **Estado:** Zustand / React Query
+- ⏳ **Animações:** Framer Motion
 
 ---
 
@@ -19,258 +19,91 @@ Construir um clone do Linear - uma ferramenta moderna de gerenciamento de projet
 
 ### Fase 1: Fundação (Semanas 1-2)
 1. **Autenticação e Usuários**
-   - Login/Registro com email
-   - Gerenciamento de perfil
-   - Workspaces/Organizations
-   - Convites de equipe
+   - [ ] Login/Registro com email
+   - [ ] Gerenciamento de perfil
+   - [ ] Workspaces/Organizations
+   - [ ] Convites de equipe
 
 2. **Schema de Dados Básico**
-   - Users
-   - Workspaces
-   - Teams
-   - Projects
-   - Issues
-   - Labels
-   - Comments
+   - ✅ Users
+   - ✅ Workspaces
+   - ✅ Teams
+   - ✅ Projects
+   - ✅ Issues
+   - ✅ Labels
+   - ✅ Comments
 
 ### Fase 2: Gerenciamento de Issues (Semanas 3-4)
 1. **CRUD de Issues**
-   - Criar issue com atalhos de teclado (Cmd+K)
-   - Edição inline
-   - Atribuição de responsáveis
-   - Prioridades (Urgent, High, Medium, Low, No Priority)
-   - Status customizáveis
-   - Labels e tags
+   - [ ] Criar issue com atalhos de teclado (Cmd+K)
+   - [ ] Edição inline
+   - [ ] Atribuição de responsáveis
+   - [ ] Prioridades (Urgent, High, Medium, Low, No Priority)
+   - [ ] Status customizáveis
+   - [ ] Labels e tags
 
 2. **Interface de Visualização**
-   - List View (padrão)
-   - Board View (Kanban)
-   - Filtros avançados
-   - Busca global (Cmd+K)
-   - Ordenação e agrupamento
+   - [ ] List View (padrão)
+   - [ ] Board View (Kanban)
+   - [ ] Filtros avançados
+   - [ ] Busca global (Cmd+K)
+   - [ ] Ordenação e agrupamento
 
 ### Fase 3: Projetos e Organização (Semanas 5-6)
 1. **Projects**
-   - Criar e gerenciar projetos
-   - Milestones/Roadmap visual
-   - Progresso do projeto
-   - Vincular issues a projetos
+   - [ ] Criar e gerenciar projetos
+   - [ ] Milestones/Roadmap visual
+   - [ ] Progresso do projeto
+   - [ ] Vincular issues a projetos
 
 2. **Teams**
-   - Múltiplos times por workspace
-   - Issues por time
-   - Membros e permissões
+   - [ ] Múltiplos times por workspace
+   - [ ] Issues por time
+   - [ ] Membros e permissões
 
 ### Fase 4: Colaboração (Semana 7)
 1. **Comentários**
-   - Sistema de comentários em issues
-   - Markdown support
-   - Menções (@user)
-   - Anexos
+   - [ ] Sistema de comentários em issues
+   - [ ] Markdown support
+   - [ ] Menções (@user)
+   - [ ] Anexos
 
 2. **Atividades**
-   - Feed de atividades
-   - Histórico de mudanças
-   - Notificações
+   - [ ] Feed de atividades
+   - [ ] Histórico de mudanças
+   - [ ] Notificações
 
 ### Fase 5: Performance e UX (Semana 8)
 1. **Otimizações**
-   - Navegação por teclado completa
-   - Loading states optimistas
-   - Infinite scroll
-   - Debouncing em buscas
-   - Cache inteligente
+   - [ ] Navegação por teclado completa
+   - [ ] Loading states optimistas
+   - [ ] Infinite scroll
+   - [ ] Debouncing em buscas
+   - [ ] Cache inteligente
 
 2. **Command Palette**
-   - Busca universal (Cmd+K)
-   - Comandos rápidos
-   - Navegação por teclado
+   - [ ] Busca universal (Cmd+K)
+   - [ ] Comandos rápidos
+   - [ ] Navegação por teclado
 
 ---
 
 ## 🗄️ Modelo de Dados (Prisma Schema)
 
-```prisma
-// Versão simplificada - expandir conforme necessário
+✅ **Schema implementado e migrado** - Veja `prisma/schema.prisma`
 
-model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  avatar        String?
-  workspaces    WorkspaceMember[]
-  createdIssues Issue[]   @relation("IssueCreator")
-  assignedIssues Issue[]  @relation("IssueAssignee")
-  comments      Comment[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-}
-
-model Workspace {
-  id        String    @id @default(cuid())
-  name      String
-  slug      String    @unique
-  icon      String?
-  members   WorkspaceMember[]
-  teams     Team[]
-  projects  Project[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-}
-
-model WorkspaceMember {
-  id          String    @id @default(cuid())
-  role        Role      @default(MEMBER)
-  user        User      @relation(fields: [userId], references: [id])
-  userId      String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
-  workspaceId String
-  createdAt   DateTime  @default(now())
-
-  @@unique([userId, workspaceId])
-}
-
-enum Role {
-  OWNER
-  ADMIN
-  MEMBER
-  GUEST
-}
-
-model Team {
-  id          String    @id @default(cuid())
-  name        String
-  key         String    // Ex: "ENG", "DESIGN"
-  icon        String?
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
-  workspaceId String
-  issues      Issue[]
-  members     TeamMember[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@unique([workspaceId, key])
-}
-
-model TeamMember {
-  id        String   @id @default(cuid())
-  team      Team     @relation(fields: [teamId], references: [id])
-  teamId    String
-  userId    String
-  createdAt DateTime @default(now())
-
-  @@unique([teamId, userId])
-}
-
-model Project {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  status      ProjectStatus @default(PLANNED)
-  startDate   DateTime?
-  targetDate  DateTime?
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
-  workspaceId String
-  issues      Issue[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
-
-enum ProjectStatus {
-  PLANNED
-  IN_PROGRESS
-  COMPLETED
-  CANCELED
-}
-
-model Issue {
-  id          String    @id @default(cuid())
-  identifier  String    // Ex: "ENG-123"
-  title       String
-  description String?
-  priority    Priority  @default(NO_PRIORITY)
-  status      Status    @relation(fields: [statusId], references: [id])
-  statusId    String
-  team        Team      @relation(fields: [teamId], references: [id])
-  teamId      String
-  project     Project?  @relation(fields: [projectId], references: [id])
-  projectId   String?
-  creator     User      @relation("IssueCreator", fields: [creatorId], references: [id])
-  creatorId   String
-  assignee    User?     @relation("IssueAssignee", fields: [assigneeId], references: [id])
-  assigneeId  String?
-  labels      IssueLabel[]
-  comments    Comment[]
-  sortOrder   Float     // Para ordenação customizada
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@unique([teamId, identifier])
-  @@index([teamId, status])
-  @@index([assigneeId])
-  @@index([projectId])
-}
-
-enum Priority {
-  URGENT
-  HIGH
-  MEDIUM
-  LOW
-  NO_PRIORITY
-}
-
-model Status {
-  id          String   @id @default(cuid())
-  name        String
-  type        StatusType
-  position    Int
-  teamId      String?
-  workspaceId String
-  issues      Issue[]
-  createdAt   DateTime @default(now())
-
-  @@unique([workspaceId, name])
-}
-
-enum StatusType {
-  BACKLOG
-  TODO
-  IN_PROGRESS
-  DONE
-  CANCELED
-}
-
-model Label {
-  id          String    @id @default(cuid())
-  name        String
-  color       String
-  workspaceId String
-  issues      IssueLabel[]
-  createdAt   DateTime  @default(now())
-
-  @@unique([workspaceId, name])
-}
-
-model IssueLabel {
-  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
-  issueId   String
-  label     Label    @relation(fields: [labelId], references: [id], onDelete: Cascade)
-  labelId   String
-
-  @@id([issueId, labelId])
-}
-
-model Comment {
-  id        String   @id @default(cuid())
-  content   String
-  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
-  issueId   String
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-```
+Modelos principais:
+- ✅ User (com hash de senha)
+- ✅ Workspace (com slug único)
+- ✅ WorkspaceMember (com roles: OWNER, ADMIN, MEMBER, GUEST)
+- ✅ Team (com key única por workspace)
+- ✅ TeamMember
+- ✅ Project (com status: PLANNED, IN_PROGRESS, COMPLETED, CANCELED)
+- ✅ Issue (com prioridades e identifiers únicos por time)
+- ✅ Status (customizável por workspace)
+- ✅ Label (com cores)
+- ✅ IssueLabel (junction table)
+- ✅ Comment
 
 ---
 
@@ -279,29 +112,29 @@ model Comment {
 ### Componentes Principais
 
 1. **Layout**
-   - Sidebar (navegação)
-   - Command Bar (Cmd+K)
-   - Issue Modal/Panel
-   - Toast notifications
+   - [ ] Sidebar (navegação)
+   - [ ] Command Bar (Cmd+K)
+   - [ ] Issue Modal/Panel
+   - [ ] Toast notifications
 
 2. **Issue Components**
-   - IssueRow (list view)
-   - IssueCard (board view)
-   - IssueDetail (modal/side panel)
-   - QuickCreate (inline)
+   - [ ] IssueRow (list view)
+   - [ ] IssueCard (board view)
+   - [ ] IssueDetail (modal/side panel)
+   - [ ] QuickCreate (inline)
 
 3. **Form Components**
-   - Priority Selector
-   - Status Dropdown
-   - Assignee Picker
-   - Label Picker
-   - Date Picker
+   - [ ] Priority Selector
+   - [ ] Status Dropdown
+   - [ ] Assignee Picker
+   - [ ] Label Picker
+   - [ ] Date Picker
 
 4. **Navigation**
-   - Global Search
-   - Breadcrumbs
-   - Team Switcher
-   - View Switcher
+   - [ ] Global Search
+   - [ ] Breadcrumbs
+   - [ ] Team Switcher
+   - [ ] View Switcher
 
 ### Paleta de Cores (Inspirado no Linear)
 ```css
@@ -339,10 +172,10 @@ model Comment {
 ```
 src/
 ├── app/
-│   ├── (auth)/
+│   ├── (auth)/                    ⏳ TODO
 │   │   ├── login/
 │   │   └── register/
-│   ├── (main)/
+│   ├── (main)/                    ⏳ TODO
 │   │   ├── [workspaceSlug]/
 │   │   │   ├── team/[teamKey]/
 │   │   │   │   ├── page.tsx (issues list)
@@ -351,29 +184,30 @@ src/
 │   │   │   ├── settings/
 │   │   │   └── layout.tsx
 │   │   └── layout.tsx
-│   ├── api/
+│   ├── api/                       ⏳ TODO
 │   │   ├── auth/[...nextauth]/
 │   │   ├── issues/
 │   │   ├── projects/
 │   │   └── teams/
-│   └── layout.tsx
-├── components/
+│   ├── layout.tsx                 ✅ DONE
+│   └── page.tsx                   ✅ DONE
+├── components/                    ⏳ TODO
 │   ├── ui/ (shadcn/radix components)
 │   ├── issues/
 │   ├── projects/
 │   ├── layout/
 │   └── command/
 ├── lib/
-│   ├── prisma.ts
-│   ├── auth.ts
-│   └── utils.ts
-├── hooks/
+│   ├── prisma.ts                  ✅ DONE
+│   ├── auth.ts                    ⏳ TODO
+│   └── utils.ts                   ✅ DONE
+├── hooks/                         ⏳ TODO
 │   ├── use-issues.ts
 │   ├── use-keyboard.ts
 │   └── use-command.ts
-├── stores/
+├── stores/                        ⏳ TODO
 │   └── ui-store.ts
-└── types/
+└── types/                         ⏳ TODO
     └── index.ts
 ```
 
@@ -381,79 +215,80 @@ src/
 
 ## ⌨️ Atalhos de Teclado (Essencial para UX)
 
-| Atalho | Ação |
-|--------|------|
-| `Cmd+K` | Command palette |
-| `C` | Criar issue |
-| `Cmd+Enter` | Salvar issue |
-| `/` | Buscar/filtrar |
-| `Cmd+Shift+K` | Alternar projeto |
-| `1-5` | Alterar prioridade (quando em issue) |
-| `A` | Atribuir a mim |
-| `Escape` | Fechar modal/limpar |
-| `Arrow Up/Down` | Navegar issues |
-| `Enter` | Abrir issue selecionada |
+| Atalho | Ação | Status |
+|--------|------|--------|
+| `Cmd+K` | Command palette | ⏳ TODO |
+| `C` | Criar issue | ⏳ TODO |
+| `Cmd+Enter` | Salvar issue | ⏳ TODO |
+| `/` | Buscar/filtrar | ⏳ TODO |
+| `Cmd+Shift+K` | Alternar projeto | ⏳ TODO |
+| `1-5` | Alterar prioridade (quando em issue) | ⏳ TODO |
+| `A` | Atribuir a mim | ⏳ TODO |
+| `Escape` | Fechar modal/limpar | ⏳ TODO |
+| `Arrow Up/Down` | Navegar issues | ⏳ TODO |
+| `Enter` | Abrir issue selecionada | ⏳ TODO |
 
 ---
 
 ## 🔥 Features Premium (Pós-MVP)
 
 1. **Cycles** (Sprints)
-   - Planejamento de sprints
-   - Velocity tracking
-   - Burndown charts
+   - [ ] Planejamento de sprints
+   - [ ] Velocity tracking
+   - [ ] Burndown charts
 
 2. **Views Customizadas**
-   - Salvar filtros
-   - Views compartilhadas
-   - Personalização avançada
+   - [ ] Salvar filtros
+   - [ ] Views compartilhadas
+   - [ ] Personalização avançada
 
 3. **Integrações**
-   - GitHub (sync de PRs)
-   - Slack (notificações)
-   - Figma (anexar designs)
+   - [ ] GitHub (sync de PRs)
+   - [ ] Slack (notificações)
+   - [ ] Figma (anexar designs)
 
 4. **Analytics**
-   - Métricas de time
-   - Cycle time
-   - Throughput
+   - [ ] Métricas de time
+   - [ ] Cycle time
+   - [ ] Throughput
 
 5. **Automações**
-   - Regras customizadas
-   - Auto-assign
-   - Status transitions
+   - [ ] Regras customizadas
+   - [ ] Auto-assign
+   - [ ] Status transitions
 
 6. **AI Features**
-   - Auto-categorização
-   - Sugestões de prioridade
-   - Templates inteligentes
+   - [ ] Auto-categorização
+   - [ ] Sugestões de prioridade
+   - [ ] Templates inteligentes
 
 ---
 
 ## 📊 Métricas de Sucesso
 
 1. **Performance**
-   - First Contentful Paint < 1s
-   - Time to Interactive < 2s
-   - Smooth 60fps animations
+   - [ ] First Contentful Paint < 1s
+   - [ ] Time to Interactive < 2s
+   - [ ] Smooth 60fps animations
 
 2. **UX**
-   - Todas as ações principais acessíveis por teclado
-   - Feedback visual imediato (optimistic updates)
-   - Zero loading spinners desnecessários
+   - [ ] Todas as ações principais acessíveis por teclado
+   - [ ] Feedback visual imediato (optimistic updates)
+   - [ ] Zero loading spinners desnecessários
 
 3. **Qualidade do Código**
-   - 100% TypeScript
-   - Componentes reutilizáveis
-   - Testes para lógica crítica
+   - [ ] TypeScript strict mode
+   - [ ] Componentes reutilizáveis
+   - [ ] Testes para lógica crítica
 
 ---
 
 ## 🎯 Roadmap de Desenvolvimento
 
 ### Sprint 1 (Semana 1-2): Setup + Auth
-- [ ] Setup Next.js + Prisma + SQLite
-- [ ] Schema inicial do banco
+- ✅ Setup Next.js + Prisma + SQLite
+- ✅ Schema inicial do banco
+- ✅ Instalação de dependências (Radix UI, cmdk, zod, etc.)
 - [ ] Autenticação com NextAuth
 - [ ] Layout base e navegação
 - [ ] Command Palette básico
@@ -490,32 +325,43 @@ src/
 ## 🛠️ Tecnologias e Bibliotecas
 
 ### Core
-- **Next.js 14+** - Framework
-- **Prisma** - ORM
-- **SQLite** - Database (pode migrar para PostgreSQL)
-- **TypeScript** - Type safety
+- ✅ **Next.js 15** - Framework
+- ✅ **Prisma 6.16.3** - ORM
+- ✅ **SQLite** - Database
+- ✅ **TypeScript 5** - Type safety
 
 ### UI/UX
-- **Tailwind CSS** - Styling
-- **Radix UI** - Accessible components
-- **Framer Motion** - Animations
-- **cmdk** - Command palette
-- **react-hot-toast** - Notifications
+- ✅ **Tailwind CSS v4** - Styling
+- ✅ **Radix UI** - Accessible components
+  - ✅ @radix-ui/react-dropdown-menu
+  - ✅ @radix-ui/react-dialog
+  - ✅ @radix-ui/react-popover
+  - ✅ @radix-ui/react-select
+  - ✅ @radix-ui/react-toast
+  - ✅ @radix-ui/react-avatar
+  - ✅ @radix-ui/react-label
+  - ✅ @radix-ui/react-slot
+- ⏳ **Framer Motion** - Animations (TODO)
+- ✅ **cmdk** - Command palette
+- ✅ **lucide-react** - Icons
 
 ### Estado e Data Fetching
-- **Zustand** - Client state
-- **React Query (TanStack Query)** - Server state
-- **SWR** - Alternative para React Query
+- ⏳ **Zustand** - Client state (TODO)
+- ⏳ **React Query (TanStack Query)** - Server state (TODO)
 
 ### Forms e Validação
-- **React Hook Form** - Form management
-- **Zod** - Schema validation
+- ✅ **React Hook Form** - Form management
+- ✅ **Zod 4.1.11** - Schema validation
+- ✅ **@hookform/resolvers** - Integration
 
 ### Outros
-- **next-auth** - Authentication
-- **date-fns** - Date utilities
-- **dnd-kit** - Drag and drop
-- **tiptap** - Rich text editor (comentários)
+- ✅ **next-auth 5.0.0-beta.29** - Authentication
+- ✅ **bcryptjs** - Password hashing
+- ✅ **date-fns 4.1.0** - Date utilities
+- ⏳ **dnd-kit** - Drag and drop (TODO)
+- ⏳ **tiptap** - Rich text editor (TODO)
+- ✅ **class-variance-authority** - Component variants
+- ✅ **clsx + tailwind-merge** - Utility for className
 
 ---
 
@@ -565,7 +411,8 @@ src/
 ## ✅ Checklist de Qualidade
 
 - [ ] TypeScript strict mode
-- [ ] ESLint + Prettier configurados
+- ✅ ESLint configurado
+- [ ] Prettier configurado
 - [ ] Acessibilidade (ARIA, keyboard nav)
 - [ ] SEO básico
 - [ ] Error boundaries
@@ -577,27 +424,63 @@ src/
 
 ---
 
-## 📝 Próximos Passos
+## 📝 Próximos Passos Imediatos
 
-1. **Setup inicial do projeto**
-   - `npx create-next-app@latest`
-   - Configurar Prisma + SQLite
-   - Setup Tailwind + configuração de cores
+### 1. Autenticação (NextAuth v5)
+- [ ] Configurar NextAuth.js v5
+- [ ] Criar páginas de login/registro
+- [ ] Implementar hash de senhas com bcryptjs
+- [ ] Criar middleware de proteção de rotas
+- [ ] Implementar sessões
 
-2. **Schema do banco de dados**
-   - Criar schema.prisma completo
-   - Executar migrations
-   - Seed inicial
+### 2. Seed do Banco de Dados
+- [ ] Criar arquivo `prisma/seed.ts`
+- [ ] Adicionar dados de exemplo (workspace, teams, statuses)
+- [ ] Popular com issues de exemplo
 
-3. **Componentes base**
-   - Layout structure
-   - Design system básico
-   - Command palette
+### 3. Layout Base
+- [ ] Criar componentes base de UI (Button, Input, Card, etc.)
+- [ ] Implementar sidebar de navegação
+- [ ] Criar header com user menu
+- [ ] Implementar workspace switcher
 
-4. **Feature: Issues**
-   - Começar pelo CRUD mais simples
-   - Iterar e adicionar complexidade
+### 4. Command Palette
+- [ ] Integrar cmdk
+- [ ] Implementar busca global
+- [ ] Adicionar comandos rápidos
+- [ ] Implementar navegação por teclado
+
+---
+
+## 📊 Status Geral do Projeto
+
+**Progresso:** Sprint 1 - 50% completo
+
+### ✅ Concluído
+- Inicialização do projeto Next.js 15
+- Configuração do Prisma com SQLite
+- Schema do banco de dados completo
+- Migração inicial executada
+- Instalação de todas as bibliotecas de UI
+- Configuração básica do NextAuth.js
+- Utilitários (cn, prisma singleton)
+
+### 🚧 Em Progresso
+- Autenticação completa com NextAuth v5
+- Páginas de login/registro
+
+### ⏳ Próximo
+- Seed do banco de dados
+- Layout base e navegação
+- Command palette
+- CRUD de issues
 
 ---
 
 **Nota:** Este é um projeto ambicioso que resultará em uma aplicação de alta qualidade. O foco deve ser sempre na experiência do usuário, performance e código limpo. Cada feature deve ser testada e refinada antes de passar para a próxima.
+
+**Legenda:**
+- ✅ DONE - Completo
+- 🚧 WIP - Em progresso
+- ⏳ TODO - Pendente
+- ❌ BLOCKED - Bloqueado
