@@ -1,4 +1,15 @@
-export default function Home() {
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+
+export default async function LandingPage() {
+  const session = await auth();
+
+  // If user is logged in, redirect to main app
+  if (session?.user) {
+    redirect("/dashboard");
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="text-center">
@@ -9,12 +20,12 @@ export default function Home() {
           Modern project management tool built with Next.js, Prisma, and SQLite
         </p>
         <div className="flex gap-4 justify-center">
-          <a
+          <Link
             href="/login"
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
           >
             Get Started
-          </a>
+          </Link>
         </div>
       </div>
     </div>
