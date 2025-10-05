@@ -1,4 +1,4 @@
-import { PrismaClient } from "../src/generated/prisma";
+import { PrismaClient, StatusType } from "../src/generated/prisma";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -62,6 +62,33 @@ async function main() {
   });
 
   console.log("✅ Added user to workspace");
+
+  // Create default statuses
+  const statuses = [
+    { name: "Backlog", type: StatusType.BACKLOG, position: 0, color: "#94a3b8" },
+    { name: "Todo", type: StatusType.TODO, position: 1, color: "#64748b" },
+    { name: "In Progress", type: StatusType.IN_PROGRESS, position: 2, color: "#3b82f6" },
+    { name: "Done", type: StatusType.DONE, position: 3, color: "#10b981" },
+    { name: "Canceled", type: StatusType.CANCELED, position: 4, color: "#6b7280" },
+  ];
+
+  for (const status of statuses) {
+    await prisma.status.upsert({
+      where: {
+        workspaceId_name: {
+          workspaceId: workspace.id,
+          name: status.name,
+        },
+      },
+      update: {},
+      create: {
+        ...status,
+        workspaceId: workspace.id,
+      },
+    });
+  }
+
+  console.log("✅ Created default statuses");
 
   console.log("\n🎉 Seed completed successfully!");
   console.log("\n📝 Login with your credentials from .env file");
