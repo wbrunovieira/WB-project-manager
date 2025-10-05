@@ -1,10 +1,9 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, CalendarDays, CheckCircle2, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CalendarDays, CheckCircle2 } from "lucide-react";
 import { ProjectIssuesClient } from "@/components/projects/project-issues-client";
+import { ProjectDetailHeader } from "@/components/projects/project-detail-header";
 
 export default async function ProjectDetailPage({
   params,
@@ -123,36 +122,16 @@ export default async function ProjectDetailPage({
     <div className="p-8">
       {/* Header */}
       <div className="mb-8">
-        <Link
-          href="/projects"
-          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to projects
-        </Link>
-
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
-            {project.description && (
-              <p className="mt-2 text-gray-600">{project.description}</p>
-            )}
-          </div>
-
-          <span
-            className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
-              project.status === "IN_PROGRESS"
-                ? "bg-blue-100 text-blue-800"
-                : project.status === "COMPLETED"
-                ? "bg-green-100 text-green-800"
-                : project.status === "PLANNED"
-                ? "bg-gray-100 text-gray-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {project.status.replace("_", " ")}
-          </span>
-        </div>
+        <ProjectDetailHeader
+          project={{
+            id: project.id,
+            name: project.name,
+            description: project.description,
+            status: project.status,
+            startDate: project.startDate,
+            targetDate: project.targetDate,
+          }}
+        />
 
         {/* Progress */}
         <div className="mt-6 max-w-2xl">
