@@ -2,7 +2,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { CalendarDays, CheckCircle2 } from "lucide-react";
+import { CalendarDays, CheckCircle2, Plus } from "lucide-react";
+import { ProjectsHeader } from "@/components/projects/projects-header";
 
 export default async function ProjectsPage() {
   const session = await auth();
@@ -37,15 +38,11 @@ export default async function ProjectsPage() {
   });
 
   const projects = workspaceMemberships.flatMap((wm) => wm.workspace.projects);
+  const workspaceId = workspaceMemberships[0]?.workspaceId || "";
 
   return (
     <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
-        <p className="mt-2 text-gray-600">
-          {projects.length} project{projects.length !== 1 ? "s" : ""}
-        </p>
-      </div>
+      <ProjectsHeader workspaceId={workspaceId} projectCount={projects.length} />
 
       <div className="grid gap-4">
         {projects.length === 0 ? (
