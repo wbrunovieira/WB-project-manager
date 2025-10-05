@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateIssueModal } from "@/components/issues/create-issue-modal";
+import { EditIssueModal } from "@/components/issues/edit-issue-modal";
+import { DeleteIssueDialog } from "@/components/issues/delete-issue-dialog";
 
 interface ProjectIssuesClientProps {
   projectId: string;
@@ -23,6 +25,8 @@ export function ProjectIssuesClient({
   users,
 }: ProjectIssuesClientProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingIssue, setEditingIssue] = useState<any | null>(null);
+  const [deletingIssue, setDeletingIssue] = useState<any | null>(null);
 
   return (
     <>
@@ -106,6 +110,26 @@ export function ProjectIssuesClient({
                           </div>
                         </div>
                       )}
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setEditingIssue(issue)}
+                          className="h-8 w-8"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setDeletingIssue(issue)}
+                          className="h-8 w-8 text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -138,6 +162,27 @@ export function ProjectIssuesClient({
         onOpenChange={setIsCreateModalOpen}
         defaultProjectId={projectId}
       />
+
+      {editingIssue && (
+        <EditIssueModal
+          issue={editingIssue}
+          statuses={statuses}
+          users={users}
+          projects={[]}
+          open={!!editingIssue}
+          onOpenChange={(open) => !open && setEditingIssue(null)}
+        />
+      )}
+
+      {deletingIssue && (
+        <DeleteIssueDialog
+          issueId={deletingIssue.id}
+          issueTitle={deletingIssue.title}
+          issueKey={`${deletingIssue.team.key}-${deletingIssue.identifier}`}
+          open={!!deletingIssue}
+          onOpenChange={(open) => !open && setDeletingIssue(null)}
+        />
+      )}
     </>
   );
 }

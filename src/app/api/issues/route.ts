@@ -165,15 +165,9 @@ export async function POST(req: NextRequest) {
       return withCors(response);
     }
 
-    // Get team to generate identifier
+    // Get team to verify it exists
     const team = await prisma.team.findUnique({
       where: { id: teamId },
-      include: {
-        issues: {
-          orderBy: { identifier: "desc" },
-          take: 1,
-        },
-      },
     });
 
     if (!team) {
@@ -184,13 +178,21 @@ export async function POST(req: NextRequest) {
       return withCors(response);
     }
 
+    // Get all issues for this team to find the highest identifier
+    const existingIssues = await prisma.issue.findMany({
+      where: { teamId },
+      select: { identifier: true },
+    });
+
     // Generate next identifier number
     let nextNumber = 1;
-    if (team.issues.length > 0) {
-      const lastIdentifier = team.issues[0].identifier;
-      const match = lastIdentifier.match(/(\d+)$/);
-      if (match) {
-        nextNumber = parseInt(match[1]) + 1;
+    if (existingIssues.length > 0) {
+      const identifierNumbers = existingIssues
+        .map((issue) => parseInt(issue.identifier, 10))
+        .filter((num) => !isNaN(num));
+
+      if (identifierNumbers.length > 0) {
+        nextNumber = Math.max(...identifierNumbers) + 1;
       }
     }
 
