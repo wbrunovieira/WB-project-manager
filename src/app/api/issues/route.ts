@@ -7,7 +7,7 @@ import { z } from "zod";
 const createIssueSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
-  teamId: z.string(),
+  workspaceId: z.string(),
   statusId: z.string(),
   projectId: z.string().optional(),
   assigneeId: z.string().optional(),
@@ -26,26 +26,26 @@ export async function GET(req: NextRequest) {
 
   try {
     const { searchParams } = new URL(req.url);
-    const teamId = searchParams.get("teamId");
+    const workspaceId = searchParams.get("workspaceId");
     const projectId = searchParams.get("projectId");
     const assigneeId = searchParams.get("assigneeId");
     const status = searchParams.get("status");
     const priority = searchParams.get("priority");
 
-    // Get user's teams
-    const teamMemberships = await prisma.teamMember.findMany({
+    // Get user's workspaces
+    const workspaceMemberships = await prisma.workspaceMember.findMany({
       where: { userId: session.user.id },
-      select: { teamId: true },
+      select: { workspaceId: true },
     });
 
-    const accessibleTeamIds = teamMemberships.map((tm) => tm.teamId);
+    const accessibleWorkspaceIds = workspaceMemberships.map((wm) => wm.workspaceId);
 
     const where: any = {
-      teamId: { in: accessibleTeamIds },
+      workspaceId: { in: accessibleWorkspaceIds },
     };
 
-    if (teamId) {
-      where.teamId = teamId;
+    if (workspaceId) {
+      where.workspaceId = workspaceId;
     }
 
     if (projectId) {
@@ -68,13 +68,6 @@ export async function GET(req: NextRequest) {
       where,
       include: {
         status: true,
-        team: {
-          select: {
-            id: true,
-            name: true,
-            key: true,
-          },
-        },
         project: {
           select: {
             id: true,
@@ -145,42 +138,29 @@ export async function POST(req: NextRequest) {
       return withCors(response);
     }
 
-    const { teamId, labelIds, ...data } = validated.data;
+    const { workspaceId, labelIds, ...data } = validated.data;
 
-    // Check if user has access to team
-    const teamMember = await prisma.teamMember.findUnique({
+    // Check if user has access to workspace
+    const workspaceMember = await prisma.workspaceMember.findUnique({
       where: {
-        teamId_userId: {
-          teamId,
+        userId_workspaceId: {
           userId: session.user.id,
+          workspaceId,
         },
       },
     });
 
-    if (!teamMember) {
+    if (!workspaceMember) {
       const response = NextResponse.json(
-        { error: "Access denied to team" },
+        { error: "Access denied to workspace" },
         { status: 403 }
       );
       return withCors(response);
     }
 
-    // Get team to verify it exists
-    const team = await prisma.team.findUnique({
-      where: { id: teamId },
-    });
-
-    if (!team) {
-      const response = NextResponse.json(
-        { error: "Team not found" },
-        { status: 404 }
-      );
-      return withCors(response);
-    }
-
-    // Get all issues for this team to find the highest identifier
+    // Get all issues for this workspace to find the highest identifier
     const existingIssues = await prisma.issue.findMany({
-      where: { teamId },
+      where: { workspaceId },
       select: { identifier: true },
     });
 
@@ -201,7 +181,7 @@ export async function POST(req: NextRequest) {
     const issue = await prisma.issue.create({
       data: {
         ...data,
-        teamId,
+        workspaceId,
         identifier,
         creatorId: session.user.id,
         labels: labelIds
@@ -214,13 +194,6 @@ export async function POST(req: NextRequest) {
       },
       include: {
         status: true,
-        team: {
-          select: {
-            id: true,
-            name: true,
-            key: true,
-          },
-        },
         project: {
           select: {
             id: true,

@@ -8,7 +8,7 @@ import { ProjectDates } from "@/components/projects/project-dates";
 export default async function ProjectDetailPage({
   params,
 }: {
-  params: { projectId: string };
+  params: Promise<{ projectId: string }>;
 }) {
   const session = await auth();
 
@@ -16,16 +16,17 @@ export default async function ProjectDetailPage({
     redirect("/login");
   }
 
+  const { projectId } = await params;
+
   const project = await prisma.project.findUnique({
     where: {
-      id: params.projectId,
+      id: projectId,
     },
     include: {
       workspace: true,
       issues: {
         include: {
           status: true,
-          team: true,
           assignee: true,
           labels: {
             include: {
@@ -66,35 +67,9 @@ export default async function ProjectDetailPage({
   const progress =
     totalIssues > 0 ? Math.round((completedIssues / totalIssues) * 100) : 0;
 
-  // Get teams, statuses, and users for create modal
-  const teams = await prisma.team.findMany({
-    where: {
-      workspace: {
-        members: {
-          some: {
-            userId: session.user.id,
-          },
-        },
-      },
-    },
-    select: {
-      id: true,
-      name: true,
-      key: true,
-      workspaceId: true,
-    },
-  });
-
+  // Get statuses and users for create modal
   const statuses = await prisma.status.findMany({
-    where: {
-      workspace: {
-        members: {
-          some: {
-            userId: session.user.id,
-          },
-        },
-      },
-    },
+    where: { workspaceId: project.workspaceId },
     select: {
       id: true,
       name: true,
@@ -162,9 +137,9 @@ export default async function ProjectDetailPage({
         projectId={project.id}
         issuesByStatus={issuesByStatus}
         totalIssues={totalIssues}
-        teams={teams}
         statuses={statuses}
         users={users}
+        workspaceId={project.workspaceId}
       />
     </div>
   );

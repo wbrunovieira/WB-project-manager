@@ -9,19 +9,19 @@ import { CreateIssueModal } from "@/components/issues/create-issue-modal";
 interface MyIssuesClientProps {
   assignedToMe: any[];
   createdByMe: any[];
-  teams: Array<{ id: string; name: string; key: string; workspaceId: string }>;
   statuses: Array<{ id: string; name: string }>;
   users: Array<{ id: string; name: string | null; email: string }>;
   projects: Array<{ id: string; name: string }>;
+  workspaceId: string;
 }
 
 export function MyIssuesClient({
   assignedToMe,
   createdByMe,
-  teams,
   statuses,
   users,
   projects,
+  workspaceId,
 }: MyIssuesClientProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -121,7 +121,7 @@ export function MyIssuesClient({
                       >
                         {getStatusIcon(issue.status.type)}
                         <span className="font-mono text-xs text-gray-500">
-                          {issue.team.key}-{issue.identifier}
+                          #{issue.identifier}
                         </span>
                         <span className="text-sm text-gray-900 group-hover:text-blue-600">
                           {issue.title}
@@ -214,7 +214,7 @@ export function MyIssuesClient({
                       >
                         {getStatusIcon(issue.status.type)}
                         <span className="font-mono text-xs text-gray-500">
-                          {issue.team.key}-{issue.identifier}
+                          #{issue.identifier}
                         </span>
                         <span className="text-sm text-gray-900 group-hover:text-blue-600">
                           {issue.title}
@@ -265,12 +265,12 @@ export function MyIssuesClient({
       </div>
 
       <CreateIssueModal
-        teams={teams}
         statuses={statuses}
         users={users}
         projects={projects}
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
+        workspaceId={workspaceId}
       />
     </>
   );

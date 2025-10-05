@@ -20,13 +20,6 @@ export default async function MyIssuesPage() {
     },
     include: {
       status: true,
-      team: {
-        select: {
-          id: true,
-          name: true,
-          key: true,
-        },
-      },
       project: {
         select: {
           id: true,
@@ -55,35 +48,21 @@ export default async function MyIssuesPage() {
   const assignedToMe = issues.filter((issue) => issue.assigneeId === session.user.id);
   const createdByMe = issues.filter((issue) => issue.creatorId === session.user.id);
 
-  // Get teams, statuses, users, and projects for create modal
-  const teams = await prisma.team.findMany({
-    where: {
-      workspace: {
-        members: {
-          some: {
-            userId: session.user.id,
-          },
-        },
-      },
-    },
-    select: {
-      id: true,
-      name: true,
-      key: true,
-      workspaceId: true,
-    },
+  // Get user's first workspace
+  const workspaceMember = await prisma.workspaceMember.findFirst({
+    where: { userId: session.user.id },
+    include: { workspace: true },
   });
 
+  if (!workspaceMember) {
+    redirect("/login");
+  }
+
+  const workspaceId = workspaceMember.workspaceId;
+
+  // Get statuses, users, and projects for create modal
   const statuses = await prisma.status.findMany({
-    where: {
-      workspace: {
-        members: {
-          some: {
-            userId: session.user.id,
-          },
-        },
-      },
-    },
+    where: { workspaceId },
     select: {
       id: true,
       name: true,
@@ -96,9 +75,7 @@ export default async function MyIssuesPage() {
   const users = await prisma.user.findMany({
     where: {
       workspaces: {
-        some: {
-          workspaceId: teams[0]?.workspaceId,
-        },
+        some: { workspaceId },
       },
     },
     select: {
@@ -109,15 +86,7 @@ export default async function MyIssuesPage() {
   });
 
   const projects = await prisma.project.findMany({
-    where: {
-      workspace: {
-        members: {
-          some: {
-            userId: session.user.id,
-          },
-        },
-      },
-    },
+    where: { workspaceId },
     select: {
       id: true,
       name: true,
@@ -129,10 +98,10 @@ export default async function MyIssuesPage() {
       <MyIssuesClient
         assignedToMe={assignedToMe}
         createdByMe={createdByMe}
-        teams={teams}
         statuses={statuses}
         users={users}
         projects={projects}
+        workspaceId={workspaceId}
       />
     </div>
   );

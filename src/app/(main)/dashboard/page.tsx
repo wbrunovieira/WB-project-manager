@@ -16,7 +16,6 @@ export default async function DashboardPage() {
     },
     include: {
       status: true,
-      team: true,
       project: true,
       labels: {
         include: {
@@ -55,7 +54,7 @@ export default async function DashboardPage() {
               >
                 <div className="flex items-center gap-3 flex-1">
                   <span className="text-sm font-mono text-gray-500">
-                    {issue.team.key}-{issue.identifier}
+                    #{issue.identifier}
                   </span>
                   <span className="text-sm font-medium text-gray-900">
                     {issue.title}

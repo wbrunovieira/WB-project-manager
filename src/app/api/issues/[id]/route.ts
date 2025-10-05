@@ -31,13 +31,6 @@ export async function GET(
       where: { id: params.id },
       include: {
         status: true,
-        team: {
-          select: {
-            id: true,
-            name: true,
-            key: true,
-          },
-        },
         project: {
           select: {
             id: true,
@@ -90,17 +83,17 @@ export async function GET(
       return withCors(response);
     }
 
-    // Check if user has access to team
-    const teamMember = await prisma.teamMember.findUnique({
+    // Check if user has access to workspace
+    const workspaceMember = await prisma.workspaceMember.findUnique({
       where: {
-        teamId_userId: {
-          teamId: issue.teamId,
+        userId_workspaceId: {
           userId: session.user.id,
+          workspaceId: issue.workspaceId,
         },
       },
     });
 
-    if (!teamMember) {
+    if (!workspaceMember) {
       const response = NextResponse.json(
         { error: "Access denied" },
         { status: 403 }
@@ -156,17 +149,17 @@ export async function PATCH(
       return withCors(response);
     }
 
-    // Check if user has access to team
-    const teamMember = await prisma.teamMember.findUnique({
+    // Check if user has access to workspace
+    const workspaceMember = await prisma.workspaceMember.findUnique({
       where: {
-        teamId_userId: {
-          teamId: issue.teamId,
+        userId_workspaceId: {
           userId: session.user.id,
+          workspaceId: issue.workspaceId,
         },
       },
     });
 
-    if (!teamMember) {
+    if (!workspaceMember) {
       const response = NextResponse.json(
         { error: "Access denied" },
         { status: 403 }
@@ -192,13 +185,6 @@ export async function PATCH(
       },
       include: {
         status: true,
-        team: {
-          select: {
-            id: true,
-            name: true,
-            key: true,
-          },
-        },
         project: {
           select: {
             id: true,
@@ -265,17 +251,17 @@ export async function DELETE(
       return withCors(response);
     }
 
-    // Check if user has access to team
-    const teamMember = await prisma.teamMember.findUnique({
+    // Check if user has access to workspace
+    const workspaceMember = await prisma.workspaceMember.findUnique({
       where: {
-        teamId_userId: {
-          teamId: issue.teamId,
+        userId_workspaceId: {
           userId: session.user.id,
+          workspaceId: issue.workspaceId,
         },
       },
     });
 
-    if (!teamMember) {
+    if (!workspaceMember) {
       const response = NextResponse.json(
         { error: "Access denied" },
         { status: 403 }

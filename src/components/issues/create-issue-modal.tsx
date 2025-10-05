@@ -28,7 +28,6 @@ interface LabelType {
 const createIssueSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
-  teamId: z.string().min(1, "Team is required"),
   statusId: z.string().min(1, "Status is required"),
   priority: z.enum(["URGENT", "HIGH", "MEDIUM", "LOW", "NO_PRIORITY"]),
   assigneeId: z.string().optional(),
@@ -38,25 +37,23 @@ const createIssueSchema = z.object({
 type CreateIssueForm = z.infer<typeof createIssueSchema>;
 
 interface CreateIssueModalProps {
-  teams: Array<{ id: string; name: string; key: string; workspaceId: string }>;
   statuses: Array<{ id: string; name: string }>;
   users: Array<{ id: string; name: string | null; email: string }>;
   projects?: Array<{ id: string; name: string }>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  defaultTeamId?: string;
   defaultProjectId?: string;
+  workspaceId: string;
 }
 
 export function CreateIssueModal({
-  teams,
   statuses,
   users,
   projects = [],
   open,
   onOpenChange,
-  defaultTeamId,
   defaultProjectId,
+  workspaceId,
 }: CreateIssueModalProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -72,7 +69,6 @@ export function CreateIssueModal({
   } = useForm<CreateIssueForm>({
     resolver: zodResolver(createIssueSchema),
     defaultValues: {
-      teamId: defaultTeamId || teams[0]?.id || "",
       statusId: statuses[0]?.id || "",
       priority: "NO_PRIORITY",
       projectId: defaultProjectId,
@@ -80,14 +76,14 @@ export function CreateIssueModal({
   });
 
   useEffect(() => {
-    if (open && teams[0]?.workspaceId) {
-      fetchLabels(teams[0].workspaceId);
+    if (open && workspaceId) {
+      fetchLabels(workspaceId);
     }
-  }, [open, teams]);
+  }, [open, workspaceId]);
 
-  const fetchLabels = async (workspaceId: string) => {
+  const fetchLabels = async (wsId: string) => {
     try {
-      const response = await fetch(`/api/labels?workspaceId=${workspaceId}`);
+      const response = await fetch(`/api/labels?workspaceId=${wsId}`);
       if (response.ok) {
         const labels = await response.json();
         setAvailableLabels(labels);
@@ -98,9 +94,6 @@ export function CreateIssueModal({
   };
 
   const handleCreateLabel = async (name: string, color: string) => {
-    const workspaceId = teams[0]?.workspaceId;
-    if (!workspaceId) throw new Error("No workspace ID");
-
     const response = await fetch("/api/labels", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -128,6 +121,7 @@ export function CreateIssueModal({
         },
         body: JSON.stringify({
           ...data,
+          workspaceId,
           assigneeId: data.assigneeId || undefined,
           projectId: data.projectId || undefined,
           labelIds: selectedLabelIds.length > 0 ? selectedLabelIds : undefined,
@@ -143,7 +137,7 @@ export function CreateIssueModal({
 
       toast({
         title: "Issue created",
-        description: `${issue.team.key}-${issue.identifier}: ${issue.title}`,
+        description: `Issue #${issue.identifier}: ${issue.title}`,
       });
 
       reset();
@@ -186,48 +180,31 @@ export function CreateIssueModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description (optional)</Label>
+            <Label htmlFor="description">Content</Label>
             <textarea
               id="description"
-              placeholder="Add more details..."
+              placeholder="Describe the issue in detail..."
               {...register("description")}
-              className="flex min-h-[80px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex min-h-[120px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="teamId">Team</Label>
-              <select
-                id="teamId"
-                {...register("teamId")}
-                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {teams.map((team) => (
-                  <option key={team.id} value={team.id}>
-                    {team.name} ({team.key})
-                  </option>
-                ))}
-              </select>
-              {errors.teamId && (
-                <p className="text-sm text-red-600">{errors.teamId.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="statusId">Status</Label>
-              <select
-                id="statusId"
-                {...register("statusId")}
-                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {statuses.map((status) => (
-                  <option key={status.id} value={status.id}>
-                    {status.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="statusId">Status</Label>
+            <select
+              id="statusId"
+              {...register("statusId")}
+              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {statuses.map((status) => (
+                <option key={status.id} value={status.id}>
+                  {status.name}
+                </option>
+              ))}
+            </select>
+            {errors.statusId && (
+              <p className="text-sm text-red-600">{errors.statusId.message}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

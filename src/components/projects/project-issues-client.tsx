@@ -11,18 +11,18 @@ interface ProjectIssuesClientProps {
   projectId: string;
   issuesByStatus: Record<string, any[]>;
   totalIssues: number;
-  teams: Array<{ id: string; name: string; key: string; workspaceId: string }>;
   statuses: Array<{ id: string; name: string }>;
   users: Array<{ id: string; name: string | null; email: string }>;
+  workspaceId: string;
 }
 
 export function ProjectIssuesClient({
   projectId,
   issuesByStatus,
   totalIssues,
-  teams,
   statuses,
   users,
+  workspaceId,
 }: ProjectIssuesClientProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingIssue, setEditingIssue] = useState<any | null>(null);
@@ -59,7 +59,7 @@ export function ProjectIssuesClient({
                   >
                     <div className="flex flex-1 items-center gap-3">
                       <span className="text-sm font-mono text-gray-500">
-                        {issue.team.key}-{issue.identifier}
+                        #{issue.identifier}
                       </span>
                       <span className="text-sm font-medium text-gray-900">
                         {issue.title}
@@ -154,13 +154,13 @@ export function ProjectIssuesClient({
       </div>
 
       <CreateIssueModal
-        teams={teams}
         statuses={statuses}
         users={users}
         projects={[]}
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
         defaultProjectId={projectId}
+        workspaceId={workspaceId}
       />
 
       {editingIssue && (
@@ -178,7 +178,7 @@ export function ProjectIssuesClient({
         <DeleteIssueDialog
           issueId={deletingIssue.id}
           issueTitle={deletingIssue.title}
-          issueKey={`${deletingIssue.team.key}-${deletingIssue.identifier}`}
+          issueKey={`#${deletingIssue.identifier}`}
           open={!!deletingIssue}
           onOpenChange={(open) => !open && setDeletingIssue(null)}
         />

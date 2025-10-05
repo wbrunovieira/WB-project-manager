@@ -16,18 +16,17 @@ datasource db {
 // ============================================
 
 model User {
-  id              String            @id @default(cuid())
-  email           String            @unique
-  name            String?
-  avatar          String?
-  password        String
-  workspaces      WorkspaceMember[]
-  createdIssues   Issue[]           @relation("IssueCreator")
-  assignedIssues  Issue[]           @relation("IssueAssignee")
-  comments        Comment[]
-  teamMemberships TeamMember[]
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id             String            @id @default(cuid())
+  email          String            @unique
+  name           String?
+  avatar         String?
+  password       String
+  workspaces     WorkspaceMember[]
+  createdIssues  Issue[]           @relation("IssueCreator")
+  assignedIssues Issue[]           @relation("IssueAssignee")
+  comments       Comment[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 }
 
 model Workspace {
@@ -36,10 +35,10 @@ model Workspace {
   slug      String            @unique
   icon      String?
   members   WorkspaceMember[]
-  teams     Team[]
   projects  Project[]
   labels    Label[]
   statuses  Status[]
+  issues    Issue[]
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 }
@@ -65,38 +64,6 @@ enum Role {
   GUEST
 }
 
-// ============================================
-// TEAM MODELS
-// ============================================
-
-model Team {
-  id          String       @id @default(cuid())
-  name        String
-  key         String
-  icon        String?
-  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  workspaceId String
-  issues      Issue[]
-  members     TeamMember[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-
-  @@unique([workspaceId, key])
-  @@index([workspaceId])
-}
-
-model TeamMember {
-  id        String   @id @default(cuid())
-  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  createdAt DateTime @default(now())
-
-  @@unique([teamId, userId])
-  @@index([teamId])
-  @@index([userId])
-}
 
 // ============================================
 // PROJECT MODELS
@@ -138,8 +105,8 @@ model Issue {
   priority    Priority     @default(NO_PRIORITY)
   status      Status       @relation(fields: [statusId], references: [id])
   statusId    String
-  team        Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId      String
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String
   project     Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
   projectId   String?
   creator     User         @relation("IssueCreator", fields: [creatorId], references: [id])
@@ -152,8 +119,8 @@ model Issue {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  @@unique([teamId, identifier])
-  @@index([teamId])
+  @@unique([workspaceId, identifier])
+  @@index([workspaceId])
   @@index([statusId])
   @@index([assigneeId])
   @@index([projectId])

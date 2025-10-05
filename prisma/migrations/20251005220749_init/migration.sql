@@ -31,28 +31,6 @@ CREATE TABLE "WorkspaceMember" (
 );
 
 -- CreateTable
-CREATE TABLE "Team" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "name" TEXT NOT NULL,
-    "key" TEXT NOT NULL,
-    "icon" TEXT,
-    "workspaceId" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "Team_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace" ("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- CreateTable
-CREATE TABLE "TeamMember" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "teamId" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "TeamMember_teamId_fkey" FOREIGN KEY ("teamId") REFERENCES "Team" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "TeamMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- CreateTable
 CREATE TABLE "Project" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
@@ -74,7 +52,7 @@ CREATE TABLE "Issue" (
     "description" TEXT,
     "priority" TEXT NOT NULL DEFAULT 'NO_PRIORITY',
     "statusId" TEXT NOT NULL,
-    "teamId" TEXT NOT NULL,
+    "workspaceId" TEXT NOT NULL,
     "projectId" TEXT,
     "creatorId" TEXT NOT NULL,
     "assigneeId" TEXT,
@@ -82,7 +60,7 @@ CREATE TABLE "Issue" (
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
     CONSTRAINT "Issue_statusId_fkey" FOREIGN KEY ("statusId") REFERENCES "Status" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT "Issue_teamId_fkey" FOREIGN KEY ("teamId") REFERENCES "Team" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "Issue_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Issue_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT "Issue_creatorId_fkey" FOREIGN KEY ("creatorId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "Issue_assigneeId_fkey" FOREIGN KEY ("assigneeId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE
@@ -149,28 +127,13 @@ CREATE INDEX "WorkspaceMember_workspaceId_idx" ON "WorkspaceMember"("workspaceId
 CREATE UNIQUE INDEX "WorkspaceMember_userId_workspaceId_key" ON "WorkspaceMember"("userId", "workspaceId");
 
 -- CreateIndex
-CREATE INDEX "Team_workspaceId_idx" ON "Team"("workspaceId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Team_workspaceId_key_key" ON "Team"("workspaceId", "key");
-
--- CreateIndex
-CREATE INDEX "TeamMember_teamId_idx" ON "TeamMember"("teamId");
-
--- CreateIndex
-CREATE INDEX "TeamMember_userId_idx" ON "TeamMember"("userId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "TeamMember_teamId_userId_key" ON "TeamMember"("teamId", "userId");
-
--- CreateIndex
 CREATE INDEX "Project_workspaceId_idx" ON "Project"("workspaceId");
 
 -- CreateIndex
 CREATE INDEX "Project_status_idx" ON "Project"("status");
 
 -- CreateIndex
-CREATE INDEX "Issue_teamId_idx" ON "Issue"("teamId");
+CREATE INDEX "Issue_workspaceId_idx" ON "Issue"("workspaceId");
 
 -- CreateIndex
 CREATE INDEX "Issue_statusId_idx" ON "Issue"("statusId");
@@ -188,7 +151,7 @@ CREATE INDEX "Issue_creatorId_idx" ON "Issue"("creatorId");
 CREATE INDEX "Issue_priority_idx" ON "Issue"("priority");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Issue_teamId_identifier_key" ON "Issue"("teamId", "identifier");
+CREATE UNIQUE INDEX "Issue_workspaceId_identifier_key" ON "Issue"("workspaceId", "identifier");
 
 -- CreateIndex
 CREATE INDEX "Status_workspaceId_idx" ON "Status"("workspaceId");
