@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,7 +16,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LabelSelector } from "@/components/ui/label-selector";
 import { useToast } from "@/hooks/use-toast";
+
+interface LabelType {
+  id: string;
+  name: string;
+  color: string;
+}
 
 const createIssueSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -31,7 +38,7 @@ const createIssueSchema = z.object({
 type CreateIssueForm = z.infer<typeof createIssueSchema>;
 
 interface CreateIssueModalProps {
-  teams: Array<{ id: string; name: string; key: string }>;
+  teams: Array<{ id: string; name: string; key: string; workspaceId: string }>;
   statuses: Array<{ id: string; name: string }>;
   users: Array<{ id: string; name: string | null; email: string }>;
   projects?: Array<{ id: string; name: string }>;
@@ -54,6 +61,8 @@ export function CreateIssueModal({
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
+  const [availableLabels, setAvailableLabels] = useState<LabelType[]>([]);
 
   const {
     register,
@@ -70,6 +79,44 @@ export function CreateIssueModal({
     },
   });
 
+  useEffect(() => {
+    if (open && teams[0]?.workspaceId) {
+      fetchLabels(teams[0].workspaceId);
+    }
+  }, [open, teams]);
+
+  const fetchLabels = async (workspaceId: string) => {
+    try {
+      const response = await fetch(`/api/labels?workspaceId=${workspaceId}`);
+      if (response.ok) {
+        const labels = await response.json();
+        setAvailableLabels(labels);
+      }
+    } catch (error) {
+      console.error("Failed to fetch labels:", error);
+    }
+  };
+
+  const handleCreateLabel = async (name: string, color: string) => {
+    const workspaceId = teams[0]?.workspaceId;
+    if (!workspaceId) throw new Error("No workspace ID");
+
+    const response = await fetch("/api/labels", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, color, workspaceId }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to create label");
+    }
+
+    const newLabel = await response.json();
+    setAvailableLabels([...availableLabels, newLabel]);
+    return newLabel;
+  };
+
   const onSubmit = async (data: CreateIssueForm) => {
     setIsLoading(true);
 
@@ -83,6 +130,7 @@ export function CreateIssueModal({
           ...data,
           assigneeId: data.assigneeId || undefined,
           projectId: data.projectId || undefined,
+          labelIds: selectedLabelIds.length > 0 ? selectedLabelIds : undefined,
         }),
       });
 
@@ -99,6 +147,7 @@ export function CreateIssueModal({
       });
 
       reset();
+      setSelectedLabelIds([]);
       onOpenChange(false);
       router.refresh();
     } catch (error) {
@@ -231,6 +280,16 @@ export function CreateIssueModal({
               </select>
             </div>
           )}
+
+          <div className="space-y-2">
+            <Label>Labels (optional)</Label>
+            <LabelSelector
+              availableLabels={availableLabels}
+              selectedLabelIds={selectedLabelIds}
+              onLabelsChange={setSelectedLabelIds}
+              onCreateLabel={handleCreateLabel}
+            />
+          </div>
 
           <DialogFooter>
             <Button

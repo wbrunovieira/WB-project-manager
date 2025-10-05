@@ -81,6 +81,7 @@ export default async function ProjectDetailPage({
       id: true,
       name: true,
       key: true,
+      workspaceId: true,
     },
   });
 

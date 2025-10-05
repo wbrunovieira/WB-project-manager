@@ -11,7 +11,7 @@ interface ProjectIssuesClientProps {
   projectId: string;
   issuesByStatus: Record<string, any[]>;
   totalIssues: number;
-  teams: Array<{ id: string; name: string; key: string }>;
+  teams: Array<{ id: string; name: string; key: string; workspaceId: string }>;
   statuses: Array<{ id: string; name: string }>;
   users: Array<{ id: string; name: string | null; email: string }>;
 }
