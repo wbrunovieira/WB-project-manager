@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withAuth, withCors } from "@/lib/api-auth";
+import { withCors } from "@/lib/api-auth";
+import { auth } from "@/lib/auth";
 import { z } from "zod";
 
 const createProjectSchema = z.object({
@@ -13,7 +14,14 @@ const createProjectSchema = z.object({
 });
 
 // GET /api/projects - List all projects
-export const GET = withAuth(async (req: NextRequest, userId: string) => {
+export async function GET(req: NextRequest) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return withCors(response);
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const workspaceId = searchParams.get("workspaceId");
@@ -21,7 +29,7 @@ export const GET = withAuth(async (req: NextRequest, userId: string) => {
 
     // Get user's workspaces
     const workspaceMemberships = await prisma.workspaceMember.findMany({
-      where: { userId },
+      where: { userId: session.user.id },
       select: { workspaceId: true },
     });
 
@@ -72,10 +80,17 @@ export const GET = withAuth(async (req: NextRequest, userId: string) => {
     );
     return withCors(response);
   }
-});
+}
 
 // POST /api/projects - Create new project
-export const POST = withAuth(async (req: NextRequest, userId: string) => {
+export async function POST(req: NextRequest) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return withCors(response);
+  }
+
   try {
     const body = await req.json();
     const validated = createProjectSchema.safeParse(body);
@@ -94,7 +109,7 @@ export const POST = withAuth(async (req: NextRequest, userId: string) => {
     const membership = await prisma.workspaceMember.findUnique({
       where: {
         userId_workspaceId: {
-          userId,
+          userId: session.user.id,
           workspaceId,
         },
       },
@@ -136,7 +151,7 @@ export const POST = withAuth(async (req: NextRequest, userId: string) => {
     );
     return withCors(response);
   }
-});
+}
 
 // OPTIONS handler for CORS
 export async function OPTIONS() {

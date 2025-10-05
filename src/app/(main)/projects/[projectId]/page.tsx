@@ -2,7 +2,9 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, CalendarDays, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CalendarDays, CheckCircle2, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ProjectIssuesClient } from "@/components/projects/project-issues-client";
 
 export default async function ProjectDetailPage({
   params,
@@ -64,6 +66,58 @@ export default async function ProjectDetailPage({
   ).length;
   const progress =
     totalIssues > 0 ? Math.round((completedIssues / totalIssues) * 100) : 0;
+
+  // Get teams, statuses, and users for create modal
+  const teams = await prisma.team.findMany({
+    where: {
+      workspace: {
+        members: {
+          some: {
+            userId: session.user.id,
+          },
+        },
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+      key: true,
+    },
+  });
+
+  const statuses = await prisma.status.findMany({
+    where: {
+      workspace: {
+        members: {
+          some: {
+            userId: session.user.id,
+          },
+        },
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+    orderBy: {
+      position: "asc",
+    },
+  });
+
+  const users = await prisma.user.findMany({
+    where: {
+      workspaces: {
+        some: {
+          workspaceId: project.workspaceId,
+        },
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  });
 
   return (
     <div className="p-8">
@@ -139,93 +193,15 @@ export default async function ProjectDetailPage({
         )}
       </div>
 
-      {/* Issues by Status */}
-      <div className="space-y-8">
-        {Object.entries(issuesByStatus).map(([statusType, issues]) => {
-          if (issues.length === 0) return null;
-
-          const statusName =
-            issues[0]?.status.name || statusType.replace("_", " ");
-
-          return (
-            <div key={statusType}>
-              <h2 className="mb-3 text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                {statusName} ({issues.length})
-              </h2>
-
-              <div className="space-y-2">
-                {issues.map((issue) => (
-                  <div
-                    key={issue.id}
-                    className="group flex items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 transition-colors hover:bg-gray-50"
-                  >
-                    <div className="flex flex-1 items-center gap-3">
-                      <span className="text-sm font-mono text-gray-500">
-                        {issue.team.key}-{issue.identifier}
-                      </span>
-                      <span className="text-sm font-medium text-gray-900">
-                        {issue.title}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      {/* Labels */}
-                      {issue.labels.map((issueLabel) => (
-                        <span
-                          key={issueLabel.labelId}
-                          className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
-                          style={{
-                            backgroundColor: `${issueLabel.label.color}20`,
-                            color: issueLabel.label.color,
-                          }}
-                        >
-                          {issueLabel.label.name}
-                        </span>
-                      ))}
-
-                      {/* Priority */}
-                      {issue.priority !== "NO_PRIORITY" && (
-                        <span
-                          className={`text-xs font-medium ${
-                            issue.priority === "URGENT"
-                              ? "text-red-600"
-                              : issue.priority === "HIGH"
-                              ? "text-orange-600"
-                              : issue.priority === "MEDIUM"
-                              ? "text-blue-600"
-                              : "text-gray-500"
-                          }`}
-                        >
-                          {issue.priority}
-                        </span>
-                      )}
-
-                      {/* Assignee */}
-                      {issue.assignee && (
-                        <div className="flex items-center gap-1.5">
-                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-medium text-white">
-                            {issue.assignee.name
-                              ?.split(" ")
-                              .map((n) => n[0])
-                              .join("")
-                              .toUpperCase() || "U"}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-
-        {totalIssues === 0 && (
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-12 text-center">
-            <p className="text-gray-600">No issues in this project yet</p>
-          </div>
-        )}
-      </div>
+      {/* Issues Section with New Issue Button */}
+      <ProjectIssuesClient
+        projectId={project.id}
+        issuesByStatus={issuesByStatus}
+        totalIssues={totalIssues}
+        teams={teams}
+        statuses={statuses}
+        users={users}
+      />
     </div>
   );
 }

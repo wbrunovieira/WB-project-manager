@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withAuth, withCors } from "@/lib/api-auth";
+import { withCors } from "@/lib/api-auth";
+import { auth } from "@/lib/auth";
 import { z } from "zod";
 
 const createIssueSchema = z.object({
@@ -15,7 +16,14 @@ const createIssueSchema = z.object({
 });
 
 // GET /api/issues - List all issues
-export const GET = withAuth(async (req: NextRequest, userId: string) => {
+export async function GET(req: NextRequest) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return withCors(response);
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const teamId = searchParams.get("teamId");
@@ -26,7 +34,7 @@ export const GET = withAuth(async (req: NextRequest, userId: string) => {
 
     // Get user's teams
     const teamMemberships = await prisma.teamMember.findMany({
-      where: { userId },
+      where: { userId: session.user.id },
       select: { teamId: true },
     });
 
@@ -114,10 +122,17 @@ export const GET = withAuth(async (req: NextRequest, userId: string) => {
     );
     return withCors(response);
   }
-});
+}
 
 // POST /api/issues - Create new issue
-export const POST = withAuth(async (req: NextRequest, userId: string) => {
+export async function POST(req: NextRequest) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return withCors(response);
+  }
+
   try {
     const body = await req.json();
     const validated = createIssueSchema.safeParse(body);
@@ -137,7 +152,7 @@ export const POST = withAuth(async (req: NextRequest, userId: string) => {
       where: {
         teamId_userId: {
           teamId,
-          userId,
+          userId: session.user.id,
         },
       },
     });
@@ -186,7 +201,7 @@ export const POST = withAuth(async (req: NextRequest, userId: string) => {
         ...data,
         teamId,
         identifier,
-        creatorId: userId,
+        creatorId: session.user.id,
         labels: labelIds
           ? {
               create: labelIds.map((labelId) => ({
@@ -243,7 +258,7 @@ export const POST = withAuth(async (req: NextRequest, userId: string) => {
     );
     return withCors(response);
   }
-});
+}
 
 // OPTIONS handler for CORS
 export async function OPTIONS() {
