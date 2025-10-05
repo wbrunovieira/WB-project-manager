@@ -59,7 +59,7 @@ export function ProjectsListClient({ projects }: ProjectsListClientProps) {
               <Link href={`/projects/${project.id}`} className="block">
                 <div className="mb-4">
                   <div className="flex items-start justify-between">
-                    <div className="flex-1">
+                    <div className="flex-1 pr-20">
                       <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">
                         {project.name}
                       </h3>
@@ -127,15 +127,16 @@ export function ProjectsListClient({ projects }: ProjectsListClientProps) {
               </Link>
 
               {/* Action Buttons */}
-              <div className="absolute right-6 top-6 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute right-6 top-6 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     setEditingProject(project);
                   }}
-                  className="h-8 w-8"
+                  className="h-8 w-8 bg-white/90 hover:bg-white"
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
@@ -144,9 +145,10 @@ export function ProjectsListClient({ projects }: ProjectsListClientProps) {
                   size="icon"
                   onClick={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     setDeletingProject(project);
                   }}
-                  className="h-8 w-8 text-red-600 hover:text-red-700"
+                  className="h-8 w-8 text-red-600 hover:text-red-700 bg-white/90 hover:bg-white"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
