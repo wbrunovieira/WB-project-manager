@@ -70,7 +70,7 @@ export function ProjectsListClient({ projects }: ProjectsListClientProps) {
                       )}
                     </div>
                     <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium mt-6 ${
                         project.status === "IN_PROGRESS"
                           ? "bg-blue-100 text-blue-800"
                           : project.status === "COMPLETED"
@@ -127,7 +127,7 @@ export function ProjectsListClient({ projects }: ProjectsListClientProps) {
               </Link>
 
               {/* Action Buttons */}
-              <div className="absolute right-6 top-6 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+              <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                 <Button
                   variant="ghost"
                   size="icon"
