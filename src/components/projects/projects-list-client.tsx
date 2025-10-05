@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { CalendarDays, CheckCircle2, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DateDisplay } from "@/components/ui/date-display";
 import { EditProjectModal } from "./edit-project-modal";
 import { DeleteProjectDialog } from "./delete-project-dialog";
 
@@ -109,8 +110,7 @@ export function ProjectsListClient({ projects }: ProjectsListClientProps) {
                       <div className="flex items-center gap-1">
                         <CalendarDays className="h-3.5 w-3.5" />
                         <span>
-                          Start:{" "}
-                          {new Date(project.startDate).toLocaleDateString()}
+                          Start: <DateDisplay date={project.startDate} />
                         </span>
                       </div>
                     )}
@@ -118,8 +118,7 @@ export function ProjectsListClient({ projects }: ProjectsListClientProps) {
                       <div className="flex items-center gap-1">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         <span>
-                          Target:{" "}
-                          {new Date(project.targetDate).toLocaleDateString()}
+                          Target: <DateDisplay date={project.targetDate} />
                         </span>
                       </div>
                     )}

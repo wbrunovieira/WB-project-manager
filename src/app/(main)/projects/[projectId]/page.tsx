@@ -1,9 +1,9 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
-import { CalendarDays, CheckCircle2 } from "lucide-react";
 import { ProjectIssuesClient } from "@/components/projects/project-issues-client";
 import { ProjectDetailHeader } from "@/components/projects/project-detail-header";
+import { ProjectDates } from "@/components/projects/project-dates";
 
 export default async function ProjectDetailPage({
   params,
@@ -150,26 +150,10 @@ export default async function ProjectDetailPage({
         </div>
 
         {/* Dates */}
-        {(project.startDate || project.targetDate) && (
-          <div className="mt-4 flex items-center gap-6 text-sm text-gray-600">
-            {project.startDate && (
-              <div className="flex items-center gap-2">
-                <CalendarDays className="h-4 w-4" />
-                <span>
-                  Start: {new Date(project.startDate).toLocaleDateString()}
-                </span>
-              </div>
-            )}
-            {project.targetDate && (
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4" />
-                <span>
-                  Target: {new Date(project.targetDate).toLocaleDateString()}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
+        <ProjectDates
+          startDate={project.startDate}
+          targetDate={project.targetDate}
+        />
       </div>
 
       {/* Issues Section with New Issue Button */}
