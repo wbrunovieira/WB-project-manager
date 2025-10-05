@@ -2,16 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FolderKanban, Users, Settings, Inbox, Folder } from "lucide-react";
+import { Home, FolderKanban, Folder } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Home", href: "/dashboard", icon: Home },
-  { name: "Inbox", href: "/inbox", icon: Inbox },
   { name: "My Issues", href: "/my-issues", icon: FolderKanban },
   { name: "Projects", href: "/projects", icon: Folder },
-  { name: "Teams", href: "/teams", icon: Users },
-  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function Sidebar() {
