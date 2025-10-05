@@ -452,9 +452,81 @@ src/
 
 ---
 
+## 🔌 API REST Endpoints (Next.js API Routes)
+
+**Objetivo:** Criar APIs REST públicas para permitir integração com outras aplicações
+
+### Projects API
+- [ ] `GET /api/projects` - List all projects
+- [ ] `GET /api/projects/:id` - Get project by ID
+- [ ] `POST /api/projects` - Create new project
+- [ ] `PATCH /api/projects/:id` - Update project
+- [ ] `DELETE /api/projects/:id` - Delete project
+- [ ] `GET /api/projects/:id/issues` - Get project issues
+
+### Issues API
+- [ ] `GET /api/issues` - List all issues (with filters)
+- [ ] `GET /api/issues/:id` - Get issue by ID
+- [ ] `POST /api/issues` - Create new issue
+- [ ] `PATCH /api/issues/:id` - Update issue
+- [ ] `DELETE /api/issues/:id` - Delete issue
+- [ ] `GET /api/issues/:id/comments` - Get issue comments
+- [ ] `POST /api/issues/:id/comments` - Add comment to issue
+
+### Teams API
+- [ ] `GET /api/teams` - List all teams
+- [ ] `GET /api/teams/:id` - Get team by ID
+- [ ] `POST /api/teams` - Create new team
+- [ ] `PATCH /api/teams/:id` - Update team
+- [ ] `DELETE /api/teams/:id` - Delete team
+- [ ] `GET /api/teams/:id/members` - Get team members
+- [ ] `POST /api/teams/:id/members` - Add team member
+
+### Workspaces API
+- [ ] `GET /api/workspaces` - List user workspaces
+- [ ] `GET /api/workspaces/:id` - Get workspace by ID
+- [ ] `POST /api/workspaces` - Create workspace
+- [ ] `PATCH /api/workspaces/:id` - Update workspace
+- [ ] `GET /api/workspaces/:id/members` - Get workspace members
+- [ ] `POST /api/workspaces/:id/members` - Invite member
+
+### Labels API
+- [ ] `GET /api/labels` - List all labels
+- [ ] `POST /api/labels` - Create label
+- [ ] `PATCH /api/labels/:id` - Update label
+- [ ] `DELETE /api/labels/:id` - Delete label
+
+### Statuses API
+- [ ] `GET /api/statuses` - List all statuses
+- [ ] `POST /api/statuses` - Create custom status
+- [ ] `PATCH /api/statuses/:id` - Update status
+- [ ] `DELETE /api/statuses/:id` - Delete status
+
+### Users API
+- [ ] `GET /api/users/me` - Get current user
+- [ ] `PATCH /api/users/me` - Update current user profile
+- [ ] `GET /api/users/:id` - Get user by ID
+
+### Comments API
+- [ ] `GET /api/comments/:id` - Get comment by ID
+- [ ] `PATCH /api/comments/:id` - Update comment
+- [ ] `DELETE /api/comments/:id` - Delete comment
+
+**API Features:**
+- [ ] API authentication (Bearer token or API keys)
+- [ ] Rate limiting
+- [ ] CORS configuration for external apps
+- [ ] API documentation (Swagger/OpenAPI)
+- [ ] Request validation with Zod
+- [ ] Error handling middleware
+- [ ] Pagination for list endpoints
+- [ ] Filtering and sorting support
+
+---
+
 ## 📊 Status Geral do Projeto
 
-**Progresso:** Sprint 1 - 50% completo
+**Progresso:** Sprint 1 - 80% completo
 
 ### ✅ Concluído
 - Inicialização do projeto Next.js 15
@@ -462,18 +534,26 @@ src/
 - Schema do banco de dados completo
 - Migração inicial executada
 - Instalação de todas as bibliotecas de UI
-- Configuração básica do NextAuth.js
+- Autenticação completa com NextAuth v5
+- Páginas de login/registro
+- Seed do banco de dados
+- Layout base com sidebar e header
+- Dashboard com lista de issues
+- Página de projetos (list e detail)
+- Issues agrupadas por status
+- UI components (Button, Input, Card, Avatar, etc.)
 - Utilitários (cn, prisma singleton)
 
 ### 🚧 Em Progresso
-- Autenticação completa com NextAuth v5
-- Páginas de login/registro
+- API REST endpoints para integração externa
 
 ### ⏳ Próximo
-- Seed do banco de dados
-- Layout base e navegação
+- CRUD APIs para Projects
+- CRUD APIs para Issues
+- CRUD APIs para Teams, Workspaces, Labels
+- API authentication
 - Command palette
-- CRUD de issues
+- Issue modal/editor
 
 ---
 
