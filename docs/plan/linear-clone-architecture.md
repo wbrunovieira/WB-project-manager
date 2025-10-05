@@ -515,12 +515,183 @@ src/
 **API Features:**
 - [ ] API authentication (Bearer token or API keys)
 - [ ] Rate limiting
-- [ ] CORS configuration for external apps
+- ✅ CORS configuration for external apps
 - [ ] API documentation (Swagger/OpenAPI)
-- [ ] Request validation with Zod
-- [ ] Error handling middleware
+- ✅ Request validation with Zod
+- ✅ Error handling middleware
 - [ ] Pagination for list endpoints
-- [ ] Filtering and sorting support
+- ✅ Filtering and sorting support
+
+---
+
+## 🖥️ UI Pages for CRUD Operations
+
+### Projects Pages
+- ✅ `GET /projects` - Projects list page (DONE)
+- ✅ `GET /projects/:id` - Project detail page with issues (DONE)
+- [ ] `POST /projects` - Create project modal/page
+  - Form with name, description, workspace selector
+  - Status dropdown (Planned, In Progress, Completed, Canceled)
+  - Start and target date pickers
+  - Save and cancel buttons
+- [ ] `PATCH /projects/:id` - Edit project modal/inline
+  - Same fields as create
+  - Inline editing on project detail page
+  - Quick edit modal from projects list
+- [ ] `DELETE /projects/:id` - Delete confirmation modal
+  - Warning message
+  - Confirm/Cancel buttons
+  - Show issue count that will be affected
+
+### Issues Pages
+- [ ] `GET /issues` - All issues list page
+  - Table/list view with columns
+  - Filters sidebar (team, status, priority, assignee)
+  - Search bar
+  - Bulk actions
+- [ ] `GET /issues/:id` - Issue detail modal/page
+  - Full issue view with all details
+  - Comments section
+  - Activity timeline
+  - Edit inline fields
+- [ ] `POST /issues` - Create issue modal (Cmd+C)
+  - Quick create with title only
+  - Full create with all fields
+  - Team selector
+  - Status dropdown
+  - Priority selector
+  - Assignee picker
+  - Labels multi-select
+  - Project selector
+  - Description editor (Markdown)
+- [ ] `PATCH /issues/:id` - Edit issue modal/inline
+  - Inline editing on issue detail
+  - Quick edit from list view
+  - Drag & drop to change status
+- [ ] `DELETE /issues/:id` - Delete confirmation modal
+
+### Teams Pages
+- [ ] `GET /teams` - Teams list page
+  - All teams grid/list
+  - Team cards with member count
+  - Create new team button
+- [ ] `GET /teams/:id` - Team detail page
+  - Team info and settings
+  - Members list with roles
+  - Team issues
+  - Team projects
+- [ ] `POST /teams` - Create team modal
+  - Team name input
+  - Team key input (e.g., "ENG")
+  - Icon picker
+  - Workspace selector
+- [ ] `PATCH /teams/:id` - Edit team modal/page
+  - Edit team settings
+  - Manage members
+  - Add/remove members
+- [ ] `DELETE /teams/:id` - Delete confirmation
+
+### Workspaces Pages
+- [ ] `GET /workspaces` - Workspace switcher dropdown
+  - List all user workspaces
+  - Switch between workspaces
+  - Create new workspace option
+- [ ] `GET /workspaces/:id` - Workspace settings page
+  - General settings
+  - Members management
+  - Billing (future)
+  - Danger zone (delete workspace)
+- [ ] `POST /workspaces` - Create workspace modal
+  - Workspace name
+  - Workspace slug (URL-friendly)
+  - Icon/avatar uploader
+- [ ] `PATCH /workspaces/:id` - Edit workspace settings
+  - Update name, slug, icon
+  - Workspace preferences
+- [ ] Workspace members management
+  - `GET /workspaces/:id/members` - Members list
+  - `POST /workspaces/:id/members` - Invite member modal
+  - Role assignment dropdown
+  - Remove member confirmation
+
+### Labels Pages
+- [ ] `GET /labels` - Labels management page (in settings)
+  - All labels list
+  - Color preview
+  - Usage count
+  - Create new label
+- [ ] `POST /labels` - Create label modal
+  - Label name input
+  - Color picker
+  - Preview
+- [ ] `PATCH /labels/:id` - Edit label inline/modal
+  - Update name and color
+- [ ] `DELETE /labels/:id` - Delete confirmation
+  - Show issues count using this label
+
+### Statuses Pages
+- [ ] `GET /statuses` - Status management page (in settings)
+  - All statuses by type
+  - Reorder statuses (drag & drop)
+  - Default statuses vs custom
+- [ ] `POST /statuses` - Create custom status modal
+  - Status name
+  - Status type (Backlog, Todo, In Progress, Done, Canceled)
+  - Color picker
+  - Position/order
+- [ ] `PATCH /statuses/:id` - Edit status
+  - Update name, color, position
+- [ ] `DELETE /statuses/:id` - Delete confirmation
+  - Show issues count using this status
+
+### Users/Profile Pages
+- [ ] `GET /users/me` - User profile page
+  - Profile information
+  - Avatar upload
+  - Email and name
+  - Password change
+  - Preferences
+- [ ] `PATCH /users/me` - Edit profile
+  - Update name, email, avatar
+  - Theme preferences
+  - Notification settings
+
+### Comments Pages
+- [ ] `GET /issues/:id/comments` - Comments section (in issue detail)
+  - Comments list with author and timestamp
+  - Reply functionality
+  - Markdown support
+- [ ] `POST /issues/:id/comments` - Add comment form
+  - Markdown editor
+  - @mentions autocomplete
+  - Attach files
+  - Submit/Cancel buttons
+- [ ] `PATCH /comments/:id` - Edit comment inline
+  - Edit mode toggle
+  - Save/Cancel
+- [ ] `DELETE /comments/:id` - Delete confirmation
+
+### Common UI Components Needed
+- [ ] Modal component (for create/edit/delete)
+- [ ] Dropdown/Select component
+- [ ] Multi-select component (for labels)
+- [ ] Date picker component
+- [ ] Color picker component
+- [ ] Markdown editor component
+- [ ] File upload component
+- [ ] Confirmation dialog component
+- [ ] Toast notifications component
+- [ ] Loading states component
+- [ ] Empty states component
+- [ ] Error states component
+- [ ] Breadcrumbs component
+- [ ] Pagination component
+- [ ] Filters panel component
+- [ ] Search input component
+- [ ] User/Assignee picker component
+- [ ] Avatar component (DONE)
+- [ ] Badge component
+- [ ] Tabs component
 
 ---
 
