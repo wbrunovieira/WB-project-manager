@@ -25,6 +25,13 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useRouter } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
 interface Issue {
   id: string;
@@ -72,6 +79,8 @@ interface SortableIssueRowProps {
   issue: Issue;
   onEdit: (issue: Issue) => void;
   onDelete: (issue: Issue) => void;
+  onStatusChange: (issueId: string, statusId: string) => void;
+  statuses: Array<{ id: string; name: string }>;
   getPriorityColor: (priority: string) => string;
   getPriorityIcon: (priority: string) => JSX.Element;
   getStatusIcon: (statusType: string) => JSX.Element;
@@ -81,6 +90,8 @@ function SortableIssueRow({
   issue,
   onEdit,
   onDelete,
+  onStatusChange,
+  statuses,
   getPriorityColor,
   getPriorityIcon,
   getStatusIcon,
@@ -101,18 +112,18 @@ function SortableIssueRow({
   };
 
   return (
-    <tr ref={setNodeRef} style={style} className="group hover:bg-gray-50">
+    <tr ref={setNodeRef} style={style} className="group hover:bg-gradient-to-r hover:from-gray-50 hover:to-white transition-all">
       <td className="px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 flex-1">
-            <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
-              <GripVertical className="h-4 w-4 text-gray-400" />
+          <div className="flex items-center gap-3 flex-1">
+            <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity">
+              <GripVertical className="h-4 w-4 text-gray-400 hover:text-gray-600" />
             </div>
-            <Link href={`/issues/${issue.id}`} className="flex items-center gap-2 flex-1">
-              <span className="text-sm font-mono text-gray-500">
+            <Link href={`/issues/${issue.id}`} className="flex items-center gap-3 flex-1 min-w-0">
+              <span className="text-sm font-mono text-gray-500 shrink-0">
                 #{issue.identifier}
               </span>
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors truncate">
                 {issue.title}
               </span>
             </Link>
@@ -128,72 +139,102 @@ function SortableIssueRow({
         </div>
       </td>
       <td className="px-6 py-4">
-        <div className="flex items-center gap-2">
-          {getStatusIcon(issue.status.type)}
-          <span className="text-sm text-gray-600">{issue.status.name}</span>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="group flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100">
+              {getStatusIcon(issue.status.type)}
+              <span className="text-gray-700">{issue.status.name}</span>
+              <ChevronDown className="h-3.5 w-3.5 text-gray-400 transition-transform group-hover:text-gray-600" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-48">
+            {statuses.map((status) => (
+              <DropdownMenuItem
+                key={status.id}
+                onClick={() => onStatusChange(issue.id, status.id)}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                {getStatusIcon(status.name === "Done" ? "DONE" : status.name === "Canceled" ? "CANCELED" : "TODO")}
+                <span>{status.name}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </td>
       <td className="px-6 py-4">
-        <div className={`flex items-center gap-1 ${getPriorityColor(issue.priority)}`}>
+        <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+          issue.priority === "URGENT"
+            ? "bg-red-50 text-red-700"
+            : issue.priority === "HIGH"
+            ? "bg-orange-50 text-orange-700"
+            : issue.priority === "MEDIUM"
+            ? "bg-yellow-50 text-yellow-700"
+            : issue.priority === "LOW"
+            ? "bg-blue-50 text-blue-700"
+            : "bg-gray-50 text-gray-600"
+        }`}>
           {getPriorityIcon(issue.priority)}
-          <span className="text-sm font-medium">
-            {issue.priority === "NO_PRIORITY" ? "No Priority" : issue.priority}
-          </span>
+          <span>{issue.priority === "NO_PRIORITY" ? "No Priority" : issue.priority}</span>
         </div>
       </td>
       <td className="px-6 py-4">
         {issue.assignee ? (
           <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-medium text-white">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-xs font-semibold text-white shadow-sm">
               {issue.assignee.name
                 ?.split(" ")
                 .map((n) => n[0])
                 .join("")
                 .toUpperCase() || "U"}
             </div>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm font-medium text-gray-700">
               {issue.assignee.name || issue.assignee.email}
             </span>
           </div>
         ) : (
-          <span className="text-sm text-gray-400">Unassigned</span>
+          <span className="text-sm text-gray-400 italic">Unassigned</span>
         )}
       </td>
       <td className="px-6 py-4">
-        <div className="flex gap-1 flex-wrap">
-          {issue.labels?.map((issueLabel) => (
-            <span
-              key={issueLabel.labelId}
-              className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
-              style={{
-                backgroundColor: `${issueLabel.label.color}20`,
-                color: issueLabel.label.color,
-              }}
-            >
-              {issueLabel.label.name}
-            </span>
-          ))}
+        <div className="flex gap-1.5 flex-wrap">
+          {issue.labels && issue.labels.length > 0 ? (
+            issue.labels.map((issueLabel) => (
+              <span
+                key={issueLabel.labelId}
+                className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium shadow-sm"
+                style={{
+                  backgroundColor: `${issueLabel.label.color}15`,
+                  color: issueLabel.label.color,
+                  border: `1px solid ${issueLabel.label.color}40`,
+                }}
+              >
+                {issueLabel.label.name}
+              </span>
+            ))
+          ) : (
+            <span className="text-xs text-gray-400 italic">No labels</span>
+          )}
         </div>
       </td>
       <td className="px-6 py-4">
         {issue.milestone ? (
-          <span className="inline-flex items-center rounded-full bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700">
+          <span className="inline-flex items-center rounded-full bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-700 border border-purple-200 shadow-sm">
             {issue.milestone.name}
           </span>
         ) : (
-          <span className="text-sm text-gray-400">-</span>
+          <span className="text-xs text-gray-400 italic">No milestone</span>
         )}
       </td>
       <td className="px-6 py-4">
         {issue.project ? (
           <Link
             href={`/projects/${issue.project.id}`}
-            className="text-sm text-gray-600 hover:text-blue-600"
+            className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
           >
             {issue.project.name}
           </Link>
         ) : (
-          <span className="text-sm text-gray-400">No project</span>
+          <span className="text-xs text-gray-400 italic">No project</span>
         )}
       </td>
     </tr>
@@ -315,6 +356,39 @@ export function MyIssuesClient({
       // Revert on error
       setIssues(issues);
     }
+  };
+
+  const handleStatusChange = async (issueId: string, statusId: string) => {
+    // Optimistically update UI
+    const updatedIssues = issues.map((issue) =>
+      issue.id === issueId
+        ? { ...issue, statusId, status: statuses.find((s) => s.id === statusId) || issue.status }
+        : issue
+    );
+    setIssues(updatedIssues);
+
+    try {
+      const response = await fetch(`/api/issues/${issueId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ statusId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update status");
+      }
+
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      // Revert on error
+      setIssues(issues);
+    }
+  };
+
+  const handleIssueCreated = (newIssue: any) => {
+    // Add the new issue to the top of the list
+    setIssues([newIssue, ...issues]);
   };
 
   const groupedIssues = useMemo(() => {
@@ -451,6 +525,8 @@ export function MyIssuesClient({
                       issue={issue}
                       onEdit={setEditingIssue}
                       onDelete={setDeletingIssue}
+                      onStatusChange={handleStatusChange}
+                      statuses={statuses}
                       getPriorityColor={getPriorityColor}
                       getPriorityIcon={getPriorityIcon}
                       getStatusIcon={getStatusIcon}
@@ -505,6 +581,8 @@ export function MyIssuesClient({
                           issue={issue}
                           onEdit={setEditingIssue}
                           onDelete={setDeletingIssue}
+                          onStatusChange={handleStatusChange}
+                          statuses={statuses}
                           getPriorityColor={getPriorityColor}
                           getPriorityIcon={getPriorityIcon}
                           getStatusIcon={getStatusIcon}
@@ -568,6 +646,8 @@ export function MyIssuesClient({
                                   issue={issue}
                                   onEdit={setEditingIssue}
                                   onDelete={setDeletingIssue}
+                                  onStatusChange={handleStatusChange}
+                                  statuses={statuses}
                                   getPriorityColor={getPriorityColor}
                                   getPriorityIcon={getPriorityIcon}
                                   getStatusIcon={getStatusIcon}
@@ -594,6 +674,7 @@ export function MyIssuesClient({
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
         workspaceId={workspaceId}
+        onIssueCreated={handleIssueCreated}
       />
 
       {editingIssue && (

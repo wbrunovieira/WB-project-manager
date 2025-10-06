@@ -46,6 +46,7 @@ interface CreateIssueModalProps {
   onOpenChange: (open: boolean) => void;
   defaultProjectId?: string;
   workspaceId: string;
+  onIssueCreated?: (issue: any) => void;
 }
 
 export function CreateIssueModal({
@@ -57,24 +58,33 @@ export function CreateIssueModal({
   onOpenChange,
   defaultProjectId,
   workspaceId,
+  onIssueCreated,
 }: CreateIssueModalProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
   const [availableLabels, setAvailableLabels] = useState<LabelType[]>([]);
+  const [createAnother, setCreateAnother] = useState(false);
+
+  // Find Bruno Vieira's user ID
+  const brunoUser = users.find(
+    (user) => user.name === "Bruno Vieira" || user.email?.includes("bruno")
+  );
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    getValues,
   } = useForm<CreateIssueForm>({
     resolver: zodResolver(createIssueSchema),
     defaultValues: {
       statusId: statuses[0]?.id || "",
       priority: "NO_PRIORITY",
       projectId: defaultProjectId,
+      assigneeId: brunoUser?.id || "",
     },
   });
 
@@ -83,6 +93,22 @@ export function CreateIssueModal({
       fetchLabels(workspaceId);
     }
   }, [open, workspaceId]);
+
+  useEffect(() => {
+    if (open && !createAnother) {
+      // Reset form with Bruno Vieira as default assignee when opening modal
+      reset({
+        title: "",
+        description: "",
+        statusId: statuses[0]?.id || "",
+        priority: "NO_PRIORITY",
+        projectId: defaultProjectId,
+        assigneeId: brunoUser?.id || "",
+        milestoneId: "",
+      });
+      setSelectedLabelIds([]);
+    }
+  }, [open, createAnother, brunoUser, statuses, defaultProjectId, reset]);
 
   const fetchLabels = async (wsId: string) => {
     try {
@@ -144,10 +170,35 @@ export function CreateIssueModal({
         description: `Issue #${issue.identifier}: ${issue.title}`,
       });
 
-      reset();
-      setSelectedLabelIds([]);
-      onOpenChange(false);
+      // Notify parent component about the new issue
+      if (onIssueCreated) {
+        onIssueCreated(issue);
+      }
+
+      // Always refresh to show the new issue
       router.refresh();
+
+      if (createAnother) {
+        // Save current values
+        const currentValues = getValues();
+
+        // Reset only title and description
+        reset({
+          title: "",
+          description: "",
+          statusId: currentValues.statusId,
+          priority: currentValues.priority,
+          assigneeId: currentValues.assigneeId,
+          projectId: currentValues.projectId,
+          milestoneId: currentValues.milestoneId,
+        });
+        // Keep labels selected
+        // Modal stays open
+      } else {
+        reset();
+        setSelectedLabelIds([]);
+        onOpenChange(false);
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -292,18 +343,35 @@ export function CreateIssueModal({
             />
           </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Creating..." : "Create Issue"}
-            </Button>
+          <DialogFooter className="sm:justify-between">
+            <div className="flex items-center space-x-2">
+              <input
+                id="createAnother"
+                type="checkbox"
+                checked={createAnother}
+                onChange={(e) => setCreateAnother(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <label
+                htmlFor="createAnother"
+                className="text-sm font-medium text-gray-700 cursor-pointer"
+              >
+                Create another
+              </label>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Creating..." : "Create Issue"}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
