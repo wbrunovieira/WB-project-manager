@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Clock, Calendar, Tag, FolderKanban, ChevronDown, ChevronRight } from "lucide-react";
+import { Clock, Calendar, Tag, FolderKanban, ChevronDown, ChevronRight, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -109,6 +109,21 @@ interface LabelStats {
   doneSeconds: number;
   inProgressSeconds: number;
   issues: GroupedByIssue[];
+}
+
+interface PeriodStats {
+  totalSeconds: number;
+  doneSeconds: number;
+  inProgressSeconds: number;
+  projectBreakdown: Map<string, { name: string; seconds: number }>;
+  milestoneBreakdown: Map<string, { name: string; seconds: number }>;
+  labelBreakdown: Map<string, { name: string; color: string; seconds: number }>;
+}
+
+interface PeriodComparison {
+  current: number;
+  previous: number;
+  percentChange: number;
 }
 
 export function TimeTrackingClient({
@@ -256,6 +271,147 @@ export function TimeTrackingClient({
 
   const projectStats = calculateProjectStats();
 
+  const calculatePeriodStats = (startDate: Date, endDate: Date): PeriodStats => {
+    if (!timeData) {
+      return {
+        totalSeconds: 0,
+        doneSeconds: 0,
+        inProgressSeconds: 0,
+        projectBreakdown: new Map(),
+        milestoneBreakdown: new Map(),
+        labelBreakdown: new Map(),
+      };
+    }
+
+    const stats: PeriodStats = {
+      totalSeconds: 0,
+      doneSeconds: 0,
+      inProgressSeconds: 0,
+      projectBreakdown: new Map(),
+      milestoneBreakdown: new Map(),
+      labelBreakdown: new Map(),
+    };
+
+    for (const group of timeData.groupedByIssue) {
+      for (const entry of group.entries) {
+        const entryStart = new Date(entry.startTime);
+        const entryEnd = entry.endTime ? new Date(entry.endTime) : new Date();
+
+        // Check if entry overlaps with period
+        if (entryEnd >= startDate && entryStart <= endDate) {
+          // Calculate overlapping time
+          const overlapStart = entryStart > startDate ? entryStart : startDate;
+          const overlapEnd = entryEnd < endDate ? entryEnd : endDate;
+          const overlapSeconds = Math.floor((overlapEnd.getTime() - overlapStart.getTime()) / 1000);
+
+          if (overlapSeconds > 0) {
+            stats.totalSeconds += overlapSeconds;
+
+            const isDone = group.issue.status.type === "DONE";
+            const isInProgress = group.issue.status.type === "IN_PROGRESS";
+
+            if (isDone) stats.doneSeconds += overlapSeconds;
+            if (isInProgress) stats.inProgressSeconds += overlapSeconds;
+
+            // Project breakdown
+            const projectId = group.issue.project.id;
+            if (!stats.projectBreakdown.has(projectId)) {
+              stats.projectBreakdown.set(projectId, {
+                name: group.issue.project.name,
+                seconds: 0,
+              });
+            }
+            stats.projectBreakdown.get(projectId)!.seconds += overlapSeconds;
+
+            // Milestone breakdown
+            if (group.issue.milestone) {
+              const milestoneId = group.issue.milestone.id;
+              if (!stats.milestoneBreakdown.has(milestoneId)) {
+                stats.milestoneBreakdown.set(milestoneId, {
+                  name: group.issue.milestone.name,
+                  seconds: 0,
+                });
+              }
+              stats.milestoneBreakdown.get(milestoneId)!.seconds += overlapSeconds;
+            }
+
+            // Label breakdown
+            for (const issueLabel of group.issue.labels) {
+              const labelId = issueLabel.label.id;
+              if (!stats.labelBreakdown.has(labelId)) {
+                stats.labelBreakdown.set(labelId, {
+                  name: issueLabel.label.name,
+                  color: issueLabel.label.color,
+                  seconds: 0,
+                });
+              }
+              stats.labelBreakdown.get(labelId)!.seconds += overlapSeconds;
+            }
+          }
+        }
+      }
+    }
+
+    return stats;
+  };
+
+  const getDateRanges = () => {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfYesterday = new Date(startOfToday);
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const startOfLastWeek = new Date(startOfWeek);
+    startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+    return {
+      today: { start: startOfToday, end: now },
+      yesterday: { start: startOfYesterday, end: startOfToday },
+      thisWeek: { start: startOfWeek, end: now },
+      lastWeek: { start: startOfLastWeek, end: startOfWeek },
+      thisMonth: { start: startOfMonth, end: now },
+      lastMonth: { start: startOfLastMonth, end: endOfLastMonth },
+    };
+  };
+
+  const dateRanges = getDateRanges();
+
+  const todayStats = calculatePeriodStats(dateRanges.today.start, dateRanges.today.end);
+  const yesterdayStats = calculatePeriodStats(dateRanges.yesterday.start, dateRanges.yesterday.end);
+  const thisWeekStats = calculatePeriodStats(dateRanges.thisWeek.start, dateRanges.thisWeek.end);
+  const lastWeekStats = calculatePeriodStats(dateRanges.lastWeek.start, dateRanges.lastWeek.end);
+  const thisMonthStats = calculatePeriodStats(dateRanges.thisMonth.start, dateRanges.thisMonth.end);
+  const lastMonthStats = calculatePeriodStats(dateRanges.lastMonth.start, dateRanges.lastMonth.end);
+
+  const calculatePercentChange = (current: number, previous: number): number => {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return ((current - previous) / previous) * 100;
+  };
+
+  const todayComparison = {
+    current: todayStats.totalSeconds,
+    previous: yesterdayStats.totalSeconds,
+    percentChange: calculatePercentChange(todayStats.totalSeconds, yesterdayStats.totalSeconds),
+  };
+
+  const weekComparison = {
+    current: thisWeekStats.totalSeconds,
+    previous: lastWeekStats.totalSeconds,
+    percentChange: calculatePercentChange(thisWeekStats.totalSeconds, lastWeekStats.totalSeconds),
+  };
+
+  const monthComparison = {
+    current: thisMonthStats.totalSeconds,
+    previous: lastMonthStats.totalSeconds,
+    percentChange: calculatePercentChange(thisMonthStats.totalSeconds, lastMonthStats.totalSeconds),
+  };
+
   return (
     <div className="space-y-6">
       {/* View Mode Selector */}
@@ -304,6 +460,233 @@ export function TimeTrackingClient({
           </div>
         </CardContent>
       </Card>
+
+      {/* Period Analysis */}
+      {!isLoading && timeData && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Time Analysis by Period</h2>
+
+          <div className="grid grid-cols-3 gap-4">
+            {/* Today */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-medium text-gray-600">Today</div>
+                    <div className="flex items-center gap-1">
+                      {todayComparison.percentChange > 0 ? (
+                        <>
+                          <TrendingUp className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-semibold text-green-600">
+                            +{todayComparison.percentChange.toFixed(0)}%
+                          </span>
+                        </>
+                      ) : todayComparison.percentChange < 0 ? (
+                        <>
+                          <TrendingDown className="h-4 w-4 text-red-600" />
+                          <span className="text-sm font-semibold text-red-600">
+                            {todayComparison.percentChange.toFixed(0)}%
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Minus className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm font-semibold text-gray-400">0%</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-gray-900">
+                    {formatTime(todayStats.totalSeconds)}
+                  </div>
+                  <div className="text-xs text-gray-500">vs yesterday: {formatTime(yesterdayStats.totalSeconds)}</div>
+
+                  {/* Breakdown */}
+                  <div className="space-y-2 pt-3 border-t">
+                    <div className="text-xs font-semibold text-gray-700 uppercase">Top Projects</div>
+                    {Array.from(todayStats.projectBreakdown.entries())
+                      .sort((a, b) => b[1].seconds - a[1].seconds)
+                      .slice(0, 3)
+                      .map(([id, data]) => (
+                        <div key={id} className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600 truncate">{data.name}</span>
+                          <span className="font-medium text-gray-900">{formatTime(data.seconds)}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* This Week */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-medium text-gray-600">This Week</div>
+                    <div className="flex items-center gap-1">
+                      {weekComparison.percentChange > 0 ? (
+                        <>
+                          <TrendingUp className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-semibold text-green-600">
+                            +{weekComparison.percentChange.toFixed(0)}%
+                          </span>
+                        </>
+                      ) : weekComparison.percentChange < 0 ? (
+                        <>
+                          <TrendingDown className="h-4 w-4 text-red-600" />
+                          <span className="text-sm font-semibold text-red-600">
+                            {weekComparison.percentChange.toFixed(0)}%
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Minus className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm font-semibold text-gray-400">0%</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-gray-900">
+                    {formatTime(thisWeekStats.totalSeconds)}
+                  </div>
+                  <div className="text-xs text-gray-500">vs last week: {formatTime(lastWeekStats.totalSeconds)}</div>
+
+                  {/* Breakdown */}
+                  <div className="space-y-2 pt-3 border-t">
+                    <div className="text-xs font-semibold text-gray-700 uppercase">Top Milestones</div>
+                    {Array.from(thisWeekStats.milestoneBreakdown.entries())
+                      .sort((a, b) => b[1].seconds - a[1].seconds)
+                      .slice(0, 3)
+                      .map(([id, data]) => (
+                        <div key={id} className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600 truncate">{data.name}</span>
+                          <span className="font-medium text-gray-900">{formatTime(data.seconds)}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* This Month */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-medium text-gray-600">This Month</div>
+                    <div className="flex items-center gap-1">
+                      {monthComparison.percentChange > 0 ? (
+                        <>
+                          <TrendingUp className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-semibold text-green-600">
+                            +{monthComparison.percentChange.toFixed(0)}%
+                          </span>
+                        </>
+                      ) : monthComparison.percentChange < 0 ? (
+                        <>
+                          <TrendingDown className="h-4 w-4 text-red-600" />
+                          <span className="text-sm font-semibold text-red-600">
+                            {monthComparison.percentChange.toFixed(0)}%
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Minus className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm font-semibold text-gray-400">0%</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-gray-900">
+                    {formatTime(thisMonthStats.totalSeconds)}
+                  </div>
+                  <div className="text-xs text-gray-500">vs last month: {formatTime(lastMonthStats.totalSeconds)}</div>
+
+                  {/* Breakdown */}
+                  <div className="space-y-2 pt-3 border-t">
+                    <div className="text-xs font-semibold text-gray-700 uppercase">Top Labels</div>
+                    {Array.from(thisMonthStats.labelBreakdown.entries())
+                      .sort((a, b) => b[1].seconds - a[1].seconds)
+                      .slice(0, 3)
+                      .map(([id, data]) => (
+                        <div key={id} className="flex items-center justify-between text-xs">
+                          <span
+                            className="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium truncate"
+                            style={{
+                              backgroundColor: `${data.color}15`,
+                              color: data.color,
+                            }}
+                          >
+                            {data.name}
+                          </span>
+                          <span className="font-medium text-gray-900">{formatTime(data.seconds)}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Status Breakdown by Period */}
+          <div className="grid grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <div className="text-xs text-gray-600">Today Status</div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-green-600">✓ Completed</span>
+                      <span className="font-semibold">{formatTime(todayStats.doneSeconds)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-blue-600">→ In Progress</span>
+                      <span className="font-semibold">{formatTime(todayStats.inProgressSeconds)}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <div className="text-xs text-gray-600">Week Status</div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-green-600">✓ Completed</span>
+                      <span className="font-semibold">{formatTime(thisWeekStats.doneSeconds)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-blue-600">→ In Progress</span>
+                      <span className="font-semibold">{formatTime(thisWeekStats.inProgressSeconds)}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <div className="text-xs text-gray-600">Month Status</div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-green-600">✓ Completed</span>
+                      <span className="font-semibold">{formatTime(thisMonthStats.doneSeconds)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-blue-600">→ In Progress</span>
+                      <span className="font-semibold">{formatTime(thisMonthStats.inProgressSeconds)}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
 
       {/* Summary */}
       {!isLoading && timeData && (
