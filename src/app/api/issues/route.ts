@@ -14,7 +14,27 @@ const createIssueSchema = z.object({
   assigneeId: z.string().optional(),
   priority: z.enum(["URGENT", "HIGH", "MEDIUM", "LOW", "NO_PRIORITY"]).optional(),
   type: z.enum(["FEATURE", "MAINTENANCE", "BUG", "IMPROVEMENT"]).default("FEATURE"),
-  reportedAt: z.string().datetime().or(z.literal("")).optional(), // ISO datetime string or empty
+  reportedAt: z.string().optional().transform((val) => {
+    // Accept empty string, undefined, or date formats
+    if (!val || val === "") return "";
+
+    // If it's already in ISO format with timezone, return as is
+    if (val.includes("Z") || val.match(/[+-]\d{2}:\d{2}$/)) {
+      return val;
+    }
+
+    // If it's datetime-local format (YYYY-MM-DDTHH:mm), add seconds and Z
+    if (val.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)) {
+      return `${val}:00.000Z`;
+    }
+
+    // If it has seconds but no timezone (YYYY-MM-DDTHH:mm:ss)
+    if (val.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/)) {
+      return `${val}.000Z`;
+    }
+
+    return val;
+  }),
   labelIds: z.array(z.string()).optional(),
 });
 

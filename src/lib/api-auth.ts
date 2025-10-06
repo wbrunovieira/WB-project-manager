@@ -19,14 +19,19 @@ export async function withAuth(
 }
 
 export function withCors(response: NextResponse) {
-  response.headers.set("Access-Control-Allow-Origin", "*");
+  // Allow specific origin for credentials support
+  // Note: Cannot use "*" with credentials, must specify exact origin
+  const origin = process.env.ALLOWED_ORIGIN || "http://localhost:3001";
+
+  response.headers.set("Access-Control-Allow-Origin", origin);
+  response.headers.set("Access-Control-Allow-Credentials", "true");
   response.headers.set(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, PATCH, DELETE, OPTIONS"
   );
   response.headers.set(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization"
+    "Content-Type, Authorization, Cookie"
   );
   return response;
 }
