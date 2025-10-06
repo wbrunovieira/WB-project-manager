@@ -112,27 +112,27 @@ function SortableIssueRow({
   };
 
   return (
-    <tr ref={setNodeRef} style={style} className="group hover:bg-gradient-to-r hover:from-gray-50 hover:to-white transition-all">
+    <tr ref={setNodeRef} style={style} className="group hover:bg-gradient-to-r hover:from-[#792990]/10 hover:to-transparent transition-all">
       <td className="px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 flex-1">
             <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity">
-              <GripVertical className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+              <GripVertical className="h-4 w-4 text-gray-400 hover:text-gray-300" />
             </div>
             <Link href={`/issues/${issue.id}`} className="flex items-center gap-3 flex-1 min-w-0">
-              <span className="text-sm font-mono text-gray-500 shrink-0">
+              <span className="text-sm font-mono text-gray-400 shrink-0">
                 #{issue.identifier}
               </span>
-              <span className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors truncate">
+              <span className="text-sm font-medium text-gray-100 hover:text-[#FFB947] transition-colors truncate">
                 {issue.title}
               </span>
             </Link>
           </div>
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button variant="ghost" size="icon" onClick={() => onEdit(issue)} className="h-8 w-8">
+            <Button variant="ghost" size="icon" onClick={() => onEdit(issue)} className="h-8 w-8 text-gray-300 hover:text-gray-100">
               <Edit className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => onDelete(issue)} className="h-8 w-8 text-red-600 hover:text-red-700">
+            <Button variant="ghost" size="icon" onClick={() => onDelete(issue)} className="h-8 w-8 text-red-400 hover:text-red-300">
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
@@ -141,18 +141,18 @@ function SortableIssueRow({
       <td className="px-6 py-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="group flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100">
+            <button className="group flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-[#792990]/20 border border-[#792990]/20 hover:border-[#792990]/40">
               {getStatusIcon(issue.status.type)}
-              <span className="text-gray-700">{issue.status.name}</span>
-              <ChevronDown className="h-3.5 w-3.5 text-gray-400 transition-transform group-hover:text-gray-600" />
+              <span className="text-gray-200">{issue.status.name}</span>
+              <ChevronDown className="h-3.5 w-3.5 text-gray-400 transition-transform group-hover:text-gray-300" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48">
+          <DropdownMenuContent align="start" className="w-48 bg-[#350459] border-[#792990]/40">
             {statuses.map((status) => (
               <DropdownMenuItem
                 key={status.id}
                 onClick={() => onStatusChange(issue.id, status.id)}
-                className="flex items-center gap-2 cursor-pointer"
+                className="flex items-center gap-2 cursor-pointer text-gray-200 hover:bg-[#792990]/30 focus:bg-[#792990]/30"
               >
                 {getStatusIcon(status.name === "Done" ? "DONE" : status.name === "Canceled" ? "CANCELED" : "TODO")}
                 <span>{status.name}</span>
@@ -162,16 +162,16 @@ function SortableIssueRow({
         </DropdownMenu>
       </td>
       <td className="px-6 py-4">
-        <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+        <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium border ${
           issue.priority === "URGENT"
-            ? "bg-red-50 text-red-700"
+            ? "bg-red-500/10 text-red-400 border-red-500/30"
             : issue.priority === "HIGH"
-            ? "bg-orange-50 text-orange-700"
+            ? "bg-orange-500/10 text-orange-400 border-orange-500/30"
             : issue.priority === "MEDIUM"
-            ? "bg-yellow-50 text-yellow-700"
+            ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/30"
             : issue.priority === "LOW"
-            ? "bg-blue-50 text-blue-700"
-            : "bg-gray-50 text-gray-600"
+            ? "bg-blue-500/10 text-blue-400 border-blue-500/30"
+            : "bg-gray-500/10 text-gray-400 border-gray-500/30"
         }`}>
           {getPriorityIcon(issue.priority)}
           <span>{issue.priority === "NO_PRIORITY" ? "No Priority" : issue.priority}</span>
@@ -180,14 +180,14 @@ function SortableIssueRow({
       <td className="px-6 py-4">
         {issue.assignee ? (
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-xs font-semibold text-white shadow-sm">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#792990] to-[#350459] text-xs font-semibold text-white shadow-sm">
               {issue.assignee.name
                 ?.split(" ")
                 .map((n) => n[0])
                 .join("")
                 .toUpperCase() || "U"}
             </div>
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-gray-200">
               {issue.assignee.name || issue.assignee.email}
             </span>
           </div>
@@ -218,7 +218,7 @@ function SortableIssueRow({
       </td>
       <td className="px-6 py-4">
         {issue.milestone ? (
-          <span className="inline-flex items-center rounded-full bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-700 border border-purple-200 shadow-sm">
+          <span className="inline-flex items-center rounded-full bg-[#792990]/20 px-2.5 py-1 text-xs font-medium text-purple-300 border border-[#792990]/40 shadow-sm">
             {issue.milestone.name}
           </span>
         ) : (
@@ -229,7 +229,7 @@ function SortableIssueRow({
         {issue.project ? (
           <Link
             href={`/projects/${issue.project.id}`}
-            className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+            className="inline-flex items-center text-sm font-medium text-gray-200 hover:text-[#FFB947] transition-colors"
           >
             {issue.project.name}
           </Link>
@@ -428,12 +428,12 @@ export function MyIssuesClient({
     <>
       <div className="mb-8 flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Issues</h1>
-          <p className="mt-2 text-gray-600">
+          <h1 className="text-3xl font-bold text-gray-100">My Issues</h1>
+          <p className="mt-2 text-gray-400">
             {issues.length} issue{issues.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <Button onClick={() => setIsCreateModalOpen(true)}>
+        <Button onClick={() => setIsCreateModalOpen(true)} className="bg-[#FFB947] text-gray-900 hover:bg-[#FFB947]/90 font-semibold">
           <Plus className="mr-2 h-4 w-4" />
           New Issue
         </Button>
@@ -442,11 +442,11 @@ export function MyIssuesClient({
       {/* Grouping Controls */}
       <div className="mb-6 flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700">Group by:</label>
+          <label className="text-sm font-medium text-gray-300">Group by:</label>
           <select
             value={groupBy}
             onChange={(e) => setGroupBy(e.target.value as GroupBy)}
-            className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="rounded-md border border-[#792990]/40 bg-[#350459] px-3 py-2 text-sm text-gray-200 focus:border-[#792990] focus:outline-none focus:ring-2 focus:ring-[#792990]/50"
           >
             <option value="none">None</option>
             <option value="project">Project</option>
@@ -459,11 +459,11 @@ export function MyIssuesClient({
 
         {groupBy !== "none" && (
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Then by:</label>
+            <label className="text-sm font-medium text-gray-300">Then by:</label>
             <select
               value={subGroupBy}
               onChange={(e) => setSubGroupBy(e.target.value as GroupBy)}
-              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-md border border-[#792990]/40 bg-[#350459] px-3 py-2 text-sm text-gray-200 focus:border-[#792990] focus:outline-none focus:ring-2 focus:ring-[#792990]/50"
             >
               <option value="none">None</option>
               {groupBy !== "project" && <option value="project">Project</option>}
@@ -477,12 +477,12 @@ export function MyIssuesClient({
       </div>
 
       {issues.length === 0 ? (
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-12 text-center">
-          <p className="text-gray-600">No issues yet</p>
+        <div className="rounded-lg border border-[#792990]/40 bg-gradient-to-br from-[#792990]/5 to-transparent p-12 text-center">
+          <p className="text-gray-300">No issues yet</p>
           <Button
             onClick={() => setIsCreateModalOpen(true)}
             variant="outline"
-            className="mt-4"
+            className="mt-4 border-[#792990]/40 text-gray-200 hover:bg-[#792990]/20 hover:border-[#792990]/60"
           >
             <Plus className="mr-2 h-4 w-4" />
             Create First Issue
@@ -490,35 +490,35 @@ export function MyIssuesClient({
         </div>
       ) : groupBy === "none" ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="overflow-hidden rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent">
+            <table className="min-w-full divide-y divide-[#792990]/20">
+              <thead className="bg-[#792990]/10">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                     Issue
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                     Priority
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                     Assignee
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                     Labels
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                     Milestone
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                     Project
                   </th>
                 </tr>
               </thead>
               <SortableContext items={issues.map(i => i.id)} strategy={verticalListSortingStrategy}>
-                <tbody className="divide-y divide-gray-200 bg-white">
+                <tbody className="divide-y divide-[#792990]/20 bg-transparent">
                   {issues.map((issue) => (
                     <SortableIssueRow
                       key={issue.id}
@@ -541,40 +541,40 @@ export function MyIssuesClient({
         <div className="space-y-6">
           {Object.entries(groupedIssues as Record<string, Issue[]>).map(([groupKey, groupIssues]) => (
             <DndContext key={groupKey} sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-                <div className="bg-gray-50 px-6 py-3">
-                  <h3 className="font-semibold text-gray-900">
+              <div className="overflow-hidden rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent">
+                <div className="bg-[#792990]/10 px-6 py-3 border-b border-[#792990]/20">
+                  <h3 className="font-semibold text-gray-100">
                     {groupKey} ({groupIssues.length})
                   </h3>
                 </div>
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-[#792990]/20">
+                  <thead className="bg-[#792990]/10">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                         Issue
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                         Priority
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                         Assignee
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                         Labels
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                         Milestone
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                         Project
                       </th>
                     </tr>
                   </thead>
                   <SortableContext items={groupIssues.map(i => i.id)} strategy={verticalListSortingStrategy}>
-                    <tbody className="divide-y divide-gray-200 bg-white">
+                    <tbody className="divide-y divide-[#792990]/20 bg-transparent">
                       {groupIssues.map((issue) => (
                         <SortableIssueRow
                           key={issue.id}
@@ -599,47 +599,47 @@ export function MyIssuesClient({
         <div className="space-y-6">
           {Object.entries(groupedIssues as Record<string, Record<string, Issue[]>>).map(
             ([groupKey, subGroups]) => (
-              <div key={groupKey} className="rounded-lg border border-gray-200 bg-white">
-                <div className="bg-gray-100 px-6 py-3">
-                  <h2 className="text-lg font-semibold text-gray-900">{groupKey}</h2>
+              <div key={groupKey} className="rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent">
+                <div className="bg-[#792990]/20 px-6 py-3 border-b border-[#792990]/30">
+                  <h2 className="text-lg font-semibold text-gray-100">{groupKey}</h2>
                 </div>
                 <div className="space-y-4 p-4">
                   {Object.entries(subGroups).map(([subKey, subIssues]) => (
                     <DndContext key={subKey} sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                      <div className="overflow-hidden rounded-lg border border-gray-200">
-                        <div className="bg-gray-50 px-6 py-2">
-                          <h3 className="font-medium text-gray-900">
+                      <div className="overflow-hidden rounded-lg border border-[#792990]/20">
+                        <div className="bg-[#792990]/10 px-6 py-2 border-b border-[#792990]/20">
+                          <h3 className="font-medium text-gray-200">
                             {subKey} ({subIssues.length})
                           </h3>
                         </div>
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
+                        <table className="min-w-full divide-y divide-[#792990]/20">
+                          <thead className="bg-[#792990]/10">
                             <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                                 Issue
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                                 Status
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                                 Priority
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                                 Assignee
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                                 Labels
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                                 Milestone
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                                 Project
                               </th>
                             </tr>
                           </thead>
                           <SortableContext items={subIssues.map(i => i.id)} strategy={verticalListSortingStrategy}>
-                            <tbody className="divide-y divide-gray-200 bg-white">
+                            <tbody className="divide-y divide-[#792990]/20 bg-transparent">
                               {subIssues.map((issue) => (
                                 <SortableIssueRow
                                   key={issue.id}

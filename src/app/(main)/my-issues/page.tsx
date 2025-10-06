@@ -112,7 +112,7 @@ export default async function MyIssuesPage() {
   });
 
   return (
-    <div className="p-8">
+    <div className="min-h-screen bg-[#350459]">
       <MyIssuesClient
         issues={issues}
         statuses={statuses}
