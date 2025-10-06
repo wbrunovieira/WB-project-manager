@@ -32,6 +32,7 @@ const editIssueSchema = z.object({
   priority: z.enum(["URGENT", "HIGH", "MEDIUM", "LOW", "NO_PRIORITY"]),
   assigneeId: z.string().optional(),
   projectId: z.string().optional(),
+  milestoneId: z.string().optional(),
 });
 
 type EditIssueForm = z.infer<typeof editIssueSchema>;
@@ -44,8 +45,15 @@ interface Issue {
   priority: string;
   assigneeId?: string | null;
   projectId?: string | null;
+  milestoneId?: string | null;
   workspaceId: string;
-  labels: Array<{ id: string }>;
+  labels?: Array<{
+    labelId: string;
+    label: {
+      name: string;
+      color: string;
+    };
+  }>;
 }
 
 interface EditIssueModalProps {
@@ -53,6 +61,7 @@ interface EditIssueModalProps {
   statuses: Array<{ id: string; name: string }>;
   users: Array<{ id: string; name: string | null; email: string }>;
   projects?: Array<{ id: string; name: string }>;
+  milestones?: Array<{ id: string; name: string }>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -62,6 +71,7 @@ export function EditIssueModal({
   statuses,
   users,
   projects = [],
+  milestones = [],
   open,
   onOpenChange,
 }: EditIssueModalProps) {
@@ -69,7 +79,7 @@ export function EditIssueModal({
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>(
-    issue.labels.map((label) => label.id)
+    issue.labels?.map((label) => label.labelId) || []
   );
   const [availableLabels, setAvailableLabels] = useState<LabelType[]>([]);
 
@@ -87,6 +97,7 @@ export function EditIssueModal({
       priority: issue.priority as EditIssueForm["priority"],
       assigneeId: issue.assigneeId || "",
       projectId: issue.projectId || "",
+      milestoneId: issue.milestoneId || "",
     },
   });
 
@@ -99,8 +110,9 @@ export function EditIssueModal({
       priority: issue.priority as EditIssueForm["priority"],
       assigneeId: issue.assigneeId || "",
       projectId: issue.projectId || "",
+      milestoneId: issue.milestoneId || "",
     });
-    setSelectedLabelIds(issue.labels.map((label) => label.id));
+    setSelectedLabelIds(issue.labels?.map((label) => label.labelId) || []);
   }, [issue, reset]);
 
   // Fetch available labels
@@ -152,6 +164,7 @@ export function EditIssueModal({
           ...data,
           assigneeId: data.assigneeId || null,
           projectId: data.projectId || null,
+          milestoneId: data.milestoneId || null,
           labelIds: selectedLabelIds.length > 0 ? selectedLabelIds : undefined,
         }),
       });
@@ -282,6 +295,24 @@ export function EditIssueModal({
               </div>
             )}
           </div>
+
+          {milestones.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="milestoneId">Milestone (optional)</Label>
+              <select
+                id="milestoneId"
+                {...register("milestoneId")}
+                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">No milestone</option>
+                {milestones.map((milestone) => (
+                  <option key={milestone.id} value={milestone.id}>
+                    {milestone.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Labels (optional)</Label>

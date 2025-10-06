@@ -172,6 +172,7 @@ export function ProjectIssuesClient({
           statuses={statuses}
           users={users}
           projects={[]}
+          milestones={milestones}
           open={!!editingIssue}
           onOpenChange={(open) => !open && setEditingIssue(null)}
         />

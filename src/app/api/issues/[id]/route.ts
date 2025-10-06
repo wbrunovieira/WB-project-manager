@@ -9,6 +9,7 @@ const updateIssueSchema = z.object({
   description: z.string().nullable().optional(),
   statusId: z.string().optional(),
   projectId: z.string().nullable().optional(),
+  milestoneId: z.string().nullable().optional(),
   assigneeId: z.string().nullable().optional(),
   priority: z.enum(["URGENT", "HIGH", "MEDIUM", "LOW", "NO_PRIORITY"]).optional(),
   labelIds: z.array(z.string()).optional(),
@@ -127,11 +128,13 @@ export async function PATCH(
 
   try {
     const body = await req.json();
+    console.log("Update issue body:", body);
     const validated = updateIssueSchema.safeParse(body);
 
     if (!validated.success) {
+      console.log("Validation error:", validated.error);
       const response = NextResponse.json(
-        { error: validated.error.errors[0].message },
+        { error: validated.error.errors[0]?.message || "Validation failed" },
         { status: 400 }
       );
       return withCors(response);

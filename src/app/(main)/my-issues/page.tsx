@@ -50,10 +50,6 @@ export default async function MyIssuesPage() {
     },
   });
 
-  // Separate issues into assigned and created
-  const assignedToMe = issues.filter((issue) => issue.assigneeId === session.user.id);
-  const createdByMe = issues.filter((issue) => issue.creatorId === session.user.id);
-
   // Get user's first workspace
   const workspaceMember = await prisma.workspaceMember.findFirst({
     where: { userId: session.user.id },
@@ -118,8 +114,7 @@ export default async function MyIssuesPage() {
   return (
     <div className="p-8">
       <MyIssuesClient
-        assignedToMe={assignedToMe}
-        createdByMe={createdByMe}
+        issues={issues}
         statuses={statuses}
         users={users}
         projects={projects}
