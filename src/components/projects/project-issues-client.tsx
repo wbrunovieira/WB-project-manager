@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, GripVertical, Circle, CheckCircle2, XCircle, ChevronDown } from "lucide-react";
+import { Plus, Edit, Trash2, GripVertical, Circle, CheckCircle2, XCircle, ChevronDown, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateIssueModal } from "@/components/issues/create-issue-modal";
 import { EditIssueModal } from "@/components/issues/edit-issue-modal";
@@ -44,17 +44,21 @@ interface ProjectIssuesClientProps {
 interface SortableIssueCardProps {
   issue: any;
   statuses: Array<{ id: string; name: string; type: string }>;
+  milestones: Array<{ id: string; name: string }>;
   onEdit: (issue: any) => void;
   onDelete: (issue: any) => void;
   onStatusChange: (issueId: string, statusId: string) => void;
+  onMilestoneChange: (issueId: string, milestoneId: string | null) => void;
 }
 
 function SortableIssueCard({
   issue,
   statuses,
+  milestones,
   onEdit,
   onDelete,
   onStatusChange,
+  onMilestoneChange,
 }: SortableIssueCardProps) {
   const {
     attributes,
@@ -144,6 +148,37 @@ function SortableIssueCard({
           </span>
         ))}
 
+        {/* Milestone Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="group/btn flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100">
+              <Target className="h-3.5 w-3.5 text-gray-400" />
+              <span className="text-gray-700">
+                {issue.milestone?.name || "No milestone"}
+              </span>
+              <ChevronDown className="h-3.5 w-3.5 text-gray-400 transition-transform group-hover/btn:text-gray-600" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-48">
+            <DropdownMenuItem
+              onClick={() => onMilestoneChange(issue.id, null)}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <span className="text-gray-500">No milestone</span>
+            </DropdownMenuItem>
+            {milestones.map((milestone) => (
+              <DropdownMenuItem
+                key={milestone.id}
+                onClick={() => onMilestoneChange(issue.id, milestone.id)}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <Target className="h-3.5 w-3.5 text-gray-400" />
+                <span>{milestone.name}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         {/* Priority */}
         {issue.priority !== "NO_PRIORITY" && (
           <span
@@ -217,6 +252,11 @@ export function ProjectIssuesClient({
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Sync internal state with props when they change (e.g., milestone filter)
+  useEffect(() => {
+    setIssuesByStatus(initialIssuesByStatus);
+  }, [initialIssuesByStatus]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -330,6 +370,59 @@ export function ProjectIssuesClient({
     }
   };
 
+  const handleMilestoneChange = async (issueId: string, milestoneId: string | null) => {
+    // Find the issue
+    let currentIssue: any = null;
+    let currentStatusType: string = "";
+
+    for (const [statusType, issues] of Object.entries(issuesByStatus)) {
+      const issue = issues.find((i: any) => i.id === issueId);
+      if (issue) {
+        currentIssue = issue;
+        currentStatusType = statusType;
+        break;
+      }
+    }
+
+    if (!currentIssue) return;
+
+    // Find the milestone
+    const milestone = milestoneId ? milestones?.find((m) => m.id === milestoneId) : null;
+
+    // Optimistically update the UI
+    const updatedIssue = {
+      ...currentIssue,
+      milestoneId,
+      milestone: milestone || null,
+    };
+
+    // Update state optimistically
+    const newIssuesByStatus = { ...issuesByStatus };
+    newIssuesByStatus[currentStatusType] = newIssuesByStatus[currentStatusType].map((i: any) =>
+      i.id === issueId ? updatedIssue : i
+    );
+
+    setIssuesByStatus(newIssuesByStatus);
+
+    try {
+      const response = await fetch(`/api/issues/${issueId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ milestoneId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update milestone");
+      }
+
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to update milestone:", error);
+      // Revert on error
+      setIssuesByStatus(initialIssuesByStatus);
+    }
+  };
+
   return (
     <>
       <div className="mb-4 flex items-center justify-between">
@@ -369,9 +462,11 @@ export function ProjectIssuesClient({
                           key={issue.id}
                           issue={issue}
                           statuses={statuses}
+                          milestones={milestones || []}
                           onEdit={setEditingIssue}
                           onDelete={setDeletingIssue}
                           onStatusChange={handleStatusChange}
+                          onMilestoneChange={handleMilestoneChange}
                         />
                       ))}
                     </div>

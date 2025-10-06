@@ -45,18 +45,24 @@ interface Milestone {
 interface ProjectMilestonesClientProps {
   projectId: string;
   milestones: Milestone[];
+  selectedMilestoneId?: string | null;
+  onMilestoneSelect?: (milestoneId: string | null) => void;
 }
 
 interface SortableMilestoneCardProps {
   milestone: Milestone;
+  isSelected: boolean;
   onEdit: (milestone: Milestone) => void;
   onDelete: (milestone: Milestone) => void;
+  onClick: () => void;
 }
 
 function SortableMilestoneCard({
   milestone,
+  isSelected,
   onEdit,
   onDelete,
+  onClick,
 }: SortableMilestoneCardProps) {
   const {
     attributes,
@@ -86,7 +92,12 @@ function SortableMilestoneCard({
     <div
       ref={setNodeRef}
       style={style}
-      className="group relative rounded-lg border border-gray-200 bg-white p-5 transition-all hover:border-gray-300 hover:shadow-sm"
+      onClick={onClick}
+      className={`group relative rounded-lg border p-5 transition-all cursor-pointer ${
+        isSelected
+          ? "border-blue-500 bg-blue-50 shadow-md"
+          : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+      }`}
     >
       <div className="mb-4">
         <div className="flex items-start justify-between">
@@ -95,6 +106,7 @@ function SortableMilestoneCard({
               {...attributes}
               {...listeners}
               className="cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity mt-1"
+              onClick={(e) => e.stopPropagation()}
             >
               <GripVertical className="h-4 w-4 text-gray-400 hover:text-gray-600" />
             </div>
@@ -114,7 +126,10 @@ function SortableMilestoneCard({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => onEdit(milestone)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(milestone);
+              }}
               className="h-8 w-8"
             >
               <Edit className="h-4 w-4" />
@@ -122,7 +137,10 @@ function SortableMilestoneCard({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => onDelete(milestone)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(milestone);
+              }}
               className="h-8 w-8 text-red-600 hover:text-red-700"
             >
               <Trash2 className="h-4 w-4" />
@@ -173,12 +191,19 @@ function SortableMilestoneCard({
 export function ProjectMilestonesClient({
   projectId,
   milestones: initialMilestones,
+  selectedMilestoneId: externalSelectedMilestoneId,
+  onMilestoneSelect,
 }: ProjectMilestonesClientProps) {
   const router = useRouter();
   const [milestones, setMilestones] = useState<Milestone[]>(initialMilestones);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null);
   const [deletingMilestone, setDeletingMilestone] = useState<Milestone | null>(null);
+
+  // Use external state if provided, otherwise use internal state
+  const [internalSelectedMilestoneId, setInternalSelectedMilestoneId] = useState<string | null>(null);
+  const selectedMilestoneId = externalSelectedMilestoneId !== undefined ? externalSelectedMilestoneId : internalSelectedMilestoneId;
+  const setSelectedMilestoneId = onMilestoneSelect || setInternalSelectedMilestoneId;
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -221,19 +246,56 @@ export function ProjectMilestonesClient({
     }
   };
 
+  const handleMilestoneCreated = (newMilestone: any) => {
+    // Add the new milestone with default structure
+    const milestoneWithCounts = {
+      ...newMilestone,
+      _count: {
+        issues: 0,
+      },
+      issues: [],
+    };
+    setMilestones([milestoneWithCounts, ...milestones]);
+  };
+
+  const handleMilestoneClick = (milestoneId: string) => {
+    if (selectedMilestoneId === milestoneId) {
+      setSelectedMilestoneId(null); // Deselect if clicking the same milestone
+    } else {
+      setSelectedMilestoneId(milestoneId);
+    }
+  };
+
+  const filteredMilestones = selectedMilestoneId
+    ? milestones.filter((m) => m.id === selectedMilestoneId)
+    : milestones;
+
   return (
     <>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">Milestones</h2>
-          <p className="mt-1 text-sm text-gray-600">
-            Track sprints and releases with milestones
-          </p>
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">Milestones</h2>
+            <p className="mt-1 text-sm text-gray-600">
+              Track sprints and releases with milestones
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {selectedMilestoneId && (
+              <Button
+                onClick={() => setSelectedMilestoneId(null)}
+                variant="outline"
+                size="sm"
+              >
+                Show All
+              </Button>
+            )}
+            <Button onClick={() => setIsCreateModalOpen(true)} size="sm">
+              <Plus className="mr-2 h-4 w-4" />
+              New Milestone
+            </Button>
+          </div>
         </div>
-        <Button onClick={() => setIsCreateModalOpen(true)} size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          New Milestone
-        </Button>
       </div>
 
       {milestones.length === 0 ? (
@@ -251,14 +313,16 @@ export function ProjectMilestonesClient({
         </div>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={milestones.map(m => m.id)} strategy={rectSortingStrategy}>
+          <SortableContext items={filteredMilestones.map(m => m.id)} strategy={rectSortingStrategy}>
             <div className="grid gap-4 md:grid-cols-2">
-              {milestones.map((milestone) => (
+              {filteredMilestones.map((milestone) => (
                 <SortableMilestoneCard
                   key={milestone.id}
                   milestone={milestone}
+                  isSelected={selectedMilestoneId === milestone.id}
                   onEdit={setEditingMilestone}
                   onDelete={setDeletingMilestone}
+                  onClick={() => handleMilestoneClick(milestone.id)}
                 />
               ))}
             </div>
@@ -270,6 +334,7 @@ export function ProjectMilestonesClient({
         projectId={projectId}
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
+        onMilestoneCreated={handleMilestoneCreated}
       />
 
       {editingMilestone && (

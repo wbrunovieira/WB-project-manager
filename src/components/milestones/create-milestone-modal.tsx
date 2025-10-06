@@ -31,12 +31,14 @@ interface CreateMilestoneModalProps {
   projectId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onMilestoneCreated?: (milestone: any) => void;
 }
 
 export function CreateMilestoneModal({
   projectId,
   open,
   onOpenChange,
+  onMilestoneCreated,
 }: CreateMilestoneModalProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -77,6 +79,11 @@ export function CreateMilestoneModal({
         title: "Milestone created",
         description: `${milestone.name} has been created successfully.`,
       });
+
+      // Call callback to update UI immediately
+      if (onMilestoneCreated) {
+        onMilestoneCreated(milestone);
+      }
 
       reset();
       onOpenChange(false);

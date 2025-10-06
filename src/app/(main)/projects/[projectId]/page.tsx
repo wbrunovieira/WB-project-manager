@@ -1,10 +1,9 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
-import { ProjectIssuesClient } from "@/components/projects/project-issues-client";
 import { ProjectDetailHeader } from "@/components/projects/project-detail-header";
 import { ProjectDates } from "@/components/projects/project-dates";
-import { ProjectMilestonesClient } from "@/components/milestones/project-milestones-client";
+import { ProjectContentClient } from "@/components/projects/project-content-client";
 
 export default async function ProjectDetailPage({
   params,
@@ -29,6 +28,7 @@ export default async function ProjectDetailPage({
         include: {
           status: true,
           assignee: true,
+          milestone: true,
           labels: {
             include: {
               label: true,
@@ -154,22 +154,14 @@ export default async function ProjectDetailPage({
         />
       </div>
 
-      {/* Milestones Section */}
-      <div className="mb-8">
-        <ProjectMilestonesClient
-          projectId={project.id}
-          milestones={milestones}
-        />
-      </div>
-
-      {/* Issues Section with New Issue Button */}
-      <ProjectIssuesClient
+      {/* Milestones and Issues Section */}
+      <ProjectContentClient
         projectId={project.id}
         issuesByStatus={issuesByStatus}
         totalIssues={totalIssues}
         statuses={statuses}
         users={users}
-        milestones={milestones.map((m) => ({ id: m.id, name: m.name }))}
+        milestones={milestones}
         workspaceId={project.workspaceId}
       />
     </div>
