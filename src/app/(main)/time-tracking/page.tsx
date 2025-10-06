@@ -62,19 +62,21 @@ export default async function TimeTrackingPage() {
   ]);
 
   return (
-    <div className="flex-1 space-y-6 p-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-100">Time Tracking</h1>
-        <p className="text-gray-300 mt-1">
-          View and analyze time spent on issues
-        </p>
-      </div>
+    <div className="min-h-screen bg-[#350459]">
+      <div className="flex-1 space-y-6 p-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-100">Time Tracking</h1>
+          <p className="text-gray-300 mt-1">
+            View and analyze time spent on issues
+          </p>
+        </div>
 
-      <TimeTrackingClient
-        projects={projects}
-        milestones={milestones}
-        labels={labels}
-      />
+        <TimeTrackingClient
+          projects={projects}
+          milestones={milestones}
+          labels={labels}
+        />
+      </div>
     </div>
   );
 }
