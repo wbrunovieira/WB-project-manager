@@ -26,6 +26,12 @@ export default async function MyIssuesPage() {
           name: true,
         },
       },
+      milestone: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
       assignee: {
         select: {
           id: true,
@@ -93,6 +99,22 @@ export default async function MyIssuesPage() {
     },
   });
 
+  // Get all milestones from workspace projects
+  const milestones = await prisma.milestone.findMany({
+    where: {
+      project: {
+        workspaceId,
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
   return (
     <div className="p-8">
       <MyIssuesClient
@@ -101,6 +123,7 @@ export default async function MyIssuesPage() {
         statuses={statuses}
         users={users}
         projects={projects}
+        milestones={milestones}
         workspaceId={workspaceId}
       />
     </div>

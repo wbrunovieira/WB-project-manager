@@ -12,6 +12,7 @@ interface MyIssuesClientProps {
   statuses: Array<{ id: string; name: string }>;
   users: Array<{ id: string; name: string | null; email: string }>;
   projects: Array<{ id: string; name: string }>;
+  milestones?: Array<{ id: string; name: string }>;
   workspaceId: string;
 }
 
@@ -21,6 +22,7 @@ export function MyIssuesClient({
   statuses,
   users,
   projects,
+  milestones,
   workspaceId,
 }: MyIssuesClientProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -107,6 +109,9 @@ export function MyIssuesClient({
                     Labels
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Milestone
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                     Project
                   </th>
                 </tr>
@@ -155,6 +160,15 @@ export function MyIssuesClient({
                       </div>
                     </td>
                     <td className="px-6 py-4">
+                      {issue.milestone ? (
+                        <span className="inline-flex items-center rounded-full bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700">
+                          {issue.milestone.name}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
                       {issue.project ? (
                         <Link
                           href={`/projects/${issue.project.id}`}
@@ -198,6 +212,9 @@ export function MyIssuesClient({
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                     Labels
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Milestone
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                     Assignee
@@ -248,6 +265,15 @@ export function MyIssuesClient({
                       </div>
                     </td>
                     <td className="px-6 py-4">
+                      {issue.milestone ? (
+                        <span className="inline-flex items-center rounded-full bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700">
+                          {issue.milestone.name}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
                       {issue.assignee ? (
                         <span className="text-sm text-gray-600">
                           {issue.assignee.name || issue.assignee.email}
@@ -268,6 +294,7 @@ export function MyIssuesClient({
         statuses={statuses}
         users={users}
         projects={projects}
+        milestones={milestones}
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
         workspaceId={workspaceId}

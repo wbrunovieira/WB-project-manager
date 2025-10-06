@@ -4,6 +4,7 @@ import { redirect, notFound } from "next/navigation";
 import { ProjectIssuesClient } from "@/components/projects/project-issues-client";
 import { ProjectDetailHeader } from "@/components/projects/project-detail-header";
 import { ProjectDates } from "@/components/projects/project-dates";
+import { ProjectMilestonesClient } from "@/components/milestones/project-milestones-client";
 
 export default async function ProjectDetailPage({
   params,
@@ -94,6 +95,26 @@ export default async function ProjectDetailPage({
     },
   });
 
+  // Get milestones for this project
+  const milestones = await prisma.milestone.findMany({
+    where: { projectId: project.id },
+    include: {
+      _count: {
+        select: {
+          issues: true,
+        },
+      },
+      issues: {
+        include: {
+          status: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
   return (
     <div className="p-8">
       {/* Header */}
@@ -132,6 +153,14 @@ export default async function ProjectDetailPage({
         />
       </div>
 
+      {/* Milestones Section */}
+      <div className="mb-8">
+        <ProjectMilestonesClient
+          projectId={project.id}
+          milestones={milestones}
+        />
+      </div>
+
       {/* Issues Section with New Issue Button */}
       <ProjectIssuesClient
         projectId={project.id}
@@ -139,6 +168,7 @@ export default async function ProjectDetailPage({
         totalIssues={totalIssues}
         statuses={statuses}
         users={users}
+        milestones={milestones.map((m) => ({ id: m.id, name: m.name }))}
         workspaceId={project.workspaceId}
       />
     </div>

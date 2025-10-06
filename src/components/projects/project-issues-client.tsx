@@ -13,6 +13,7 @@ interface ProjectIssuesClientProps {
   totalIssues: number;
   statuses: Array<{ id: string; name: string }>;
   users: Array<{ id: string; name: string | null; email: string }>;
+  milestones?: Array<{ id: string; name: string }>;
   workspaceId: string;
 }
 
@@ -22,6 +23,7 @@ export function ProjectIssuesClient({
   totalIssues,
   statuses,
   users,
+  milestones,
   workspaceId,
 }: ProjectIssuesClientProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -157,6 +159,7 @@ export function ProjectIssuesClient({
         statuses={statuses}
         users={users}
         projects={[]}
+        milestones={milestones}
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
         defaultProjectId={projectId}

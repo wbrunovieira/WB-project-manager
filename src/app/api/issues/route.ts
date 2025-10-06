@@ -10,6 +10,7 @@ const createIssueSchema = z.object({
   workspaceId: z.string(),
   statusId: z.string(),
   projectId: z.string().optional(),
+  milestoneId: z.string().optional(),
   assigneeId: z.string().optional(),
   priority: z.enum(["URGENT", "HIGH", "MEDIUM", "LOW", "NO_PRIORITY"]).optional(),
   labelIds: z.array(z.string()).optional(),

@@ -32,6 +32,7 @@ const createIssueSchema = z.object({
   priority: z.enum(["URGENT", "HIGH", "MEDIUM", "LOW", "NO_PRIORITY"]),
   assigneeId: z.string().optional(),
   projectId: z.string().optional(),
+  milestoneId: z.string().optional(),
 });
 
 type CreateIssueForm = z.infer<typeof createIssueSchema>;
@@ -40,6 +41,7 @@ interface CreateIssueModalProps {
   statuses: Array<{ id: string; name: string }>;
   users: Array<{ id: string; name: string | null; email: string }>;
   projects?: Array<{ id: string; name: string }>;
+  milestones?: Array<{ id: string; name: string }>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultProjectId?: string;
@@ -50,6 +52,7 @@ export function CreateIssueModal({
   statuses,
   users,
   projects = [],
+  milestones = [],
   open,
   onOpenChange,
   defaultProjectId,
@@ -124,6 +127,7 @@ export function CreateIssueModal({
           workspaceId,
           assigneeId: data.assigneeId || undefined,
           projectId: data.projectId || undefined,
+          milestoneId: data.milestoneId || undefined,
           labelIds: selectedLabelIds.length > 0 ? selectedLabelIds : undefined,
         }),
       });
@@ -240,23 +244,43 @@ export function CreateIssueModal({
             </div>
           </div>
 
-          {projects.length > 0 && (
-            <div className="space-y-2">
-              <Label htmlFor="projectId">Project (optional)</Label>
-              <select
-                id="projectId"
-                {...register("projectId")}
-                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">No project</option>
-                {projects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+          <div className="grid grid-cols-2 gap-4">
+            {projects.length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="projectId">Project (optional)</Label>
+                <select
+                  id="projectId"
+                  {...register("projectId")}
+                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">No project</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {milestones.length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="milestoneId">Milestone (optional)</Label>
+                <select
+                  id="milestoneId"
+                  {...register("milestoneId")}
+                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">No milestone</option>
+                  {milestones.map((milestone) => (
+                    <option key={milestone.id} value={milestone.id}>
+                      {milestone.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
 
           <div className="space-y-2">
             <Label>Labels (optional)</Label>
