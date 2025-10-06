@@ -414,53 +414,6 @@ export function TimeTrackingClient({
 
   return (
     <div className="space-y-6">
-      {/* View Mode Selector */}
-      <Card className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent">
-        <CardContent className="pt-6">
-          <div className="flex gap-2">
-            <button
-              onClick={() => setViewMode("project")}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                viewMode === "project"
-                  ? "bg-[#FFB947] text-gray-900"
-                  : "bg-[#792990]/10 text-gray-300 hover:bg-[#792990]/20"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <FolderKanban className="h-4 w-4" />
-                By Project
-              </div>
-            </button>
-            <button
-              onClick={() => setViewMode("milestone")}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                viewMode === "milestone"
-                  ? "bg-[#FFB947] text-gray-900"
-                  : "bg-[#792990]/10 text-gray-300 hover:bg-[#792990]/20"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                By Milestone
-              </div>
-            </button>
-            <button
-              onClick={() => setViewMode("label")}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                viewMode === "label"
-                  ? "bg-[#FFB947] text-gray-900"
-                  : "bg-[#792990]/10 text-gray-300 hover:bg-[#792990]/20"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Tag className="h-4 w-4" />
-                By Label
-              </div>
-            </button>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Period Analysis */}
       {!isLoading && timeData && (
         <div className="space-y-4">
@@ -725,6 +678,53 @@ export function TimeTrackingClient({
           </Card>
         </div>
       )}
+
+      {/* View Mode Selector */}
+      <Card className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent">
+        <CardContent className="pt-6">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setViewMode("project")}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                viewMode === "project"
+                  ? "bg-[#FFB947] text-gray-900"
+                  : "bg-[#792990]/10 text-gray-300 hover:bg-[#792990]/20"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <FolderKanban className="h-4 w-4" />
+                By Project
+              </div>
+            </button>
+            <button
+              onClick={() => setViewMode("milestone")}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                viewMode === "milestone"
+                  ? "bg-[#FFB947] text-gray-900"
+                  : "bg-[#792990]/10 text-gray-300 hover:bg-[#792990]/20"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                By Milestone
+              </div>
+            </button>
+            <button
+              onClick={() => setViewMode("label")}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                viewMode === "label"
+                  ? "bg-[#FFB947] text-gray-900"
+                  : "bg-[#792990]/10 text-gray-300 hover:bg-[#792990]/20"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Tag className="h-4 w-4" />
+                By Label
+              </div>
+            </button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Project View */}
       {!isLoading && viewMode === "project" && projectStats.length > 0 && (
