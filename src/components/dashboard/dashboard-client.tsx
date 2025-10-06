@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Circle, CheckCircle2, XCircle, ChevronDown } from "lucide-react";
+import { TimerButton } from "@/components/time-tracker/timer-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -131,6 +132,15 @@ export function DashboardClient({ issues, labels }: DashboardClientProps) {
                     </div>
 
                     <div className="flex items-center gap-3">
+                      {/* Timer Button */}
+                      <TimerButton
+                        issueId={issue.id}
+                        issueIdentifier={issue.identifier}
+                        issueTitle={issue.title}
+                        issueStatusType={issue.status.type}
+                        size="icon"
+                      />
+
                       {/* Status Badge */}
                       {groupBy !== "status" && (
                         <div className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium">

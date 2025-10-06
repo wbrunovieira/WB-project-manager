@@ -216,6 +216,7 @@ function SortableIssueCard({
             issueId={issue.id}
             issueIdentifier={issue.identifier}
             issueTitle={issue.title}
+            issueStatusType={issue.status.type}
             size="icon"
           />
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
