@@ -13,7 +13,7 @@ const createIssueSchema = z.object({
   milestoneId: z.string().optional(),
   assigneeId: z.string().optional(),
   priority: z.enum(["URGENT", "HIGH", "MEDIUM", "LOW", "NO_PRIORITY"]).optional(),
-  type: z.enum(["FEATURE", "MAINTENANCE", "BUG", "IMPROVEMENT"]).optional(),
+  type: z.enum(["FEATURE", "MAINTENANCE", "BUG", "IMPROVEMENT"]).default("FEATURE"),
   reportedAt: z.string().datetime().optional(), // ISO datetime string
   labelIds: z.array(z.string()).optional(),
 });
@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
 
     if (!validated.success) {
       const response = NextResponse.json(
-        { error: validated.error.errors[0].message },
+        { error: validated.error.errors[0]?.message || "Validation failed" },
         { status: 400 }
       );
       return withCors(response);
