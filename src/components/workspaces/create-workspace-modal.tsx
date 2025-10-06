@@ -114,7 +114,7 @@ export function CreateWorkspaceModal({
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Workspace name</Label>
+            <Label htmlFor="name" className="text-gray-300">Workspace name</Label>
             <Input
               id="name"
               placeholder="Acme Inc"
@@ -123,6 +123,7 @@ export function CreateWorkspaceModal({
                 register("name").onChange(e);
                 handleNameChange(e);
               }}
+              className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
             />
             {errors.name && (
               <p className="text-sm text-red-600">{errors.name.message}</p>
@@ -130,29 +131,31 @@ export function CreateWorkspaceModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="slug">Slug</Label>
+            <Label htmlFor="slug" className="text-gray-300">Slug</Label>
             <Input
               id="slug"
               placeholder="acme-inc"
               {...register("slug")}
+              className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
             />
             {errors.slug && (
               <p className="text-sm text-red-600">{errors.slug.message}</p>
             )}
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-400">
               Used in URLs. Only lowercase letters, numbers, and hyphens.
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="icon">Icon (optional)</Label>
+            <Label htmlFor="icon" className="text-gray-300">Icon (optional)</Label>
             <Input
               id="icon"
               placeholder="🚀"
               maxLength={2}
               {...register("icon")}
+              className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
             />
-            <p className="text-xs text-gray-500">Choose an emoji for your workspace.</p>
+            <p className="text-xs text-gray-400">Choose an emoji for your workspace.</p>
           </div>
 
           <DialogFooter>
@@ -161,10 +164,11 @@ export function CreateWorkspaceModal({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
+              className="bg-[#792990]/10 hover:bg-[#792990]/20 text-gray-300 border-[#792990]/30"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading} className="bg-[#FFB947] hover:bg-[#FFB947]/90 text-gray-900">
               {isLoading ? "Creating..." : "Create Workspace"}
             </Button>
           </DialogFooter>

@@ -222,12 +222,13 @@ export function CreateIssueModal({
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title" className="text-gray-300">Title</Label>
             <Input
               id="title"
               placeholder="Fix login bug"
               {...register("title")}
               autoFocus
+              className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
             />
             {errors.title && (
               <p className="text-sm text-red-600">{errors.title.message}</p>
@@ -235,21 +236,21 @@ export function CreateIssueModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Content</Label>
+            <Label htmlFor="description" className="text-gray-300">Content</Label>
             <textarea
               id="description"
               placeholder="Describe the issue in detail..."
               {...register("description")}
-              className="flex min-h-[120px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex min-h-[120px] w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="statusId">Status</Label>
+            <Label htmlFor="statusId" className="text-gray-300">Status</Label>
             <select
               id="statusId"
               {...register("statusId")}
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
             >
               {statuses.map((status) => (
                 <option key={status.id} value={status.id}>
@@ -264,11 +265,11 @@ export function CreateIssueModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
+              <Label htmlFor="priority" className="text-gray-300">Priority</Label>
               <select
                 id="priority"
                 {...register("priority")}
-                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
               >
                 <option value="NO_PRIORITY">No Priority</option>
                 <option value="LOW">Low</option>
@@ -279,11 +280,11 @@ export function CreateIssueModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="assigneeId">Assignee (optional)</Label>
+              <Label htmlFor="assigneeId" className="text-gray-300">Assignee (optional)</Label>
               <select
                 id="assigneeId"
                 {...register("assigneeId")}
-                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
               >
                 <option value="">Unassigned</option>
                 {users.map((user) => (
@@ -298,11 +299,11 @@ export function CreateIssueModal({
           <div className="grid grid-cols-2 gap-4">
             {projects.length > 0 && (
               <div className="space-y-2">
-                <Label htmlFor="projectId">Project (optional)</Label>
+                <Label htmlFor="projectId" className="text-gray-300">Project (optional)</Label>
                 <select
                   id="projectId"
                   {...register("projectId")}
-                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
                 >
                   <option value="">No project</option>
                   {projects.map((project) => (
@@ -316,11 +317,11 @@ export function CreateIssueModal({
 
             {milestones.length > 0 && (
               <div className="space-y-2">
-                <Label htmlFor="milestoneId">Milestone (optional)</Label>
+                <Label htmlFor="milestoneId" className="text-gray-300">Milestone (optional)</Label>
                 <select
                   id="milestoneId"
                   {...register("milestoneId")}
-                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
                 >
                   <option value="">No milestone</option>
                   {milestones.map((milestone) => (
@@ -334,7 +335,7 @@ export function CreateIssueModal({
           </div>
 
           <div className="space-y-2">
-            <Label>Labels (optional)</Label>
+            <Label className="text-gray-300">Labels (optional)</Label>
             <LabelSelector
               availableLabels={availableLabels}
               selectedLabelIds={selectedLabelIds}
@@ -350,11 +351,11 @@ export function CreateIssueModal({
                 type="checkbox"
                 checked={createAnother}
                 onChange={(e) => setCreateAnother(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="h-4 w-4 rounded border-[#792990]/30 accent-[#FFB947] focus:ring-[#FFB947]"
               />
               <label
                 htmlFor="createAnother"
-                className="text-sm font-medium text-gray-700 cursor-pointer"
+                className="text-sm font-medium text-gray-300 cursor-pointer"
               >
                 Create another
               </label>
@@ -365,10 +366,11 @@ export function CreateIssueModal({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 disabled={isLoading}
+                className="bg-[#792990]/10 hover:bg-[#792990]/20 text-gray-300 border-[#792990]/30"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading} className="bg-[#FFB947] hover:bg-[#FFB947]/90 text-gray-900">
                 {isLoading ? "Creating..." : "Create Issue"}
               </Button>
             </div>

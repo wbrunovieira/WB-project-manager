@@ -107,11 +107,11 @@ export function CreateProjectModal({
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="workspaceId">Workspace</Label>
+            <Label htmlFor="workspaceId" className="text-gray-300">Workspace</Label>
             <select
               id="workspaceId"
               {...register("workspaceId")}
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
             >
               {workspaces.map((workspace) => (
                 <option key={workspace.id} value={workspace.id}>
@@ -125,11 +125,12 @@ export function CreateProjectModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="name">Project name</Label>
+            <Label htmlFor="name" className="text-gray-300">Project name</Label>
             <Input
               id="name"
               placeholder="Product Launch Q1"
               {...register("name")}
+              className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
             />
             {errors.name && (
               <p className="text-sm text-red-600">{errors.name.message}</p>
@@ -137,20 +138,21 @@ export function CreateProjectModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description (optional)</Label>
+            <Label htmlFor="description" className="text-gray-300">Description (optional)</Label>
             <Input
               id="description"
               placeholder="Launch our new product features"
               {...register("description")}
+              className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
+            <Label htmlFor="status" className="text-gray-300">Status</Label>
             <select
               id="status"
               {...register("status")}
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
             >
               <option value="PLANNED">Planned</option>
               <option value="IN_PROGRESS">In Progress</option>
@@ -161,20 +163,22 @@ export function CreateProjectModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startDate">Start date (optional)</Label>
+              <Label htmlFor="startDate" className="text-gray-300">Start date (optional)</Label>
               <Input
                 id="startDate"
                 type="date"
                 {...register("startDate")}
+                className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="targetDate">Target date (optional)</Label>
+              <Label htmlFor="targetDate" className="text-gray-300">Target date (optional)</Label>
               <Input
                 id="targetDate"
                 type="date"
                 {...register("targetDate")}
+                className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
               />
             </div>
           </div>
@@ -185,10 +189,11 @@ export function CreateProjectModal({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
+              className="bg-[#792990]/10 hover:bg-[#792990]/20 text-gray-300 border-[#792990]/30"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading} className="bg-[#FFB947] hover:bg-[#FFB947]/90 text-gray-900">
               {isLoading ? "Creating..." : "Create Project"}
             </Button>
           </DialogFooter>
