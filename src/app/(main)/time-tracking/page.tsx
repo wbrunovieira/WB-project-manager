@@ -64,8 +64,8 @@ export default async function TimeTrackingPage() {
   return (
     <div className="flex-1 space-y-6 p-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Time Tracking</h1>
-        <p className="text-gray-600 mt-1">
+        <h1 className="text-3xl font-bold tracking-tight text-gray-100">Time Tracking</h1>
+        <p className="text-gray-300 mt-1">
           View and analyze time spent on issues
         </p>
       </div>

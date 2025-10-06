@@ -415,15 +415,15 @@ export function TimeTrackingClient({
   return (
     <div className="space-y-6">
       {/* View Mode Selector */}
-      <Card>
+      <Card className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent">
         <CardContent className="pt-6">
           <div className="flex gap-2">
             <button
               onClick={() => setViewMode("project")}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 viewMode === "project"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-[#FFB947] text-gray-900"
+                  : "bg-[#792990]/10 text-gray-300 hover:bg-[#792990]/20"
               }`}
             >
               <div className="flex items-center gap-2">
@@ -435,8 +435,8 @@ export function TimeTrackingClient({
               onClick={() => setViewMode("milestone")}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 viewMode === "milestone"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-[#FFB947] text-gray-900"
+                  : "bg-[#792990]/10 text-gray-300 hover:bg-[#792990]/20"
               }`}
             >
               <div className="flex items-center gap-2">
@@ -448,8 +448,8 @@ export function TimeTrackingClient({
               onClick={() => setViewMode("label")}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 viewMode === "label"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-[#FFB947] text-gray-900"
+                  : "bg-[#792990]/10 text-gray-300 hover:bg-[#792990]/20"
               }`}
             >
               <div className="flex items-center gap-2">
@@ -464,27 +464,27 @@ export function TimeTrackingClient({
       {/* Period Analysis */}
       {!isLoading && timeData && (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Time Analysis by Period</h2>
+          <h2 className="text-xl font-semibold text-gray-100">Time Analysis by Period</h2>
 
           <div className="grid grid-cols-3 gap-4">
             {/* Today */}
-            <Card>
+            <Card className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent hover:border-[#792990]/40 transition-colors">
               <CardContent className="pt-6">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="text-sm font-medium text-gray-600">Today</div>
+                    <div className="text-sm font-medium text-gray-300">Today</div>
                     <div className="flex items-center gap-1">
                       {todayComparison.percentChange > 0 ? (
                         <>
-                          <TrendingUp className="h-4 w-4 text-green-600" />
-                          <span className="text-sm font-semibold text-green-600">
+                          <TrendingUp className="h-4 w-4 text-green-400" />
+                          <span className="text-sm font-semibold text-green-400">
                             +{todayComparison.percentChange.toFixed(0)}%
                           </span>
                         </>
                       ) : todayComparison.percentChange < 0 ? (
                         <>
-                          <TrendingDown className="h-4 w-4 text-red-600" />
-                          <span className="text-sm font-semibold text-red-600">
+                          <TrendingDown className="h-4 w-4 text-red-400" />
+                          <span className="text-sm font-semibold text-red-400">
                             {todayComparison.percentChange.toFixed(0)}%
                           </span>
                         </>
@@ -496,21 +496,21 @@ export function TimeTrackingClient({
                       )}
                     </div>
                   </div>
-                  <div className="text-3xl font-bold text-gray-900">
+                  <div className="text-3xl font-bold text-gray-100">
                     {formatTime(todayStats.totalSeconds)}
                   </div>
-                  <div className="text-xs text-gray-500">vs yesterday: {formatTime(yesterdayStats.totalSeconds)}</div>
+                  <div className="text-xs text-gray-400">vs yesterday: {formatTime(yesterdayStats.totalSeconds)}</div>
 
                   {/* Breakdown */}
-                  <div className="space-y-2 pt-3 border-t">
-                    <div className="text-xs font-semibold text-gray-700 uppercase">Top Projects</div>
+                  <div className="space-y-2 pt-3 border-t border-[#792990]/20">
+                    <div className="text-xs font-semibold text-gray-300 uppercase">Top Projects</div>
                     {Array.from(todayStats.projectBreakdown.entries())
                       .sort((a, b) => b[1].seconds - a[1].seconds)
                       .slice(0, 3)
                       .map(([id, data]) => (
                         <div key={id} className="flex items-center justify-between text-xs">
-                          <span className="text-gray-600 truncate">{data.name}</span>
-                          <span className="font-medium text-gray-900">{formatTime(data.seconds)}</span>
+                          <span className="text-gray-300 truncate">{data.name}</span>
+                          <span className="font-medium text-gray-100">{formatTime(data.seconds)}</span>
                         </div>
                       ))}
                   </div>
@@ -519,23 +519,23 @@ export function TimeTrackingClient({
             </Card>
 
             {/* This Week */}
-            <Card>
+            <Card className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent hover:border-[#792990]/40 transition-colors">
               <CardContent className="pt-6">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="text-sm font-medium text-gray-600">This Week</div>
+                    <div className="text-sm font-medium text-gray-300">This Week</div>
                     <div className="flex items-center gap-1">
                       {weekComparison.percentChange > 0 ? (
                         <>
-                          <TrendingUp className="h-4 w-4 text-green-600" />
-                          <span className="text-sm font-semibold text-green-600">
+                          <TrendingUp className="h-4 w-4 text-green-400" />
+                          <span className="text-sm font-semibold text-green-400">
                             +{weekComparison.percentChange.toFixed(0)}%
                           </span>
                         </>
                       ) : weekComparison.percentChange < 0 ? (
                         <>
-                          <TrendingDown className="h-4 w-4 text-red-600" />
-                          <span className="text-sm font-semibold text-red-600">
+                          <TrendingDown className="h-4 w-4 text-red-400" />
+                          <span className="text-sm font-semibold text-red-400">
                             {weekComparison.percentChange.toFixed(0)}%
                           </span>
                         </>
@@ -547,21 +547,21 @@ export function TimeTrackingClient({
                       )}
                     </div>
                   </div>
-                  <div className="text-3xl font-bold text-gray-900">
+                  <div className="text-3xl font-bold text-gray-100">
                     {formatTime(thisWeekStats.totalSeconds)}
                   </div>
-                  <div className="text-xs text-gray-500">vs last week: {formatTime(lastWeekStats.totalSeconds)}</div>
+                  <div className="text-xs text-gray-400">vs last week: {formatTime(lastWeekStats.totalSeconds)}</div>
 
                   {/* Breakdown */}
-                  <div className="space-y-2 pt-3 border-t">
-                    <div className="text-xs font-semibold text-gray-700 uppercase">Top Milestones</div>
+                  <div className="space-y-2 pt-3 border-t border-[#792990]/20">
+                    <div className="text-xs font-semibold text-gray-300 uppercase">Top Milestones</div>
                     {Array.from(thisWeekStats.milestoneBreakdown.entries())
                       .sort((a, b) => b[1].seconds - a[1].seconds)
                       .slice(0, 3)
                       .map(([id, data]) => (
                         <div key={id} className="flex items-center justify-between text-xs">
-                          <span className="text-gray-600 truncate">{data.name}</span>
-                          <span className="font-medium text-gray-900">{formatTime(data.seconds)}</span>
+                          <span className="text-gray-300 truncate">{data.name}</span>
+                          <span className="font-medium text-gray-100">{formatTime(data.seconds)}</span>
                         </div>
                       ))}
                   </div>
@@ -570,23 +570,23 @@ export function TimeTrackingClient({
             </Card>
 
             {/* This Month */}
-            <Card>
+            <Card className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent hover:border-[#792990]/40 transition-colors">
               <CardContent className="pt-6">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="text-sm font-medium text-gray-600">This Month</div>
+                    <div className="text-sm font-medium text-gray-300">This Month</div>
                     <div className="flex items-center gap-1">
                       {monthComparison.percentChange > 0 ? (
                         <>
-                          <TrendingUp className="h-4 w-4 text-green-600" />
-                          <span className="text-sm font-semibold text-green-600">
+                          <TrendingUp className="h-4 w-4 text-green-400" />
+                          <span className="text-sm font-semibold text-green-400">
                             +{monthComparison.percentChange.toFixed(0)}%
                           </span>
                         </>
                       ) : monthComparison.percentChange < 0 ? (
                         <>
-                          <TrendingDown className="h-4 w-4 text-red-600" />
-                          <span className="text-sm font-semibold text-red-600">
+                          <TrendingDown className="h-4 w-4 text-red-400" />
+                          <span className="text-sm font-semibold text-red-400">
                             {monthComparison.percentChange.toFixed(0)}%
                           </span>
                         </>
@@ -598,14 +598,14 @@ export function TimeTrackingClient({
                       )}
                     </div>
                   </div>
-                  <div className="text-3xl font-bold text-gray-900">
+                  <div className="text-3xl font-bold text-gray-100">
                     {formatTime(thisMonthStats.totalSeconds)}
                   </div>
-                  <div className="text-xs text-gray-500">vs last month: {formatTime(lastMonthStats.totalSeconds)}</div>
+                  <div className="text-xs text-gray-400">vs last month: {formatTime(lastMonthStats.totalSeconds)}</div>
 
                   {/* Breakdown */}
-                  <div className="space-y-2 pt-3 border-t">
-                    <div className="text-xs font-semibold text-gray-700 uppercase">Top Labels</div>
+                  <div className="space-y-2 pt-3 border-t border-[#792990]/20">
+                    <div className="text-xs font-semibold text-gray-300 uppercase">Top Labels</div>
                     {Array.from(thisMonthStats.labelBreakdown.entries())
                       .sort((a, b) => b[1].seconds - a[1].seconds)
                       .slice(0, 3)
@@ -620,7 +620,7 @@ export function TimeTrackingClient({
                           >
                             {data.name}
                           </span>
-                          <span className="font-medium text-gray-900">{formatTime(data.seconds)}</span>
+                          <span className="font-medium text-gray-100">{formatTime(data.seconds)}</span>
                         </div>
                       ))}
                   </div>
@@ -631,54 +631,54 @@ export function TimeTrackingClient({
 
           {/* Status Breakdown by Period */}
           <div className="grid grid-cols-3 gap-4">
-            <Card>
+            <Card className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent hover:border-[#792990]/40 transition-colors">
               <CardContent className="pt-6">
                 <div className="space-y-2">
-                  <div className="text-xs text-gray-600">Today Status</div>
+                  <div className="text-xs text-gray-300">Today Status</div>
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-green-600">✓ Completed</span>
-                      <span className="font-semibold">{formatTime(todayStats.doneSeconds)}</span>
+                      <span className="text-green-400">✓ Completed</span>
+                      <span className="font-semibold text-gray-100">{formatTime(todayStats.doneSeconds)}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-blue-600">→ In Progress</span>
-                      <span className="font-semibold">{formatTime(todayStats.inProgressSeconds)}</span>
+                      <span className="text-[#FFB947]">→ In Progress</span>
+                      <span className="font-semibold text-gray-100">{formatTime(todayStats.inProgressSeconds)}</span>
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent hover:border-[#792990]/40 transition-colors">
               <CardContent className="pt-6">
                 <div className="space-y-2">
-                  <div className="text-xs text-gray-600">Week Status</div>
+                  <div className="text-xs text-gray-300">Week Status</div>
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-green-600">✓ Completed</span>
-                      <span className="font-semibold">{formatTime(thisWeekStats.doneSeconds)}</span>
+                      <span className="text-green-400">✓ Completed</span>
+                      <span className="font-semibold text-gray-100">{formatTime(thisWeekStats.doneSeconds)}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-blue-600">→ In Progress</span>
-                      <span className="font-semibold">{formatTime(thisWeekStats.inProgressSeconds)}</span>
+                      <span className="text-[#FFB947]">→ In Progress</span>
+                      <span className="font-semibold text-gray-100">{formatTime(thisWeekStats.inProgressSeconds)}</span>
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent hover:border-[#792990]/40 transition-colors">
               <CardContent className="pt-6">
                 <div className="space-y-2">
-                  <div className="text-xs text-gray-600">Month Status</div>
+                  <div className="text-xs text-gray-300">Month Status</div>
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-green-600">✓ Completed</span>
-                      <span className="font-semibold">{formatTime(thisMonthStats.doneSeconds)}</span>
+                      <span className="text-green-400">✓ Completed</span>
+                      <span className="font-semibold text-gray-100">{formatTime(thisMonthStats.doneSeconds)}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-blue-600">→ In Progress</span>
-                      <span className="font-semibold">{formatTime(thisMonthStats.inProgressSeconds)}</span>
+                      <span className="text-[#FFB947]">→ In Progress</span>
+                      <span className="font-semibold text-gray-100">{formatTime(thisMonthStats.inProgressSeconds)}</span>
                     </div>
                   </div>
                 </div>
@@ -691,18 +691,18 @@ export function TimeTrackingClient({
       {/* Summary */}
       {!isLoading && timeData && (
         <div className="grid grid-cols-3 gap-4">
-          <Card>
+          <Card className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent hover:border-[#792990]/40 transition-colors">
             <CardContent className="pt-6">
-              <div className="text-sm text-gray-600 mb-1">Total Time</div>
-              <div className="text-3xl font-bold text-gray-900">
+              <div className="text-sm text-gray-300 mb-1">Total Time</div>
+              <div className="text-3xl font-bold text-gray-100">
                 {formatTime(timeData.totalSeconds)}
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent hover:border-[#792990]/40 transition-colors">
             <CardContent className="pt-6">
-              <div className="text-sm text-gray-600 mb-1">Completed</div>
-              <div className="text-3xl font-bold text-green-600">
+              <div className="text-sm text-gray-300 mb-1">Completed</div>
+              <div className="text-3xl font-bold text-green-400">
                 {formatTime(
                   timeData.groupedByIssue
                     .filter((g) => g.issue.status.type === "DONE")
@@ -711,10 +711,10 @@ export function TimeTrackingClient({
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent hover:border-[#792990]/40 transition-colors">
             <CardContent className="pt-6">
-              <div className="text-sm text-gray-600 mb-1">In Progress</div>
-              <div className="text-3xl font-bold text-blue-600">
+              <div className="text-sm text-gray-300 mb-1">In Progress</div>
+              <div className="text-3xl font-bold text-[#FFB947]">
                 {formatTime(
                   timeData.groupedByIssue
                     .filter((g) => g.issue.status.type === "IN_PROGRESS")
@@ -730,8 +730,8 @@ export function TimeTrackingClient({
       {!isLoading && viewMode === "project" && projectStats.length > 0 && (
         <div className="space-y-4">
           {projectStats.map((project) => (
-            <Card key={project.projectId}>
-              <CardHeader className="cursor-pointer hover:bg-gray-50" onClick={() => toggleSection(project.projectId)}>
+            <Card key={project.projectId} className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent hover:border-[#792990]/40 transition-colors">
+              <CardHeader className="cursor-pointer hover:from-[#792990]/10 hover:to-[#792990]/5 transition-all" onClick={() => toggleSection(project.projectId)}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {expandedSections.has(project.projectId) ? (
@@ -740,15 +740,15 @@ export function TimeTrackingClient({
                       <ChevronRight className="h-5 w-5 text-gray-400" />
                     )}
                     <div>
-                      <CardTitle className="text-xl">{project.projectName}</CardTitle>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
+                      <CardTitle className="text-xl text-gray-100">{project.projectName}</CardTitle>
+                      <div className="flex items-center gap-4 mt-1 text-sm text-gray-300">
                         <span>{project.issues.length} issues</span>
-                        <span className="text-green-600">✓ {formatTime(project.doneSeconds)}</span>
-                        <span className="text-blue-600">→ {formatTime(project.inProgressSeconds)}</span>
+                        <span className="text-green-400">✓ {formatTime(project.doneSeconds)}</span>
+                        <span className="text-[#FFB947]">→ {formatTime(project.inProgressSeconds)}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="text-2xl font-bold text-gray-900">
+                  <div className="text-2xl font-bold text-gray-100">
                     {formatTime(project.totalSeconds)}
                   </div>
                 </div>
@@ -758,23 +758,23 @@ export function TimeTrackingClient({
                 <CardContent>
                   {/* Milestones */}
                   <div className="space-y-3 mb-6">
-                    <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                    <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
                       By Milestone
                     </h3>
                     {Array.from(project.milestones.values()).map((milestone) => (
                       <div
                         key={milestone.milestoneId}
-                        className="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-gray-50"
+                        className="flex items-center justify-between p-3 rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent hover:border-[#792990]/40 transition-colors"
                       >
                         <div>
-                          <div className="font-medium text-gray-900">{milestone.milestoneName}</div>
-                          <div className="flex items-center gap-3 mt-1 text-xs text-gray-600">
+                          <div className="font-medium text-gray-100">{milestone.milestoneName}</div>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-gray-300">
                             <span>{milestone.issues.length} issues</span>
-                            <span className="text-green-600">✓ {formatTime(milestone.doneSeconds)}</span>
-                            <span className="text-blue-600">→ {formatTime(milestone.inProgressSeconds)}</span>
+                            <span className="text-green-400">✓ {formatTime(milestone.doneSeconds)}</span>
+                            <span className="text-[#FFB947]">→ {formatTime(milestone.inProgressSeconds)}</span>
                           </div>
                         </div>
-                        <div className="text-xl font-bold text-gray-900">
+                        <div className="text-xl font-bold text-gray-100">
                           {formatTime(milestone.totalSeconds)}
                         </div>
                       </div>
@@ -783,13 +783,13 @@ export function TimeTrackingClient({
 
                   {/* Labels */}
                   <div className="space-y-3">
-                    <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                    <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
                       By Label
                     </h3>
                     {Array.from(project.labels.values()).map((label) => (
                       <div
                         key={label.labelId}
-                        className="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-gray-50"
+                        className="flex items-center justify-between p-3 rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent hover:border-[#792990]/40 transition-colors"
                       >
                         <div>
                           <div className="flex items-center gap-2">
@@ -804,13 +804,13 @@ export function TimeTrackingClient({
                               {label.labelName}
                             </span>
                           </div>
-                          <div className="flex items-center gap-3 mt-1 text-xs text-gray-600">
+                          <div className="flex items-center gap-3 mt-1 text-xs text-gray-300">
                             <span>{label.issues.length} issues</span>
-                            <span className="text-green-600">✓ {formatTime(label.doneSeconds)}</span>
-                            <span className="text-blue-600">→ {formatTime(label.inProgressSeconds)}</span>
+                            <span className="text-green-400">✓ {formatTime(label.doneSeconds)}</span>
+                            <span className="text-[#FFB947]">→ {formatTime(label.inProgressSeconds)}</span>
                           </div>
                         </div>
-                        <div className="text-xl font-bold text-gray-900">
+                        <div className="text-xl font-bold text-gray-100">
                           {formatTime(label.totalSeconds)}
                         </div>
                       </div>
@@ -828,19 +828,19 @@ export function TimeTrackingClient({
         <div className="space-y-4">
           {projectStats.map((project) =>
             Array.from(project.milestones.values()).map((milestone) => (
-              <Card key={`${project.projectId}-${milestone.milestoneId}`}>
+              <Card key={`${project.projectId}-${milestone.milestoneId}`} className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent hover:border-[#792990]/40 transition-colors">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle className="text-xl">{milestone.milestoneName}</CardTitle>
-                      <div className="flex items-center gap-3 mt-1 text-sm text-gray-600">
-                        <span className="text-gray-500">{project.projectName}</span>
+                      <CardTitle className="text-xl text-gray-100">{milestone.milestoneName}</CardTitle>
+                      <div className="flex items-center gap-3 mt-1 text-sm text-gray-300">
+                        <span className="text-gray-400">{project.projectName}</span>
                         <span>{milestone.issues.length} issues</span>
-                        <span className="text-green-600">✓ {formatTime(milestone.doneSeconds)}</span>
-                        <span className="text-blue-600">→ {formatTime(milestone.inProgressSeconds)}</span>
+                        <span className="text-green-400">✓ {formatTime(milestone.doneSeconds)}</span>
+                        <span className="text-[#FFB947]">→ {formatTime(milestone.inProgressSeconds)}</span>
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900">
+                    <div className="text-2xl font-bold text-gray-100">
                       {formatTime(milestone.totalSeconds)}
                     </div>
                   </div>
@@ -875,7 +875,7 @@ export function TimeTrackingClient({
             return Array.from(allLabels.values())
               .sort((a, b) => b.label.totalSeconds - a.label.totalSeconds)
               .map(({ label, projects }) => (
-                <Card key={label.labelId}>
+                <Card key={label.labelId} className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent hover:border-[#792990]/40 transition-colors">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div>
@@ -891,13 +891,13 @@ export function TimeTrackingClient({
                             {label.labelName}
                           </span>
                         </div>
-                        <div className="flex items-center gap-3 text-sm text-gray-600">
+                        <div className="flex items-center gap-3 text-sm text-gray-300">
                           <span>{[...new Set(projects)].length} projects</span>
-                          <span className="text-green-600">✓ {formatTime(label.doneSeconds)}</span>
-                          <span className="text-blue-600">→ {formatTime(label.inProgressSeconds)}</span>
+                          <span className="text-green-400">✓ {formatTime(label.doneSeconds)}</span>
+                          <span className="text-[#FFB947]">→ {formatTime(label.inProgressSeconds)}</span>
                         </div>
                       </div>
-                      <div className="text-2xl font-bold text-gray-900">
+                      <div className="text-2xl font-bold text-gray-100">
                         {formatTime(label.totalSeconds)}
                       </div>
                     </div>
@@ -909,18 +909,18 @@ export function TimeTrackingClient({
       )}
 
       {!isLoading && (!timeData || timeData.groupedByIssue.length === 0) && (
-        <Card>
+        <Card className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent">
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Clock className="h-16 w-16 text-gray-300 mb-4" />
-            <p className="text-gray-600 text-center">No time entries found</p>
+            <Clock className="h-16 w-16 text-gray-400 mb-4" />
+            <p className="text-gray-300 text-center">No time entries found</p>
           </CardContent>
         </Card>
       )}
 
       {isLoading && (
-        <Card>
+        <Card className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent">
           <CardContent className="flex items-center justify-center py-12">
-            <div className="text-gray-600">Loading...</div>
+            <div className="text-gray-300">Loading...</div>
           </CardContent>
         </Card>
       )}
