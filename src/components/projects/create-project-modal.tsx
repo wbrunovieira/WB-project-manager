@@ -22,6 +22,7 @@ const createProjectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
   description: z.string().optional(),
   workspaceId: z.string().min(1, "Workspace is required"),
+  type: z.enum(["DEVELOPMENT", "MAINTENANCE"]),
   status: z.enum(["PLANNED", "IN_PROGRESS", "COMPLETED", "CANCELED"]),
   startDate: z.string().optional(),
   targetDate: z.string().optional(),
@@ -52,6 +53,7 @@ export function CreateProjectModal({
   } = useForm<CreateProjectForm>({
     resolver: zodResolver(createProjectSchema),
     defaultValues: {
+      type: "DEVELOPMENT",
       status: "PLANNED",
       workspaceId: workspaces[0]?.id || "",
     },
@@ -147,18 +149,38 @@ export function CreateProjectModal({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="status" className="text-gray-300">Status</Label>
-            <select
-              id="status"
-              {...register("status")}
-              className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
-            >
-              <option value="PLANNED">Planned</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="CANCELED">Canceled</option>
-            </select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="type" className="text-gray-300">Type</Label>
+              <select
+                id="type"
+                {...register("type")}
+                className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
+              >
+                <option value="DEVELOPMENT">Development</option>
+                <option value="MAINTENANCE">Maintenance</option>
+              </select>
+              {errors.type && (
+                <p className="text-sm text-red-600">{errors.type.message}</p>
+              )}
+              <p className="text-xs text-gray-400">
+                Maintenance projects track SLA and resolution times
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="status" className="text-gray-300">Status</Label>
+              <select
+                id="status"
+                {...register("status")}
+                className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
+              >
+                <option value="PLANNED">Planned</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELED">Canceled</option>
+              </select>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

@@ -8,6 +8,7 @@ const createProjectSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   workspaceId: z.string(),
+  type: z.enum(["DEVELOPMENT", "MAINTENANCE"]).optional(),
   status: z.enum(["PLANNED", "IN_PROGRESS", "COMPLETED", "CANCELED"]).optional(),
   startDate: z.string().optional(),
   targetDate: z.string().optional(),
