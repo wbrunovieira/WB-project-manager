@@ -13,6 +13,8 @@ const createIssueSchema = z.object({
   milestoneId: z.string().optional(),
   assigneeId: z.string().optional(),
   priority: z.enum(["URGENT", "HIGH", "MEDIUM", "LOW", "NO_PRIORITY"]).optional(),
+  type: z.enum(["FEATURE", "MAINTENANCE", "BUG", "IMPROVEMENT"]).optional(),
+  reportedAt: z.string().datetime().optional(), // ISO datetime string
   labelIds: z.array(z.string()).optional(),
 });
 
@@ -139,7 +141,7 @@ export async function POST(req: NextRequest) {
       return withCors(response);
     }
 
-    const { workspaceId, labelIds, ...data } = validated.data;
+    const { workspaceId, labelIds, reportedAt, ...data } = validated.data;
 
     // Check if user has access to workspace
     const workspaceMember = await prisma.workspaceMember.findUnique({
@@ -185,6 +187,7 @@ export async function POST(req: NextRequest) {
         workspaceId,
         identifier,
         creatorId: session.user.id,
+        reportedAt: reportedAt ? new Date(reportedAt) : undefined,
         labels: labelIds
           ? {
               create: labelIds.map((labelId) => ({

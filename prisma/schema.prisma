@@ -75,17 +75,20 @@ model Project {
   name        String
   description String?
   status      ProjectStatus @default(PLANNED)
+  type        ProjectType   @default(DEVELOPMENT)
   startDate   DateTime?
   targetDate  DateTime?
   workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   workspaceId String
   issues      Issue[]
   milestones  Milestone[]
+  slaConfig   SLAConfig[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
   @@index([workspaceId])
   @@index([status])
+  @@index([type])
 }
 
 model Milestone {
@@ -110,34 +113,45 @@ enum ProjectStatus {
   CANCELED
 }
 
+enum ProjectType {
+  DEVELOPMENT
+  MAINTENANCE
+}
+
 // ============================================
 // ISSUE MODELS
 // ============================================
 
 model Issue {
-  id          String       @id @default(cuid())
-  identifier  String
-  title       String
-  description String?
-  priority    Priority     @default(NO_PRIORITY)
-  status      Status       @relation(fields: [statusId], references: [id])
-  statusId    String
-  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  workspaceId String
-  project     Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  projectId   String?
-  milestone   Milestone?   @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
-  milestoneId String?
-  creator     User         @relation("IssueCreator", fields: [creatorId], references: [id])
-  creatorId   String
-  assignee    User?        @relation("IssueAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
-  assigneeId  String?
-  labels      IssueLabel[]
-  comments    Comment[]
-  timeEntries TimeEntry[]
-  sortOrder   Float        @default(0)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id                     String       @id @default(cuid())
+  identifier             String
+  title                  String
+  description            String?
+  type                   IssueType    @default(FEATURE)
+  priority               Priority     @default(NO_PRIORITY)
+  status                 Status       @relation(fields: [statusId], references: [id])
+  statusId               String
+  workspace              Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId            String
+  project                Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  projectId              String?
+  milestone              Milestone?   @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  milestoneId            String?
+  creator                User         @relation("IssueCreator", fields: [creatorId], references: [id])
+  creatorId              String
+  assignee               User?        @relation("IssueAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  assigneeId             String?
+  labels                 IssueLabel[]
+  comments               Comment[]
+  timeEntries            TimeEntry[]
+  sortOrder              Float        @default(0)
+  reportedAt             DateTime?    // When the issue was actually reported (editable, defaults to createdAt)
+  firstResponseAt        DateTime?    // When first moved to IN_PROGRESS
+  resolvedAt             DateTime?    // When marked as DONE
+  resolutionTimeMinutes  Int?         // Business hours between reportedAt/createdAt and resolvedAt
+  reopenCount            Int          @default(0) // Number of times reopened after DONE
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
 
   @@unique([workspaceId, identifier])
   @@index([workspaceId])
@@ -147,6 +161,8 @@ model Issue {
   @@index([milestoneId])
   @@index([creatorId])
   @@index([priority])
+  @@index([type])
+  @@index([resolvedAt])
 }
 
 enum Priority {
@@ -155,6 +171,13 @@ enum Priority {
   MEDIUM
   LOW
   NO_PRIORITY
+}
+
+enum IssueType {
+  FEATURE
+  MAINTENANCE
+  BUG
+  IMPROVEMENT
 }
 
 model Status {
@@ -243,4 +266,25 @@ model TimeEntry {
   @@index([issueId])
   @@index([userId])
   @@index([startTime])
+}
+
+// ============================================
+// SLA CONFIGURATION
+// ============================================
+
+model SLAConfig {
+  id                        String    @id @default(cuid())
+  project                   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId                 String
+  issueType                 IssueType
+  priority                  Priority
+  firstResponseTimeHours    Int       // Hours for first response (IN_PROGRESS)
+  resolutionTimeHours       Int       // Hours for resolution (DONE)
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+
+  @@unique([projectId, issueType, priority])
+  @@index([projectId])
+  @@index([issueType])
+  @@index([priority])
 }

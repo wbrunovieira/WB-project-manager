@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withCors } from "@/lib/api-auth";
 import { auth } from "@/lib/auth";
 import { z } from "zod";
+import { calculateBusinessHours } from "@/lib/business-hours";
 
 const updateIssueSchema = z.object({
   title: z.string().min(1).optional(),
@@ -142,6 +143,9 @@ export async function PATCH(
 
     const issue = await prisma.issue.findUnique({
       where: { id: params.id },
+      include: {
+        status: true,
+      },
     });
 
     if (!issue) {
@@ -172,11 +176,48 @@ export async function PATCH(
 
     const { labelIds, ...data } = validated.data;
 
+    // Check if status is changing
+    let additionalData: any = {};
+    if (data.statusId && data.statusId !== issue.statusId) {
+      const newStatus = await prisma.status.findUnique({
+        where: { id: data.statusId },
+      });
+
+      if (newStatus) {
+        const oldStatusType = issue.status.type;
+        const newStatusType = newStatus.type;
+
+        // When moving to IN_PROGRESS for the first time
+        if (newStatusType === "IN_PROGRESS" && !issue.firstResponseAt) {
+          additionalData.firstResponseAt = new Date();
+        }
+
+        // When moving to DONE
+        if (newStatusType === "DONE" && oldStatusType !== "DONE") {
+          const now = new Date();
+          additionalData.resolvedAt = now;
+
+          // Calculate resolution time in business hours
+          const startDate = issue.reportedAt || issue.createdAt;
+          const resolutionTimeMinutes = calculateBusinessHours(startDate, now);
+          additionalData.resolutionTimeMinutes = resolutionTimeMinutes;
+        }
+
+        // When reopening (moving from DONE to any other status)
+        if (oldStatusType === "DONE" && newStatusType !== "DONE") {
+          additionalData.reopenCount = issue.reopenCount + 1;
+          additionalData.resolvedAt = null;
+          additionalData.resolutionTimeMinutes = null;
+        }
+      }
+    }
+
     // Update issue
     const updated = await prisma.issue.update({
       where: { id: params.id },
       data: {
         ...data,
+        ...additionalData,
         ...(labelIds !== undefined && {
           labels: {
             deleteMany: {},
