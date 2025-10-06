@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 const createProjectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
   description: z.string().optional(),
+  workspaceId: z.string().min(1, "Workspace is required"),
   status: z.enum(["PLANNED", "IN_PROGRESS", "COMPLETED", "CANCELED"]),
   startDate: z.string().optional(),
   targetDate: z.string().optional(),
@@ -29,13 +30,13 @@ const createProjectSchema = z.object({
 type CreateProjectForm = z.infer<typeof createProjectSchema>;
 
 interface CreateProjectModalProps {
-  workspaceId: string;
+  workspaces: Array<{ id: string; name: string }>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function CreateProjectModal({
-  workspaceId,
+  workspaces,
   open,
   onOpenChange,
 }: CreateProjectModalProps) {
@@ -52,6 +53,7 @@ export function CreateProjectModal({
     resolver: zodResolver(createProjectSchema),
     defaultValues: {
       status: "PLANNED",
+      workspaceId: workspaces[0]?.id || "",
     },
   });
 
@@ -64,10 +66,7 @@ export function CreateProjectModal({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...data,
-          workspaceId,
-        }),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
@@ -107,6 +106,24 @@ export function CreateProjectModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="workspaceId">Workspace</Label>
+            <select
+              id="workspaceId"
+              {...register("workspaceId")}
+              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {workspaces.map((workspace) => (
+                <option key={workspace.id} value={workspace.id}>
+                  {workspace.name}
+                </option>
+              ))}
+            </select>
+            {errors.workspaceId && (
+              <p className="text-sm text-red-600">{errors.workspaceId.message}</p>
+            )}
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="name">Project name</Label>
             <Input

@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { CreateProjectModal } from "./create-project-modal";
 
 interface ProjectsHeaderProps {
-  workspaceId: string;
+  workspaces: Array<{ id: string; name: string }>;
   projectCount: number;
 }
 
-export function ProjectsHeader({ workspaceId, projectCount }: ProjectsHeaderProps) {
+export function ProjectsHeader({ workspaces, projectCount }: ProjectsHeaderProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   return (
@@ -30,7 +30,7 @@ export function ProjectsHeader({ workspaceId, projectCount }: ProjectsHeaderProp
       </div>
 
       <CreateProjectModal
-        workspaceId={workspaceId}
+        workspaces={workspaces}
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
       />

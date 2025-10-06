@@ -11,7 +11,7 @@ export default async function ProjectsPage() {
     redirect("/login");
   }
 
-  // Get user's workspaces
+  // Get user's workspaces with projects
   const workspaceMemberships = await prisma.workspaceMember.findMany({
     where: {
       userId: session.user.id,
@@ -34,15 +34,42 @@ export default async function ProjectsPage() {
         },
       },
     },
+    orderBy: {
+      workspace: {
+        name: "asc",
+      },
+    },
   });
 
-  const projects = workspaceMemberships.flatMap((wm) => wm.workspace.projects);
-  const workspaceId = workspaceMemberships[0]?.workspaceId || "";
+  // Group projects by workspace
+  const workspacesWithProjects = workspaceMemberships.map((wm) => ({
+    id: wm.workspaceId,
+    name: wm.workspace.name,
+    icon: wm.workspace.icon,
+    projects: wm.workspace.projects.map((p) => ({
+      ...p,
+      workspace: {
+        id: wm.workspace.id,
+        name: wm.workspace.name,
+        icon: wm.workspace.icon,
+      },
+    })),
+  }));
+
+  const workspaces = workspaceMemberships.map((wm) => ({
+    id: wm.workspaceId,
+    name: wm.workspace.name,
+  }));
+
+  const totalProjects = workspacesWithProjects.reduce(
+    (sum, ws) => sum + ws.projects.length,
+    0
+  );
 
   return (
     <div className="p-8">
-      <ProjectsHeader workspaceId={workspaceId} projectCount={projects.length} />
-      <ProjectsListClient projects={projects} />
+      <ProjectsHeader workspaces={workspaces} projectCount={totalProjects} />
+      <ProjectsListClient workspacesWithProjects={workspacesWithProjects} />
     </div>
   );
 }

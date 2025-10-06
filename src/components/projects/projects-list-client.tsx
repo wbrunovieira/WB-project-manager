@@ -15,6 +15,11 @@ interface Project {
   status: string;
   startDate?: Date | null;
   targetDate?: Date | null;
+  workspace: {
+    id: string;
+    name: string;
+    icon: string | null;
+  };
   issues: Array<{
     status: {
       type: string;
@@ -22,15 +27,27 @@ interface Project {
   }>;
 }
 
-interface ProjectsListClientProps {
+interface WorkspaceWithProjects {
+  id: string;
+  name: string;
+  icon: string | null;
   projects: Project[];
 }
 
-export function ProjectsListClient({ projects }: ProjectsListClientProps) {
+interface ProjectsListClientProps {
+  workspacesWithProjects: WorkspaceWithProjects[];
+}
+
+export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClientProps) {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
 
-  if (projects.length === 0) {
+  const totalProjects = workspacesWithProjects.reduce(
+    (sum, ws) => sum + ws.projects.length,
+    0
+  );
+
+  if (totalProjects === 0) {
     return (
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-12 text-center">
         <p className="text-gray-600">No projects yet</p>
@@ -40,8 +57,24 @@ export function ProjectsListClient({ projects }: ProjectsListClientProps) {
 
   return (
     <>
-      <div className="grid gap-4">
-        {projects.map((project) => {
+      <div className="space-y-8">
+        {workspacesWithProjects.map((workspace) => {
+          if (workspace.projects.length === 0) return null;
+
+          return (
+            <div key={workspace.id}>
+              <div className="mb-4 flex items-center gap-2">
+                <span className="text-2xl">{workspace.icon || "🏢"}</span>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {workspace.name}
+                </h2>
+                <span className="text-sm text-gray-500">
+                  ({workspace.projects.length} project{workspace.projects.length !== 1 ? "s" : ""})
+                </span>
+              </div>
+
+              <div className="grid gap-4">
+                {workspace.projects.map((project) => {
           const totalIssues = project.issues.length;
           const completedIssues = project.issues.filter(
             (issue) => issue.status.type === "DONE"
@@ -152,6 +185,10 @@ export function ProjectsListClient({ projects }: ProjectsListClientProps) {
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
+              </div>
+            </div>
+          );
+        })}
               </div>
             </div>
           );
