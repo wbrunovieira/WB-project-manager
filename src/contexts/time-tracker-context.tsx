@@ -36,6 +36,7 @@ interface TimeTrackerContextType {
   fetchActiveEntries: () => Promise<void>;
   getElapsedTime: (entryId: string) => number;
   isIssueTracking: (issueId: string) => boolean;
+  lastUpdate: number;
 }
 
 const TimeTrackerContext = createContext<TimeTrackerContextType | undefined>(undefined);
@@ -43,6 +44,7 @@ const TimeTrackerContext = createContext<TimeTrackerContextType | undefined>(und
 export function TimeTrackerProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [activeEntries, setActiveEntries] = useState<TimeEntryWithElapsed[]>([]);
+  const [lastUpdate, setLastUpdate] = useState(Date.now());
 
   const fetchActiveEntries = useCallback(async () => {
     try {
@@ -101,6 +103,7 @@ export function TimeTrackerProvider({ children }: { children: React.ReactNode })
       }
 
       await fetchActiveEntries();
+      setLastUpdate(Date.now());
       router.refresh();
     } catch (error) {
       console.error("Error starting timer:", error);
@@ -122,6 +125,7 @@ export function TimeTrackerProvider({ children }: { children: React.ReactNode })
       }
 
       await fetchActiveEntries();
+      setLastUpdate(Date.now());
       router.refresh();
     } catch (error) {
       console.error("Error stopping timer:", error);
@@ -148,6 +152,7 @@ export function TimeTrackerProvider({ children }: { children: React.ReactNode })
         fetchActiveEntries,
         getElapsedTime,
         isIssueTracking,
+        lastUpdate,
       }}
     >
       {children}

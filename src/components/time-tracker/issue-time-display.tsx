@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Clock } from "lucide-react";
+import { useTimeTracker } from "@/contexts/time-tracker-context";
 
 interface IssueTimeDisplayProps {
   issueId: string;
@@ -21,6 +22,7 @@ function formatTime(seconds: number): string {
 }
 
 export function IssueTimeDisplay({ issueId }: IssueTimeDisplayProps) {
+  const { lastUpdate } = useTimeTracker();
   const [timeData, setTimeData] = useState<{
     totalSeconds: number;
     activeEntries: number;
@@ -52,7 +54,7 @@ export function IssueTimeDisplay({ issueId }: IssueTimeDisplayProps) {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [issueId, timeData?.activeEntries]);
+  }, [issueId, timeData?.activeEntries, lastUpdate]); // Re-fetch when lastUpdate changes
 
   if (isLoading || !timeData || timeData.totalSeconds === 0) {
     return null;
