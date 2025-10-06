@@ -74,6 +74,7 @@ export default async function ProjectDetailPage({
     select: {
       id: true,
       name: true,
+      type: true,
     },
     orderBy: {
       position: "asc",

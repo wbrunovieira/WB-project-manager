@@ -1,34 +1,334 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Edit, Trash2, GripVertical, Circle, CheckCircle2, XCircle, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateIssueModal } from "@/components/issues/create-issue-modal";
 import { EditIssueModal } from "@/components/issues/edit-issue-modal";
 import { DeleteIssueDialog } from "@/components/issues/delete-issue-dialog";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useRouter } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ProjectIssuesClientProps {
   projectId: string;
   issuesByStatus: Record<string, any[]>;
   totalIssues: number;
-  statuses: Array<{ id: string; name: string }>;
+  statuses: Array<{ id: string; name: string; type: string }>;
   users: Array<{ id: string; name: string | null; email: string }>;
   milestones?: Array<{ id: string; name: string }>;
   workspaceId: string;
 }
 
+interface SortableIssueCardProps {
+  issue: any;
+  statuses: Array<{ id: string; name: string; type: string }>;
+  onEdit: (issue: any) => void;
+  onDelete: (issue: any) => void;
+  onStatusChange: (issueId: string, statusId: string) => void;
+}
+
+function SortableIssueCard({
+  issue,
+  statuses,
+  onEdit,
+  onDelete,
+  onStatusChange,
+}: SortableIssueCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: issue.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const getStatusIcon = (statusType: string) => {
+    switch (statusType) {
+      case "DONE":
+        return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+      case "CANCELED":
+        return <XCircle className="h-4 w-4 text-red-600" />;
+      default:
+        return <Circle className="h-4 w-4 text-gray-400" />;
+    }
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="group flex items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 transition-all hover:bg-gradient-to-r hover:from-gray-50 hover:to-white"
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <GripVertical className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+      </div>
+
+      <div className="flex flex-1 items-center gap-3">
+        <span className="text-sm font-mono text-gray-500">
+          #{issue.identifier}
+        </span>
+        <span className="text-sm font-medium text-gray-900">
+          {issue.title}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-3">
+        {/* Status Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="group/btn flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100">
+              {getStatusIcon(issue.status.type)}
+              <span className="text-gray-700">{issue.status.name}</span>
+              <ChevronDown className="h-3.5 w-3.5 text-gray-400 transition-transform group-hover/btn:text-gray-600" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-48">
+            {statuses.map((status) => (
+              <DropdownMenuItem
+                key={status.id}
+                onClick={() => onStatusChange(issue.id, status.id)}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                {getStatusIcon(status.type)}
+                <span>{status.name}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Labels */}
+        {issue.labels.map((issueLabel: any) => (
+          <span
+            key={issueLabel.labelId}
+            className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium shadow-sm"
+            style={{
+              backgroundColor: `${issueLabel.label.color}15`,
+              color: issueLabel.label.color,
+              border: `1px solid ${issueLabel.label.color}40`,
+            }}
+          >
+            {issueLabel.label.name}
+          </span>
+        ))}
+
+        {/* Priority */}
+        {issue.priority !== "NO_PRIORITY" && (
+          <span
+            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+              issue.priority === "URGENT"
+                ? "bg-red-50 text-red-700"
+                : issue.priority === "HIGH"
+                ? "bg-orange-50 text-orange-700"
+                : issue.priority === "MEDIUM"
+                ? "bg-yellow-50 text-yellow-700"
+                : "bg-blue-50 text-blue-700"
+            }`}
+          >
+            {issue.priority}
+          </span>
+        )}
+
+        {/* Assignee */}
+        {issue.assignee && (
+          <div className="flex items-center gap-1.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-xs font-semibold text-white shadow-sm">
+              {issue.assignee.name
+                ?.split(" ")
+                .map((n: string) => n[0])
+                .join("")
+                .toUpperCase() || "U"}
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(issue)}
+            className="h-8 w-8"
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onDelete(issue)}
+            className="h-8 w-8 text-red-600 hover:text-red-700"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ProjectIssuesClient({
   projectId,
-  issuesByStatus,
+  issuesByStatus: initialIssuesByStatus,
   totalIssues,
   statuses,
   users,
   milestones,
   workspaceId,
 }: ProjectIssuesClientProps) {
+  const router = useRouter();
+  const [issuesByStatus, setIssuesByStatus] = useState(initialIssuesByStatus);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingIssue, setEditingIssue] = useState<any | null>(null);
   const [deletingIssue, setDeletingIssue] = useState<any | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const createHandleDragEnd = (statusType: string) => {
+    return async (event: DragEndEvent) => {
+      const { active, over } = event;
+
+      if (!over || active.id === over.id) {
+        return;
+      }
+
+      const issues = issuesByStatus[statusType];
+      const oldIndex = issues.findIndex((i: any) => i.id === active.id);
+      const newIndex = issues.findIndex((i: any) => i.id === over.id);
+
+      if (oldIndex === -1 || newIndex === -1) {
+        return;
+      }
+
+      const newIssues = arrayMove(issues, oldIndex, newIndex);
+      const updatedIssuesByStatus = {
+        ...issuesByStatus,
+        [statusType]: newIssues,
+      };
+      setIssuesByStatus(updatedIssuesByStatus);
+
+      try {
+        await fetch("/api/issues/reorder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            issueId: active.id,
+            newIndex,
+          }),
+        });
+      } catch (error) {
+        console.error("Failed to update issue order:", error);
+        setIssuesByStatus(issuesByStatus);
+      }
+    };
+  };
+
+  const handleStatusChange = async (issueId: string, statusId: string) => {
+    // Find the issue and its current status
+    let currentIssue: any = null;
+    let currentStatusType: string = "";
+
+    for (const [statusType, issues] of Object.entries(issuesByStatus)) {
+      const issue = issues.find((i: any) => i.id === issueId);
+      if (issue) {
+        currentIssue = issue;
+        currentStatusType = statusType;
+        break;
+      }
+    }
+
+    if (!currentIssue) return;
+
+    // Find the new status
+    const newStatus = statuses.find((s) => s.id === statusId);
+    if (!newStatus) return;
+
+    // Optimistically update the UI
+    const updatedIssue = {
+      ...currentIssue,
+      statusId,
+      status: newStatus,
+    };
+
+    // Use the status type directly
+    const newStatusType = newStatus.type;
+
+    // Update state optimistically
+    const newIssuesByStatus = { ...issuesByStatus };
+
+    // Remove from old status
+    newIssuesByStatus[currentStatusType] = newIssuesByStatus[currentStatusType].filter(
+      (i: any) => i.id !== issueId
+    );
+
+    // Add to new status
+    if (!newIssuesByStatus[newStatusType]) {
+      newIssuesByStatus[newStatusType] = [];
+    }
+    newIssuesByStatus[newStatusType] = [...newIssuesByStatus[newStatusType], updatedIssue];
+
+    setIssuesByStatus(newIssuesByStatus);
+
+    try {
+      const response = await fetch(`/api/issues/${issueId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ statusId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update status");
+      }
+
+      // Refresh to get updated data from server
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      // Revert on error
+      setIssuesByStatus(initialIssuesByStatus);
+    }
+  };
 
   return (
     <>
@@ -53,89 +353,49 @@ export function ProjectIssuesClient({
                 {statusName} ({issues.length})
               </h3>
 
-              <div className="space-y-2">
-                {issues.map((issue) => (
-                  <div
-                    key={issue.id}
-                    className="group flex items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 transition-colors hover:bg-gray-50"
+              {isMounted ? (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={createHandleDragEnd(statusType)}
+                >
+                  <SortableContext
+                    items={issues.map((i: any) => i.id)}
+                    strategy={verticalListSortingStrategy}
                   >
-                    <div className="flex flex-1 items-center gap-3">
-                      <span className="text-sm font-mono text-gray-500">
-                        #{issue.identifier}
-                      </span>
-                      <span className="text-sm font-medium text-gray-900">
-                        {issue.title}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      {/* Labels */}
-                      {issue.labels.map((issueLabel: any) => (
-                        <span
-                          key={issueLabel.labelId}
-                          className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
-                          style={{
-                            backgroundColor: `${issueLabel.label.color}20`,
-                            color: issueLabel.label.color,
-                          }}
-                        >
-                          {issueLabel.label.name}
-                        </span>
+                    <div className="space-y-2">
+                      {issues.map((issue) => (
+                        <SortableIssueCard
+                          key={issue.id}
+                          issue={issue}
+                          statuses={statuses}
+                          onEdit={setEditingIssue}
+                          onDelete={setDeletingIssue}
+                          onStatusChange={handleStatusChange}
+                        />
                       ))}
-
-                      {/* Priority */}
-                      {issue.priority !== "NO_PRIORITY" && (
-                        <span
-                          className={`text-xs font-medium ${
-                            issue.priority === "URGENT"
-                              ? "text-red-600"
-                              : issue.priority === "HIGH"
-                              ? "text-orange-600"
-                              : issue.priority === "MEDIUM"
-                              ? "text-blue-600"
-                              : "text-gray-500"
-                          }`}
-                        >
-                          {issue.priority}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              ) : (
+                <div className="space-y-2">
+                  {issues.map((issue) => (
+                    <div
+                      key={issue.id}
+                      className="group flex items-center gap-4 rounded-lg border border-gray-200 bg-white p-4"
+                    >
+                      <div className="flex flex-1 items-center gap-3">
+                        <span className="text-sm font-mono text-gray-500">
+                          #{issue.identifier}
                         </span>
-                      )}
-
-                      {/* Assignee */}
-                      {issue.assignee && (
-                        <div className="flex items-center gap-1.5">
-                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-medium text-white">
-                            {issue.assignee.name
-                              ?.split(" ")
-                              .map((n: string) => n[0])
-                              .join("")
-                              .toUpperCase() || "U"}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Action Buttons */}
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setEditingIssue(issue)}
-                          className="h-8 w-8"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeletingIssue(issue)}
-                          className="h-8 w-8 text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <span className="text-sm font-medium text-gray-900">
+                          {issue.title}
+                        </span>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}
