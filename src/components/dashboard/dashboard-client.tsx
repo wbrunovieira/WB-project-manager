@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Circle, CheckCircle2, XCircle, ChevronDown } from "lucide-react";
 import { TimerButton } from "@/components/time-tracker/timer-button";
 import { IssueTimeDisplay } from "@/components/time-tracker/issue-time-display";
+import { SLAIndicator } from "@/components/issues/sla-indicator";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -145,6 +146,7 @@ export function DashboardClient({ issues, labels }: DashboardClientProps) {
                       <span className="text-sm font-medium text-gray-100 truncate">
                         {issue.title}
                       </span>
+                      <SLAIndicator issue={issue} compact />
                       {groupBy !== "project" && (
                         <span className="text-xs text-gray-500 flex-shrink-0">
                           {issue.project.name}

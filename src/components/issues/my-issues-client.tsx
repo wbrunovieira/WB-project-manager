@@ -32,12 +32,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
+import { SLAIndicator } from "@/components/issues/sla-indicator";
 
 interface Issue {
   id: string;
   identifier: string;
   title: string;
   priority: string;
+  type: string;
+  reportedAt?: Date | null;
+  createdAt: Date;
+  resolvedAt?: Date | null;
   status: {
     name: string;
     type: string;
@@ -126,6 +131,9 @@ function SortableIssueRow({
               <span className="text-sm font-medium text-gray-100 hover:text-[#FFB947] transition-colors truncate">
                 {issue.title}
               </span>
+              <div className="ml-2 shrink-0">
+                <SLAIndicator issue={issue} compact />
+              </div>
             </Link>
           </div>
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -256,6 +264,7 @@ export function MyIssuesClient({
   const [deletingIssue, setDeletingIssue] = useState<Issue | null>(null);
   const [groupBy, setGroupBy] = useState<GroupBy>("none");
   const [subGroupBy, setSubGroupBy] = useState<GroupBy>("none");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -392,12 +401,17 @@ export function MyIssuesClient({
   };
 
   const groupedIssues = useMemo(() => {
+    // Filter by type first
+    const filteredIssues = typeFilter === "all"
+      ? issues
+      : issues.filter(issue => issue.type === typeFilter);
+
     if (groupBy === "none") {
-      return { all: issues };
+      return { all: filteredIssues };
     }
 
     const groups: Record<string, Issue[]> = {};
-    issues.forEach((issue) => {
+    filteredIssues.forEach((issue) => {
       const key = getGroupKey(issue, groupBy);
       if (!groups[key]) {
         groups[key] = [];
@@ -422,7 +436,7 @@ export function MyIssuesClient({
     }
 
     return groups;
-  }, [issues, groupBy, subGroupBy]);
+  }, [issues, groupBy, subGroupBy, typeFilter]);
 
   return (
     <>
@@ -439,8 +453,25 @@ export function MyIssuesClient({
         </Button>
       </div>
 
-      {/* Grouping Controls */}
+      {/* Filters and Grouping Controls */}
       <div className="mb-6 flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-300">Type:</label>
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="rounded-md border border-[#792990]/40 bg-[#350459] px-3 py-2 text-sm text-gray-200 focus:border-[#792990] focus:outline-none focus:ring-2 focus:ring-[#792990]/50"
+          >
+            <option value="all">All Types</option>
+            <option value="FEATURE">Feature</option>
+            <option value="BUG">Bug</option>
+            <option value="IMPROVEMENT">Improvement</option>
+            <option value="MAINTENANCE">Maintenance</option>
+          </select>
+        </div>
+
+        <div className="h-6 w-px bg-[#792990]/30"></div>
+
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium text-gray-300">Group by:</label>
           <select
