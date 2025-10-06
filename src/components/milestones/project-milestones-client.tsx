@@ -95,8 +95,8 @@ function SortableMilestoneCard({
       onClick={onClick}
       className={`group relative rounded-lg border p-5 transition-all cursor-pointer ${
         isSelected
-          ? "border-blue-500 bg-blue-50 shadow-md"
-          : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+          ? "border-[#792990]/60 bg-gradient-to-r from-[#792990]/20 to-[#792990]/10 shadow-md"
+          : "border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent hover:border-[#792990]/40 hover:from-[#792990]/10 hover:to-[#792990]/5 hover:shadow-sm"
       }`}
     >
       <div className="mb-4">
@@ -108,14 +108,14 @@ function SortableMilestoneCard({
               className="cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity mt-1"
               onClick={(e) => e.stopPropagation()}
             >
-              <GripVertical className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+              <GripVertical className="h-4 w-4 text-gray-400 hover:text-[#FFB947]" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-gray-900">
+              <h3 className="font-semibold text-gray-100">
                 {milestone.name}
               </h3>
               {milestone.description && (
-                <p className="mt-1 text-sm text-gray-600">
+                <p className="mt-1 text-sm text-gray-300">
                   {milestone.description}
                 </p>
               )}
@@ -130,7 +130,7 @@ function SortableMilestoneCard({
                 e.stopPropagation();
                 onEdit(milestone);
               }}
-              className="h-8 w-8"
+              className="h-8 w-8 text-gray-300 hover:text-gray-100 hover:bg-[#792990]/20"
             >
               <Edit className="h-4 w-4" />
             </Button>
@@ -141,7 +141,7 @@ function SortableMilestoneCard({
                 e.stopPropagation();
                 onDelete(milestone);
               }}
-              className="h-8 w-8 text-red-600 hover:text-red-700"
+              className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-[#792990]/20"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -152,24 +152,24 @@ function SortableMilestoneCard({
       {/* Progress */}
       <div className="mb-3">
         <div className="mb-1 flex items-center justify-between text-xs">
-          <span className="text-gray-600">
+          <span className="text-gray-300">
             {completedIssues} of {totalIssues} issues completed
           </span>
-          <span className="font-medium text-gray-900">{progress}%</span>
+          <span className="font-medium text-gray-100">{progress}%</span>
         </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+        <div className="h-2 w-full overflow-hidden rounded-full bg-[#792990]/20">
           <div
-            className="h-full bg-blue-600 transition-all"
+            className="h-full bg-gradient-to-r from-[#FFB947] to-[#792990] transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>
       </div>
 
       {/* Dates */}
-      <div className="flex items-center gap-4 text-xs text-gray-600">
+      <div className="flex items-center gap-4 text-xs text-gray-300">
         {milestone.startDate && (
           <div className="flex items-center gap-1">
-            <CalendarDays className="h-3.5 w-3.5" />
+            <CalendarDays className="h-3.5 w-3.5 text-[#FFB947]" />
             <span>
               <DateDisplay date={milestone.startDate} />
             </span>
@@ -177,7 +177,7 @@ function SortableMilestoneCard({
         )}
         {milestone.targetDate && (
           <div className="flex items-center gap-1">
-            <CheckCircle2 className="h-3.5 w-3.5" />
+            <CheckCircle2 className="h-3.5 w-3.5 text-[#FFB947]" />
             <span>
               <DateDisplay date={milestone.targetDate} />
             </span>
@@ -275,8 +275,8 @@ export function ProjectMilestonesClient({
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Milestones</h2>
-            <p className="mt-1 text-sm text-gray-600">
+            <h2 className="text-xl font-semibold text-gray-100">Milestones</h2>
+            <p className="mt-1 text-sm text-gray-300">
               Track sprints and releases with milestones
             </p>
           </div>
@@ -286,11 +286,12 @@ export function ProjectMilestonesClient({
                 onClick={() => setSelectedMilestoneId(null)}
                 variant="outline"
                 size="sm"
+                className="border-[#792990]/40 bg-[#792990]/5 text-gray-100 hover:bg-[#792990]/10 hover:border-[#792990]/60"
               >
                 Show All
               </Button>
             )}
-            <Button onClick={() => setIsCreateModalOpen(true)} size="sm">
+            <Button onClick={() => setIsCreateModalOpen(true)} size="sm" className="bg-[#FFB947] text-gray-900 hover:bg-[#FFB947]/90">
               <Plus className="mr-2 h-4 w-4" />
               New Milestone
             </Button>
@@ -299,13 +300,13 @@ export function ProjectMilestonesClient({
       </div>
 
       {milestones.length === 0 ? (
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-12 text-center">
+        <div className="rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent p-12 text-center">
           <Target className="mx-auto h-12 w-12 text-gray-400" />
-          <p className="mt-4 text-gray-600">No milestones yet</p>
+          <p className="mt-4 text-gray-300">No milestones yet</p>
           <Button
             onClick={() => setIsCreateModalOpen(true)}
             variant="outline"
-            className="mt-4"
+            className="mt-4 border-[#792990]/40 bg-[#792990]/5 text-gray-100 hover:bg-[#792990]/10 hover:border-[#792990]/60"
           >
             <Plus className="mr-2 h-4 w-4" />
             Create First Milestone

@@ -117,7 +117,7 @@ export default async function ProjectDetailPage({
   });
 
   return (
-    <div className="p-8">
+    <div className="min-h-screen bg-[#350459] p-8">
       {/* Header */}
       <div className="mb-8">
         <ProjectDetailHeader
@@ -134,14 +134,14 @@ export default async function ProjectDetailPage({
         {/* Progress */}
         <div className="mt-6 max-w-2xl">
           <div className="mb-2 flex items-center justify-between text-sm">
-            <span className="text-gray-600">
+            <span className="text-gray-300">
               {completedIssues} of {totalIssues} issues completed
             </span>
-            <span className="font-medium text-gray-900">{progress}%</span>
+            <span className="font-medium text-gray-100">{progress}%</span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-[#792990]/20">
             <div
-              className="h-full bg-blue-600 transition-all"
+              className="h-full bg-gradient-to-r from-[#FFB947] to-[#792990] transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>

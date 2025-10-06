@@ -28,7 +28,7 @@ export function ProjectDetailHeader({ project }: ProjectDetailHeaderProps) {
     <>
       <Link
         href="/projects"
-        className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
+        className="inline-flex items-center gap-2 text-sm text-gray-300 hover:text-gray-100 mb-4"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to projects
@@ -36,9 +36,9 @@ export function ProjectDetailHeader({ project }: ProjectDetailHeaderProps) {
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
+          <h1 className="text-3xl font-bold text-gray-100">{project.name}</h1>
           {project.description && (
-            <p className="mt-2 text-gray-600">{project.description}</p>
+            <p className="mt-2 text-gray-300">{project.description}</p>
           )}
         </div>
 
@@ -46,12 +46,12 @@ export function ProjectDetailHeader({ project }: ProjectDetailHeaderProps) {
           <span
             className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
               project.status === "IN_PROGRESS"
-                ? "bg-blue-100 text-blue-800"
+                ? "bg-[#792990]/20 text-[#FFB947] border border-[#792990]/40"
                 : project.status === "COMPLETED"
-                ? "bg-green-100 text-green-800"
+                ? "bg-[#792990]/20 text-green-400 border border-[#792990]/40"
                 : project.status === "PLANNED"
-                ? "bg-gray-100 text-gray-800"
-                : "bg-red-100 text-red-800"
+                ? "bg-[#792990]/20 text-gray-300 border border-[#792990]/40"
+                : "bg-[#792990]/20 text-red-400 border border-[#792990]/40"
             }`}
           >
             {project.status.replace("_", " ")}
@@ -61,6 +61,7 @@ export function ProjectDetailHeader({ project }: ProjectDetailHeaderProps) {
             variant="outline"
             size="icon"
             onClick={() => setIsEditModalOpen(true)}
+            className="border-[#792990]/40 bg-[#792990]/5 text-gray-100 hover:bg-[#792990]/10 hover:border-[#792990]/60"
           >
             <Edit className="h-4 w-4" />
           </Button>
@@ -69,7 +70,7 @@ export function ProjectDetailHeader({ project }: ProjectDetailHeaderProps) {
             variant="outline"
             size="icon"
             onClick={() => setIsDeleteDialogOpen(true)}
-            className="text-red-600 hover:text-red-700"
+            className="border-[#792990]/40 bg-[#792990]/5 text-red-400 hover:bg-[#792990]/10 hover:border-[#792990]/60 hover:text-red-300"
           >
             <Trash2 className="h-4 w-4" />
           </Button>

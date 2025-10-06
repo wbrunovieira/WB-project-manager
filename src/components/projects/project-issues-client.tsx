@@ -92,21 +92,21 @@ function SortableIssueCard({
     <div
       ref={setNodeRef}
       style={style}
-      className="group flex items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 transition-all hover:bg-gradient-to-r hover:from-gray-50 hover:to-white"
+      className="group flex items-center gap-4 rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent p-4 transition-all hover:border-[#792990]/40 hover:from-[#792990]/10 hover:to-[#792990]/5"
     >
       <div
         {...attributes}
         {...listeners}
         className="cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
       >
-        <GripVertical className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+        <GripVertical className="h-4 w-4 text-gray-400 hover:text-[#FFB947]" />
       </div>
 
       <div className="flex flex-1 items-center gap-3">
-        <span className="text-sm font-mono text-gray-500">
+        <span className="text-sm font-mono text-gray-400">
           #{issue.identifier}
         </span>
-        <span className="text-sm font-medium text-gray-900">
+        <span className="text-sm font-medium text-gray-100">
           {issue.title}
         </span>
       </div>
@@ -118,10 +118,10 @@ function SortableIssueCard({
         {/* Status Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="group/btn flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100">
+            <button className="group/btn flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-[#792990]/20">
               {getStatusIcon(issue.status.type)}
-              <span className="text-gray-700">{issue.status.name}</span>
-              <ChevronDown className="h-3.5 w-3.5 text-gray-400 transition-transform group-hover/btn:text-gray-600" />
+              <span className="text-gray-300">{issue.status.name}</span>
+              <ChevronDown className="h-3.5 w-3.5 text-gray-400 transition-transform group-hover/btn:text-gray-300" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-48">
@@ -156,12 +156,12 @@ function SortableIssueCard({
         {/* Milestone Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="group/btn flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100">
-              <Target className="h-3.5 w-3.5 text-gray-400" />
-              <span className="text-gray-700">
+            <button className="group/btn flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-[#792990]/20">
+              <Target className="h-3.5 w-3.5 text-[#FFB947]" />
+              <span className="text-gray-300">
                 {issue.milestone?.name || "No milestone"}
               </span>
-              <ChevronDown className="h-3.5 w-3.5 text-gray-400 transition-transform group-hover/btn:text-gray-600" />
+              <ChevronDown className="h-3.5 w-3.5 text-gray-400 transition-transform group-hover/btn:text-gray-300" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-48">
@@ -228,7 +228,7 @@ function SortableIssueCard({
               variant="ghost"
               size="icon"
               onClick={() => onEdit(issue)}
-              className="h-8 w-8"
+              className="h-8 w-8 text-gray-300 hover:text-gray-100 hover:bg-[#792990]/20"
             >
               <Edit className="h-4 w-4" />
             </Button>
@@ -236,7 +236,7 @@ function SortableIssueCard({
               variant="ghost"
               size="icon"
               onClick={() => onDelete(issue)}
-              className="h-8 w-8 text-red-600 hover:text-red-700"
+              className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-[#792990]/20"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -440,8 +440,8 @@ export function ProjectIssuesClient({
   return (
     <>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">Issues</h2>
-        <Button onClick={() => setIsCreateModalOpen(true)}>
+        <h2 className="text-xl font-semibold text-gray-100">Issues</h2>
+        <Button onClick={() => setIsCreateModalOpen(true)} className="bg-[#FFB947] text-gray-900 hover:bg-[#FFB947]/90">
           <Plus className="mr-2 h-4 w-4" />
           New Issue
         </Button>
@@ -456,7 +456,7 @@ export function ProjectIssuesClient({
 
           return (
             <div key={statusType}>
-              <h3 className="mb-3 text-sm font-semibold text-gray-500 uppercase tracking-wide">
+              <h3 className="mb-3 text-sm font-semibold text-gray-400 uppercase tracking-wide">
                 {statusName} ({issues.length})
               </h3>
 
@@ -491,13 +491,13 @@ export function ProjectIssuesClient({
                   {issues.map((issue) => (
                     <div
                       key={issue.id}
-                      className="group flex items-center gap-4 rounded-lg border border-gray-200 bg-white p-4"
+                      className="group flex items-center gap-4 rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent p-4"
                     >
                       <div className="flex flex-1 items-center gap-3">
-                        <span className="text-sm font-mono text-gray-500">
+                        <span className="text-sm font-mono text-gray-400">
                           #{issue.identifier}
                         </span>
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-gray-100">
                           {issue.title}
                         </span>
                       </div>
@@ -510,12 +510,12 @@ export function ProjectIssuesClient({
         })}
 
         {totalIssues === 0 && (
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-12 text-center">
-            <p className="text-gray-600">No issues in this project yet</p>
+          <div className="rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent p-12 text-center">
+            <p className="text-gray-300">No issues in this project yet</p>
             <Button
               onClick={() => setIsCreateModalOpen(true)}
               variant="outline"
-              className="mt-4"
+              className="mt-4 border-[#792990]/40 bg-[#792990]/5 text-gray-100 hover:bg-[#792990]/10 hover:border-[#792990]/60"
             >
               <Plus className="mr-2 h-4 w-4" />
               Create First Issue
