@@ -14,7 +14,7 @@ const createIssueSchema = z.object({
   assigneeId: z.string().optional(),
   priority: z.enum(["URGENT", "HIGH", "MEDIUM", "LOW", "NO_PRIORITY"]).optional(),
   type: z.enum(["FEATURE", "MAINTENANCE", "BUG", "IMPROVEMENT"]).default("FEATURE"),
-  reportedAt: z.string().datetime().optional(), // ISO datetime string
+  reportedAt: z.string().datetime().or(z.literal("")).optional(), // ISO datetime string or empty
   labelIds: z.array(z.string()).optional(),
 });
 
@@ -131,11 +131,16 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
+    console.log("Creating issue with body:", body);
     const validated = createIssueSchema.safeParse(body);
 
     if (!validated.success) {
+      console.log("Validation failed:", validated.error);
       const response = NextResponse.json(
-        { error: validated.error.errors[0]?.message || "Validation failed" },
+        {
+          error: validated.error?.errors?.[0]?.message || "Validation failed",
+          details: validated.error?.errors || []
+        },
         { status: 400 }
       );
       return withCors(response);
@@ -187,7 +192,7 @@ export async function POST(req: NextRequest) {
         workspaceId,
         identifier,
         creatorId: session.user.id,
-        reportedAt: reportedAt ? new Date(reportedAt) : undefined,
+        reportedAt: reportedAt && reportedAt !== "" ? new Date(reportedAt) : undefined,
         labels: labelIds
           ? {
               create: labelIds.map((labelId) => ({
