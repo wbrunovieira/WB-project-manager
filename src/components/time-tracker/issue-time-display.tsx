@@ -61,11 +61,11 @@ export function IssueTimeDisplay({ issueId }: IssueTimeDisplayProps) {
   }
 
   return (
-    <div className="flex items-center gap-1 text-xs text-gray-600">
-      <Clock className="h-3.5 w-3.5" />
-      <span className="font-medium">{formatTime(timeData.totalSeconds)}</span>
+    <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#792990]/20 border border-[#792990]/30">
+      <Clock className="h-3.5 w-3.5 text-gray-400" />
+      <span className="font-medium text-xs text-gray-300">{formatTime(timeData.totalSeconds)}</span>
       {timeData.activeEntries > 0 && (
-        <span className="text-green-600 font-semibold">(active)</span>
+        <span className="text-green-400 font-semibold text-xs">(active)</span>
       )}
     </div>
   );

@@ -73,7 +73,11 @@ export function TimerButton({
       variant={isThisIssueActive ? "default" : "ghost"}
       size={size}
       onClick={handleClick}
-      className={isThisIssueActive ? "bg-green-600 hover:bg-green-700" : ""}
+      className={
+        isThisIssueActive
+          ? "bg-[#FFB947] hover:bg-[#FFB947]/90 text-[#350459] font-semibold"
+          : "hover:bg-[#792990]/20 text-gray-300"
+      }
       title={
         isThisIssueActive
           ? "Stop timer"
