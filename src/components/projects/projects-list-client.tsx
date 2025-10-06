@@ -49,8 +49,8 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
 
   if (totalProjects === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-12 text-center">
-        <p className="text-gray-600">No projects yet</p>
+      <div className="rounded-lg border border-[#792990]/20 bg-[#792990]/5 p-12 text-center">
+        <p className="text-gray-300">No projects yet</p>
       </div>
     );
   }
@@ -63,14 +63,16 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
 
           return (
             <div key={workspace.id}>
-              <div className="mb-4 flex items-center gap-2">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="h-px flex-1 bg-gradient-to-r from-[#792990] to-transparent"></div>
                 <span className="text-2xl">{workspace.icon || "🏢"}</span>
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-gray-100">
                   {workspace.name}
                 </h2>
-                <span className="text-sm text-gray-500">
-                  ({workspace.projects.length} project{workspace.projects.length !== 1 ? "s" : ""})
+                <span className="px-2 py-0.5 rounded bg-[#792990]/20 text-gray-400 text-xs font-medium">
+                  {workspace.projects.length}
                 </span>
+                <div className="h-px flex-1 bg-gradient-to-l from-[#792990] to-transparent"></div>
               </div>
 
               <div className="grid gap-4">
@@ -87,30 +89,30 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
           return (
             <div
               key={project.id}
-              className="group relative rounded-lg border border-gray-200 bg-white p-6 transition-all hover:border-gray-300 hover:shadow-sm"
+              className="group relative rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent p-6 transition-all hover:border-[#792990]/40 hover:from-[#792990]/10 hover:to-[#792990]/5"
             >
               <Link href={`/projects/${project.id}`} className="block">
                 <div className="mb-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 pr-20">
-                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">
+                      <h3 className="text-lg font-semibold text-gray-100 group-hover:text-[#FFB947] transition-colors">
                         {project.name}
                       </h3>
                       {project.description && (
-                        <p className="mt-1 text-sm text-gray-600">
+                        <p className="mt-1 text-sm text-gray-400">
                           {project.description}
                         </p>
                       )}
                     </div>
                     <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium mt-6 ${
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium mt-6 border ${
                         project.status === "IN_PROGRESS"
-                          ? "bg-blue-100 text-blue-800"
+                          ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
                           : project.status === "COMPLETED"
-                          ? "bg-green-100 text-green-800"
+                          ? "bg-green-500/10 text-green-400 border-green-500/20"
                           : project.status === "PLANNED"
-                          ? "bg-gray-100 text-gray-800"
-                          : "bg-red-100 text-red-800"
+                          ? "bg-gray-500/10 text-gray-400 border-gray-500/20"
+                          : "bg-red-500/10 text-red-400 border-red-500/20"
                       }`}
                     >
                       {project.status.replace("_", " ")}
@@ -122,23 +124,23 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
                   {/* Progress Bar */}
                   <div>
                     <div className="mb-1 flex items-center justify-between text-xs">
-                      <span className="text-gray-600">
+                      <span className="text-gray-400">
                         {completedIssues} of {totalIssues} completed
                       </span>
-                      <span className="font-medium text-gray-900">
+                      <span className="font-medium text-gray-300">
                         {progress}%
                       </span>
                     </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-[#792990]/20">
                       <div
-                        className="h-full bg-blue-600 transition-all"
+                        className="h-full bg-gradient-to-r from-[#FFB947] to-[#792990] transition-all"
                         style={{ width: `${progress}%` }}
                       />
                     </div>
                   </div>
 
                   {/* Dates */}
-                  <div className="flex items-center gap-4 text-xs text-gray-600">
+                  <div className="flex items-center gap-4 text-xs text-gray-400">
                     {project.startDate && (
                       <div className="flex items-center gap-1">
                         <CalendarDays className="h-3.5 w-3.5" />
@@ -169,7 +171,7 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
                     e.stopPropagation();
                     setEditingProject(project);
                   }}
-                  className="h-8 w-8 bg-white/90 hover:bg-white"
+                  className="h-8 w-8 bg-[#350459]/90 hover:bg-[#792990]/50 text-gray-300 hover:text-gray-100 border border-[#792990]/30"
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
@@ -181,7 +183,7 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
                     e.stopPropagation();
                     setDeletingProject(project);
                   }}
-                  className="h-8 w-8 text-red-600 hover:text-red-700 bg-white/90 hover:bg-white"
+                  className="h-8 w-8 bg-[#350459]/90 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-[#792990]/30 hover:border-red-500/30"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

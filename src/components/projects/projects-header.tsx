@@ -17,13 +17,16 @@ export function ProjectsHeader({ workspaces, projectCount }: ProjectsHeaderProps
     <>
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
-          <p className="mt-2 text-gray-600">
+          <h1 className="text-3xl font-bold text-gray-100">Projects</h1>
+          <p className="mt-2 text-gray-400">
             {projectCount} project{projectCount !== 1 ? "s" : ""}
           </p>
         </div>
 
-        <Button onClick={() => setIsCreateModalOpen(true)}>
+        <Button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="bg-[#FFB947] hover:bg-[#FFB947]/90 text-gray-900 font-semibold"
+        >
           <Plus className="mr-2 h-4 w-4" />
           New Project
         </Button>

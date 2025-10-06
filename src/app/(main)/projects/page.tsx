@@ -67,9 +67,11 @@ export default async function ProjectsPage() {
   );
 
   return (
-    <div className="p-8">
-      <ProjectsHeader workspaces={workspaces} projectCount={totalProjects} />
-      <ProjectsListClient workspacesWithProjects={workspacesWithProjects} />
+    <div className="min-h-screen bg-[#350459]">
+      <div className="p-8">
+        <ProjectsHeader workspaces={workspaces} projectCount={totalProjects} />
+        <ProjectsListClient workspacesWithProjects={workspacesWithProjects} />
+      </div>
     </div>
   );
 }
