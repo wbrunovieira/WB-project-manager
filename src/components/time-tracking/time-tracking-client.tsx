@@ -416,8 +416,12 @@ export function TimeTrackingClient({
     <div className="space-y-6">
       {/* Period Analysis */}
       {!isLoading && timeData && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-100">Time Analysis by Period</h2>
+        <div className="space-y-6 pb-6 border-b border-[#792990]/30">
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-gradient-to-r from-[#792990] to-transparent"></div>
+            <h2 className="text-xl font-semibold text-gray-100 uppercase tracking-wide">Time Analysis by Period</h2>
+            <div className="h-px flex-1 bg-gradient-to-l from-[#792990] to-transparent"></div>
+          </div>
 
           <div className="grid grid-cols-3 gap-4">
             {/* Today */}
@@ -679,11 +683,19 @@ export function TimeTrackingClient({
         </div>
       )}
 
-      {/* View Mode Selector */}
-      <Card className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent">
-        <CardContent className="pt-6">
-          <div className="flex gap-2">
-            <button
+      {/* Detailed Time Breakdown Section */}
+      <div className="space-y-6 pt-6">
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-gradient-to-r from-[#792990] to-transparent"></div>
+          <h2 className="text-xl font-semibold text-gray-100 uppercase tracking-wide">Detailed Breakdown</h2>
+          <div className="h-px flex-1 bg-gradient-to-l from-[#792990] to-transparent"></div>
+        </div>
+
+        {/* View Mode Selector */}
+        <Card className="border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent">
+          <CardContent className="pt-6">
+            <div className="flex gap-2">
+              <button
               onClick={() => setViewMode("project")}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 viewMode === "project"
@@ -725,6 +737,7 @@ export function TimeTrackingClient({
           </div>
         </CardContent>
       </Card>
+      </div>
 
       {/* Project View */}
       {!isLoading && viewMode === "project" && projectStats.length > 0 && (
