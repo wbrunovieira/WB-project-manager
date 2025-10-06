@@ -78,12 +78,6 @@ export function DashboardClient({ issues, labels }: DashboardClientProps) {
   return (
     <div className="min-h-screen bg-[#350459]">
       <div className="p-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-100 mb-1">Dashboard</h1>
-          <p className="text-gray-400">Manage your issues and track progress</p>
-        </div>
-
         {/* Group By Selector */}
         <div className="mb-6 flex items-center gap-3">
           <span className="text-sm font-medium text-gray-400">Group by:</span>

@@ -17,17 +17,19 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="flex h-full w-60 flex-col border-r border-gray-200 bg-gray-50">
-      <div className="flex h-14 items-center border-b border-gray-200 px-4">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-600">
-            <span className="text-sm font-bold text-white">WB</span>
+    <div className="flex h-full w-60 flex-col border-r border-[#792990]/20 bg-[#350459]">
+      {/* Logo */}
+      <div className="flex h-16 items-center border-b border-[#792990]/20 px-4">
+        <Link href="/" className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#792990] to-[#350459] ring-2 ring-[#FFB947]/30">
+            <span className="text-base font-bold text-white">WB</span>
           </div>
-          <span className="font-semibold text-gray-900">WB Digital</span>
+          <span className="font-bold text-gray-100">WB Digital</span>
         </Link>
       </div>
 
-      <nav className="flex-1 space-y-1 px-2 py-4">
+      {/* Navigation */}
+      <nav className="flex-1 space-y-1 px-3 py-6">
         {navigation.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -35,10 +37,10 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
                 isActive
-                  ? "bg-gray-200 text-gray-900"
-                  : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  ? "bg-[#FFB947] text-[#350459] shadow-lg shadow-[#FFB947]/20"
+                  : "text-gray-300 hover:bg-[#792990]/20 hover:text-gray-100"
               )}
             >
               <item.icon className="h-5 w-5" />
@@ -48,9 +50,10 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-gray-200 p-4">
-        <div className="text-xs text-gray-500">
-          <kbd className="rounded bg-gray-200 px-1.5 py-0.5 text-gray-700">
+      {/* Footer */}
+      <div className="border-t border-[#792990]/20 p-4">
+        <div className="text-xs text-gray-400">
+          <kbd className="rounded bg-[#792990]/20 px-2 py-1 text-gray-300 border border-[#792990]/30">
             ⌘K
           </kbd>{" "}
           to open command palette
