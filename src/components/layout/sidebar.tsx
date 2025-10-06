@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FolderKanban, Folder, Building2 } from "lucide-react";
+import { Home, FolderKanban, Folder, Building2, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Home", href: "/dashboard", icon: Home },
   { name: "My Issues", href: "/my-issues", icon: FolderKanban },
   { name: "Projects", href: "/projects", icon: Folder },
+  { name: "Time Tracking", href: "/time-tracking", icon: Clock },
   { name: "Workspaces", href: "/workspaces", icon: Building2 },
 ];
 
