@@ -18,31 +18,23 @@ export function TimerButton({
   issueTitle,
   size = "icon",
 }: TimerButtonProps) {
-  const { activeEntry, isRunning, startTimer, stopTimer } = useTimeTracker();
+  const { activeEntries, startTimer, stopTimer, isIssueTracking } = useTimeTracker();
   const { toast } = useToast();
 
-  const isThisIssueActive = activeEntry?.issueId === issueId;
+  const isThisIssueActive = isIssueTracking(issueId);
+  const activeEntry = activeEntries.find((e) => e.issueId === issueId);
 
   const handleClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
     try {
-      if (isThisIssueActive) {
-        await stopTimer();
+      if (isThisIssueActive && activeEntry) {
+        await stopTimer(activeEntry.id);
         toast({
           title: "Timer stopped",
           description: `Stopped tracking time for #${issueIdentifier}`,
         });
       } else {
-        if (isRunning) {
-          toast({
-            title: "Timer already running",
-            description: "Please stop the current timer first",
-            variant: "destructive",
-          });
-          return;
-        }
-
         await startTimer(issueId);
         toast({
           title: "Timer started",

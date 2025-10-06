@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, GripVertical, Circle, CheckCircle2, XCircle, ChevronDown, Target } from "lucide-react";
+import { TimerButton } from "@/components/time-tracker/timer-button";
 import { Button } from "@/components/ui/button";
 import { CreateIssueModal } from "@/components/issues/create-issue-modal";
 import { EditIssueModal } from "@/components/issues/edit-issue-modal";
@@ -210,23 +211,31 @@ function SortableIssueCard({
         )}
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button
-            variant="ghost"
+        <div className="flex items-center gap-1">
+          <TimerButton
+            issueId={issue.id}
+            issueIdentifier={issue.identifier}
+            issueTitle={issue.title}
             size="icon"
-            onClick={() => onEdit(issue)}
-            className="h-8 w-8"
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onDelete(issue)}
-            className="h-8 w-8 text-red-600 hover:text-red-700"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          />
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onEdit(issue)}
+              className="h-8 w-8"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onDelete(issue)}
+              className="h-8 w-8 text-red-600 hover:text-red-700"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

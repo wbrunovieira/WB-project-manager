@@ -24,17 +24,18 @@ export async function POST(req: NextRequest) {
       return withCors(response);
     }
 
-    // Check if there's already an active time entry for this user
-    const activeEntry = await prisma.timeEntry.findFirst({
+    // Check if there's already an active time entry for this specific issue
+    const activeEntryForIssue = await prisma.timeEntry.findFirst({
       where: {
         userId: session.user.id,
+        issueId,
         endTime: null,
       },
     });
 
-    if (activeEntry) {
+    if (activeEntryForIssue) {
       const response = NextResponse.json(
-        { error: "You already have an active time entry. Please stop it first." },
+        { error: "You already have an active timer for this issue." },
         { status: 400 }
       );
       return withCors(response);
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET /api/time-entries - Get active time entry for current user
+// GET /api/time-entries - Get all active time entries for current user
 export async function GET(req: NextRequest) {
   const session = await auth();
 
@@ -81,7 +82,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const activeEntry = await prisma.timeEntry.findFirst({
+    const activeEntries = await prisma.timeEntry.findMany({
       where: {
         userId: session.user.id,
         endTime: null,
@@ -95,12 +96,15 @@ export async function GET(req: NextRequest) {
           },
         },
       },
+      orderBy: {
+        startTime: 'desc',
+      },
     });
 
-    const response = NextResponse.json(activeEntry);
+    const response = NextResponse.json(activeEntries);
     return withCors(response);
   } catch (error) {
-    console.error("Error fetching active time entry:", error);
+    console.error("Error fetching active time entries:", error);
     const response = NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
