@@ -14,8 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Linear Clone - Project Management",
+  title: "WB Projects Manager",
   description: "Modern project management tool built with Next.js",
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
