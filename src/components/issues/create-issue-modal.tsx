@@ -29,10 +29,12 @@ const createIssueSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   statusId: z.string().min(1, "Status is required"),
+  type: z.enum(["FEATURE", "MAINTENANCE", "BUG", "IMPROVEMENT"]),
   priority: z.enum(["URGENT", "HIGH", "MEDIUM", "LOW", "NO_PRIORITY"]),
   assigneeId: z.string().optional(),
   projectId: z.string().optional(),
   milestoneId: z.string().optional(),
+  reportedAt: z.string().optional(),
 });
 
 type CreateIssueForm = z.infer<typeof createIssueSchema>;
@@ -82,9 +84,11 @@ export function CreateIssueModal({
     resolver: zodResolver(createIssueSchema),
     defaultValues: {
       statusId: statuses[0]?.id || "",
+      type: "FEATURE",
       priority: "NO_PRIORITY",
       projectId: defaultProjectId,
       assigneeId: brunoUser?.id || "",
+      reportedAt: "",
     },
   });
 
@@ -101,10 +105,12 @@ export function CreateIssueModal({
         title: "",
         description: "",
         statusId: statuses[0]?.id || "",
+        type: "FEATURE",
         priority: "NO_PRIORITY",
         projectId: defaultProjectId,
         assigneeId: brunoUser?.id || "",
         milestoneId: "",
+        reportedAt: "",
       });
       setSelectedLabelIds([]);
     }
@@ -154,6 +160,7 @@ export function CreateIssueModal({
           assigneeId: data.assigneeId || undefined,
           projectId: data.projectId || undefined,
           milestoneId: data.milestoneId || undefined,
+          reportedAt: data.reportedAt || undefined,
           labelIds: selectedLabelIds.length > 0 ? selectedLabelIds : undefined,
         }),
       });
@@ -187,10 +194,12 @@ export function CreateIssueModal({
           title: "",
           description: "",
           statusId: currentValues.statusId,
+          type: currentValues.type,
           priority: currentValues.priority,
           assigneeId: currentValues.assigneeId,
           projectId: currentValues.projectId,
           milestoneId: currentValues.milestoneId,
+          reportedAt: "",
         });
         // Keep labels selected
         // Modal stays open
@@ -245,22 +254,41 @@ export function CreateIssueModal({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="statusId" className="text-gray-300">Status</Label>
-            <select
-              id="statusId"
-              {...register("statusId")}
-              className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
-            >
-              {statuses.map((status) => (
-                <option key={status.id} value={status.id}>
-                  {status.name}
-                </option>
-              ))}
-            </select>
-            {errors.statusId && (
-              <p className="text-sm text-red-600">{errors.statusId.message}</p>
-            )}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="statusId" className="text-gray-300">Status</Label>
+              <select
+                id="statusId"
+                {...register("statusId")}
+                className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
+              >
+                {statuses.map((status) => (
+                  <option key={status.id} value={status.id}>
+                    {status.name}
+                  </option>
+                ))}
+              </select>
+              {errors.statusId && (
+                <p className="text-sm text-red-600">{errors.statusId.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="type" className="text-gray-300">Type</Label>
+              <select
+                id="type"
+                {...register("type")}
+                className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
+              >
+                <option value="FEATURE">Feature</option>
+                <option value="BUG">Bug</option>
+                <option value="IMPROVEMENT">Improvement</option>
+                <option value="MAINTENANCE">Maintenance</option>
+              </select>
+              {errors.type && (
+                <p className="text-sm text-red-600">{errors.type.message}</p>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -332,6 +360,22 @@ export function CreateIssueModal({
                 </select>
               </div>
             )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="reportedAt" className="text-gray-300">
+              Reported At (optional)
+              <span className="text-xs text-gray-500 ml-2">Leave empty to use current time</span>
+            </Label>
+            <Input
+              id="reportedAt"
+              type="datetime-local"
+              {...register("reportedAt")}
+              className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
+            />
+            <p className="text-xs text-gray-400">
+              Set this if the issue was reported before creating it in the system
+            </p>
           </div>
 
           <div className="space-y-2">
