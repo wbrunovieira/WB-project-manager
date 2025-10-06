@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, GripVertical, Circle, CheckCircle2, XCircle, ChevronDown, Target } from "lucide-react";
 import { TimerButton } from "@/components/time-tracker/timer-button";
+import { IssueTimeDisplay } from "@/components/time-tracker/issue-time-display";
 import { Button } from "@/components/ui/button";
 import { CreateIssueModal } from "@/components/issues/create-issue-modal";
 import { EditIssueModal } from "@/components/issues/edit-issue-modal";
@@ -111,6 +112,9 @@ function SortableIssueCard({
       </div>
 
       <div className="flex items-center gap-3">
+        {/* Time Display */}
+        <IssueTimeDisplay issueId={issue.id} />
+
         {/* Status Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Circle, CheckCircle2, XCircle, ChevronDown } from "lucide-react";
 import { TimerButton } from "@/components/time-tracker/timer-button";
+import { IssueTimeDisplay } from "@/components/time-tracker/issue-time-display";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -132,6 +133,9 @@ export function DashboardClient({ issues, labels }: DashboardClientProps) {
                     </div>
 
                     <div className="flex items-center gap-3">
+                      {/* Time Display */}
+                      <IssueTimeDisplay issueId={issue.id} />
+
                       {/* Timer Button */}
                       <TimerButton
                         issueId={issue.id}
