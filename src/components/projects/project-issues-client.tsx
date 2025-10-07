@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Plus, Edit, Trash2, GripVertical, Circle, CheckCircle2, XCircle, ChevronDown, Target } from "lucide-react";
+import { Plus, Edit, Trash2, GripVertical, Circle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Target, User, Calendar, Clock, AlertCircle } from "lucide-react";
 import { TimerButton } from "@/components/time-tracker/timer-button";
 import { IssueTimeDisplay } from "@/components/time-tracker/issue-time-display";
 import { SLAIndicator } from "@/components/issues/sla-indicator";
@@ -63,6 +63,8 @@ function SortableIssueCard({
   onStatusChange,
   onMilestoneChange,
 }: SortableIssueCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const {
     attributes,
     listeners,
@@ -93,25 +95,37 @@ function SortableIssueCard({
     <div
       ref={setNodeRef}
       style={style}
-      className="group flex items-center gap-4 rounded-xl border-2 border-[#792990]/40 bg-gradient-to-r from-[#792990]/15 via-[#792990]/10 to-[#792990]/5 p-5 transition-all hover:border-[#FFB947]/70 hover:from-[#792990]/25 hover:via-[#792990]/20 hover:to-[#792990]/10 hover:shadow-lg hover:shadow-[#792990]/10"
+      className="group rounded-xl border-2 border-[#792990]/40 bg-gradient-to-r from-[#792990]/15 via-[#792990]/10 to-[#792990]/5 transition-all hover:border-[#FFB947]/70 hover:from-[#792990]/25 hover:via-[#792990]/20 hover:to-[#792990]/10 hover:shadow-lg hover:shadow-[#792990]/10"
     >
-      <div
-        {...attributes}
-        {...listeners}
-        className="cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        <GripVertical className="h-5 w-5 text-gray-400 hover:text-[#FFB947]" />
-      </div>
+      <div className="flex items-center gap-4 p-5">
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <GripVertical className="h-5 w-5 text-gray-400 hover:text-[#FFB947]" />
+        </div>
 
-      <div className="flex flex-1 items-center gap-4">
-        <span className="text-sm font-mono font-semibold text-[#FFB947] shrink-0">
-          #{issue.identifier}
-        </span>
-        <span className="text-base font-semibold text-gray-100">
-          {issue.title}
-        </span>
-        <SLAIndicator issue={issue} compact />
-      </div>
+        <div className="flex flex-1 items-center gap-4">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex items-center gap-2 shrink-0 text-gray-400 hover:text-[#FFB947] transition-colors"
+            title={isExpanded ? "Collapse" : "Expand"}
+          >
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </button>
+          <span className="text-sm font-mono font-semibold text-[#FFB947] shrink-0">
+            #{issue.identifier}
+          </span>
+          <span className="text-base font-semibold text-gray-100">
+            {issue.title}
+          </span>
+          <SLAIndicator issue={issue} compact />
+        </div>
 
       <div className="flex items-center gap-3">
         {/* Time Display */}
@@ -245,6 +259,163 @@ function SortableIssueCard({
           </div>
         </div>
       </div>
+      </div>
+
+      {/* Expanded Details */}
+      {isExpanded && (
+        <div className="border-t border-[#792990]/30 bg-[#792990]/5 p-6 space-y-4">
+          {/* Description */}
+          {issue.description && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-[#FFB947]" />
+                Description
+              </h4>
+              <p className="text-sm text-gray-300 whitespace-pre-wrap pl-6">
+                {issue.description}
+              </p>
+            </div>
+          )}
+
+          {/* Metadata Grid */}
+          <div className="grid grid-cols-2 gap-4 pl-6">
+            {/* Type */}
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-gray-400">Type</p>
+              <p className="text-sm text-gray-200">{issue.type}</p>
+            </div>
+
+            {/* Priority */}
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-gray-400">Priority</p>
+              <p className="text-sm text-gray-200">{issue.priority || "NO_PRIORITY"}</p>
+            </div>
+
+            {/* Creator */}
+            {issue.creator && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-gray-400 flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  Creator
+                </p>
+                <p className="text-sm text-gray-200">{issue.creator.name || issue.creator.email}</p>
+              </div>
+            )}
+
+            {/* Assignee */}
+            {issue.assignee && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-gray-400 flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  Assignee
+                </p>
+                <p className="text-sm text-gray-200">{issue.assignee.name || issue.assignee.email}</p>
+              </div>
+            )}
+
+            {/* Created At */}
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-gray-400 flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                Created
+              </p>
+              <p className="text-sm text-gray-200">
+                {new Date(issue.createdAt).toLocaleDateString()} {new Date(issue.createdAt).toLocaleTimeString()}
+              </p>
+            </div>
+
+            {/* Updated At */}
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-gray-400 flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                Updated
+              </p>
+              <p className="text-sm text-gray-200">
+                {new Date(issue.updatedAt).toLocaleDateString()} {new Date(issue.updatedAt).toLocaleTimeString()}
+              </p>
+            </div>
+
+            {/* Reported At */}
+            {issue.reportedAt && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-gray-400 flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  Reported
+                </p>
+                <p className="text-sm text-gray-200">
+                  {new Date(issue.reportedAt).toLocaleDateString()} {new Date(issue.reportedAt).toLocaleTimeString()}
+                </p>
+              </div>
+            )}
+
+            {/* First Response */}
+            {issue.firstResponseAt && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-gray-400 flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  First Response
+                </p>
+                <p className="text-sm text-gray-200">
+                  {new Date(issue.firstResponseAt).toLocaleDateString()} {new Date(issue.firstResponseAt).toLocaleTimeString()}
+                </p>
+              </div>
+            )}
+
+            {/* Resolved At */}
+            {issue.resolvedAt && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-gray-400 flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Resolved
+                </p>
+                <p className="text-sm text-gray-200">
+                  {new Date(issue.resolvedAt).toLocaleDateString()} {new Date(issue.resolvedAt).toLocaleTimeString()}
+                </p>
+              </div>
+            )}
+
+            {/* Resolution Time */}
+            {issue.resolutionTimeMinutes && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-gray-400">Resolution Time</p>
+                <p className="text-sm text-gray-200">
+                  {Math.floor(issue.resolutionTimeMinutes / 60)}h {issue.resolutionTimeMinutes % 60}m
+                </p>
+              </div>
+            )}
+
+            {/* Reopen Count */}
+            {issue.reopenCount > 0 && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-gray-400">Reopened</p>
+                <p className="text-sm text-gray-200">{issue.reopenCount} times</p>
+              </div>
+            )}
+          </div>
+
+          {/* Labels (if not shown above) */}
+          {issue.labels.length > 0 && (
+            <div className="space-y-2 pl-6">
+              <p className="text-xs font-medium text-gray-400">Labels</p>
+              <div className="flex flex-wrap gap-2">
+                {issue.labels.map((issueLabel: any) => (
+                  <span
+                    key={issueLabel.labelId}
+                    className="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium shadow-sm"
+                    style={{
+                      backgroundColor: `${issueLabel.label.color}15`,
+                      color: issueLabel.label.color,
+                      border: `1px solid ${issueLabel.label.color}40`,
+                    }}
+                  >
+                    {issueLabel.label.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
