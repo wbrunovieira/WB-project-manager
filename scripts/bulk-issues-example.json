@@ -1,0 +1,83 @@
+{
+  "workspaceId": "cmge96f200001wa7ouziczg0w",
+  "issues": [
+    {
+      "title": "Implementar autenticação JWT",
+      "description": "Adicionar suporte completo para tokens JWT na API com refresh tokens",
+      "statusId": "cmge9i3pv0007walqv7is970v",
+      "projectId": "cmgfjhyh50005waqglsynsz1d",
+      "milestoneId": "cmggc1uqk0001wakb3no9xhb7",
+      "assigneeId": "cmge96f1y0000wa7olxm69prv",
+      "priority": "HIGH",
+      "type": "FEATURE",
+      "labelIds": ["cmgf23zl50009watfyq73olpr"]
+    },
+    {
+      "title": "Corrigir bug no login com caracteres especiais",
+      "description": "Usuários não conseguem fazer login quando a senha contém caracteres especiais como @, #, $",
+      "statusId": "cmge9i3pv0009walqbwhmule6",
+      "projectId": "cmgfjhyh50005waqglsynsz1d",
+      "priority": "URGENT",
+      "type": "BUG",
+      "labelIds": ["cmgfcyxlz0003waknba486r40", "cmgf23zl50009watfyq73olpr"]
+    },
+    {
+      "title": "Melhorar performance do dashboard",
+      "description": "Dashboard está lento quando há mais de 50 projetos. Implementar paginação e lazy loading.",
+      "statusId": "cmge9i3pt0005walququqw1rx",
+      "projectId": "cmgfjhyh50005waqglsynsz1d",
+      "priority": "MEDIUM",
+      "type": "IMPROVEMENT",
+      "labelIds": ["cmgf21xvb0003watfaqi1ynw7"]
+    },
+    {
+      "title": "Adicionar exportação de relatórios em PDF",
+      "description": "Usuários precisam exportar relatórios de issues em formato PDF para compartilhar com stakeholders",
+      "statusId": "cmge9i3pv0007walqv7is970v",
+      "projectId": "cmgfjhyh50005waqglsynsz1d",
+      "milestoneId": "cmggc2ctf0003wakbo6jvl6lm",
+      "priority": "LOW",
+      "type": "FEATURE",
+      "labelIds": ["cmgf23zl50009watfyq73olpr"]
+    },
+    {
+      "title": "Implementar dark mode",
+      "description": "Adicionar tema escuro em toda a aplicação com toggle no header",
+      "statusId": "cmge9i3pt0005walququqw1rx",
+      "projectId": "cmgfjhyh50005waqglsynsz1d",
+      "priority": "LOW",
+      "type": "FEATURE",
+      "labelIds": ["cmgf21xvb0003watfaqi1ynw7"]
+    },
+    {
+      "title": "Configurar CI/CD pipeline",
+      "description": "Setup GitHub Actions para testes automatizados e deploy",
+      "statusId": "cmge9i3pv0007walqv7is970v",
+      "projectId": "cmgfjhyh50005waqglsynsz1d",
+      "milestoneId": "cmggc1uqk0001wakb3no9xhb7",
+      "assigneeId": "cmge96f1y0000wa7olxm69prv",
+      "priority": "HIGH",
+      "type": "MAINTENANCE",
+      "labelIds": ["cmgf23zl50009watfyq73olpr"]
+    },
+    {
+      "title": "Adicionar testes E2E com Playwright",
+      "description": "Implementar testes end-to-end para fluxos críticos da aplicação",
+      "statusId": "cmge9i3pv0007walqv7is970v",
+      "projectId": "cmgfjhyh50005waqglsynsz1d",
+      "priority": "MEDIUM",
+      "type": "MAINTENANCE",
+      "labelIds": ["cmgf23zl50009watfyq73olpr"]
+    },
+    {
+      "title": "Implementar notificações push",
+      "description": "Adicionar sistema de notificações em tempo real para atualizações de issues",
+      "statusId": "cmge9i3pt0005walququqw1rx",
+      "projectId": "cmgfjhyh50005waqglsynsz1d",
+      "milestoneId": "cmggc2ctf0003wakbo6jvl6lm",
+      "priority": "MEDIUM",
+      "type": "FEATURE",
+      "labelIds": ["cmgf21xvb0003watfaqi1ynw7", "cmgf23zl50009watfyq73olpr"]
+    }
+  ]
+}

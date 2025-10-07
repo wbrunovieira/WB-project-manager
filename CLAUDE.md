@@ -25,6 +25,22 @@ npm run lint
 npm run db:seed
 ```
 
+## API Endpoints for External Integration
+
+### Single Issue Creation
+```
+POST /api/issues
+```
+Creates a single issue. See `scripts/API-KEY-AUTH.md` for details.
+
+### Bulk Issue Creation
+```
+POST /api/issues/bulk
+```
+Creates multiple issues (1-100) in a single transaction. See `scripts/BULK-CREATE-API.md` for details.
+
+Both endpoints support API Key (Bearer token) and Session Cookie authentication.
+
 ## Database Setup
 
 1. Copy `.env.example` to `.env` and configure:
