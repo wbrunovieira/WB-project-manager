@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Plus, Edit, Trash2, GripVertical, Circle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Target, User, Calendar, Clock, AlertCircle } from "lucide-react";
+import { Plus, Edit, Trash2, GripVertical, Circle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Target, User, Calendar, Clock, AlertCircle, Lock } from "lucide-react";
 import { TimerButton } from "@/components/time-tracker/timer-button";
 import { IssueTimeDisplay } from "@/components/time-tracker/issue-time-display";
 import { SLAIndicator } from "@/components/issues/sla-indicator";
+import { useTimeTracker } from "@/contexts/time-tracker-context";
 import { Button } from "@/components/ui/button";
 import { CreateIssueModal } from "@/components/issues/create-issue-modal";
 import { EditIssueModal } from "@/components/issues/edit-issue-modal";
@@ -64,6 +65,8 @@ function SortableIssueCard({
   onMilestoneChange,
 }: SortableIssueCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { isIssueTracking } = useTimeTracker();
+  const isTimerActive = isIssueTracking(issue.id);
 
   const {
     attributes,
@@ -208,25 +211,39 @@ function SortableIssueCard({
 
         {/* Status Dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="group/btn flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-[#792990]/20">
+          <DropdownMenuTrigger asChild disabled={isTimerActive}>
+            <button
+              className={`group/btn flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
+                isTimerActive
+                  ? "cursor-not-allowed opacity-50"
+                  : "hover:bg-[#792990]/20"
+              }`}
+              disabled={isTimerActive}
+              title={isTimerActive ? "Stop timer to change status" : "Change status"}
+            >
               {getStatusIcon(issue.status.type)}
               <span className="text-gray-300">{issue.status.name}</span>
-              <ChevronDown className="h-3.5 w-3.5 text-gray-400 transition-transform group-hover/btn:text-gray-300" />
+              {isTimerActive ? (
+                <Lock className="h-3.5 w-3.5 text-gray-500" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5 text-gray-400 transition-transform group-hover/btn:text-gray-300" />
+              )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48">
-            {statuses.map((status) => (
-              <DropdownMenuItem
-                key={status.id}
-                onClick={() => onStatusChange(issue.id, status.id)}
-                className="flex items-center gap-2 cursor-pointer"
-              >
-                {getStatusIcon(status.type)}
-                <span>{status.name}</span>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
+          {!isTimerActive && (
+            <DropdownMenuContent align="start" className="w-48">
+              {statuses.map((status) => (
+                <DropdownMenuItem
+                  key={status.id}
+                  onClick={() => onStatusChange(issue.id, status.id)}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  {getStatusIcon(status.type)}
+                  <span>{status.name}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          )}
         </DropdownMenu>
 
         {/* Labels */}
@@ -246,33 +263,47 @@ function SortableIssueCard({
 
         {/* Milestone Dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="group/btn flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-[#792990]/20">
+          <DropdownMenuTrigger asChild disabled={isTimerActive}>
+            <button
+              className={`group/btn flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
+                isTimerActive
+                  ? "cursor-not-allowed opacity-50"
+                  : "hover:bg-[#792990]/20"
+              }`}
+              disabled={isTimerActive}
+              title={isTimerActive ? "Stop timer to change milestone" : "Change milestone"}
+            >
               <Target className="h-3.5 w-3.5 text-[#FFB947]" />
               <span className="text-gray-300">
                 {issue.milestone?.name || "No milestone"}
               </span>
-              <ChevronDown className="h-3.5 w-3.5 text-gray-400 transition-transform group-hover/btn:text-gray-300" />
+              {isTimerActive ? (
+                <Lock className="h-3.5 w-3.5 text-gray-500" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5 text-gray-400 transition-transform group-hover/btn:text-gray-300" />
+              )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48">
-            <DropdownMenuItem
-              onClick={() => onMilestoneChange(issue.id, null)}
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              <span className="text-gray-500">No milestone</span>
-            </DropdownMenuItem>
-            {milestones.map((milestone) => (
+          {!isTimerActive && (
+            <DropdownMenuContent align="start" className="w-48">
               <DropdownMenuItem
-                key={milestone.id}
-                onClick={() => onMilestoneChange(issue.id, milestone.id)}
+                onClick={() => onMilestoneChange(issue.id, null)}
                 className="flex items-center gap-2 cursor-pointer"
               >
-                <Target className="h-3.5 w-3.5 text-gray-400" />
-                <span>{milestone.name}</span>
+                <span className="text-gray-500">No milestone</span>
               </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
+              {milestones.map((milestone) => (
+                <DropdownMenuItem
+                  key={milestone.id}
+                  onClick={() => onMilestoneChange(issue.id, milestone.id)}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <Target className="h-3.5 w-3.5 text-gray-400" />
+                  <span>{milestone.name}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          )}
         </DropdownMenu>
 
         {/* Priority */}
@@ -318,18 +349,30 @@ function SortableIssueCard({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => onEdit(issue)}
-              className="h-8 w-8 text-gray-300 hover:text-gray-100 hover:bg-[#792990]/20"
+              onClick={() => !isTimerActive && onEdit(issue)}
+              disabled={isTimerActive}
+              className={`h-8 w-8 ${
+                isTimerActive
+                  ? "cursor-not-allowed opacity-30 text-gray-500"
+                  : "text-gray-300 hover:text-gray-100 hover:bg-[#792990]/20"
+              }`}
+              title={isTimerActive ? "Stop timer to edit" : "Edit issue"}
             >
-              <Edit className="h-4 w-4" />
+              {isTimerActive ? <Lock className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => onDelete(issue)}
-              className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-[#792990]/20"
+              onClick={() => !isTimerActive && onDelete(issue)}
+              disabled={isTimerActive}
+              className={`h-8 w-8 ${
+                isTimerActive
+                  ? "cursor-not-allowed opacity-30 text-gray-500"
+                  : "text-red-400 hover:text-red-300 hover:bg-[#792990]/20"
+              }`}
+              title={isTimerActive ? "Stop timer to delete" : "Delete issue"}
             >
-              <Trash2 className="h-4 w-4" />
+              {isTimerActive ? <Lock className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
             </Button>
           </div>
         </div>
