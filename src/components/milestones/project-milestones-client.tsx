@@ -93,10 +93,10 @@ function SortableMilestoneCard({
       ref={setNodeRef}
       style={style}
       onClick={onClick}
-      className={`group relative rounded-lg border p-5 transition-all cursor-pointer ${
+      className={`group relative rounded-xl border-2 p-6 transition-all cursor-pointer ${
         isSelected
-          ? "border-[#792990]/60 bg-gradient-to-r from-[#792990]/20 to-[#792990]/10 shadow-md"
-          : "border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent hover:border-[#792990]/40 hover:from-[#792990]/10 hover:to-[#792990]/5 hover:shadow-sm"
+          ? "border-[#FFB947] bg-gradient-to-br from-[#792990]/30 via-[#792990]/20 to-[#350459]/30 shadow-lg shadow-[#792990]/20 scale-[1.02]"
+          : "border-[#792990]/30 bg-gradient-to-br from-[#792990]/10 via-[#792990]/5 to-transparent hover:border-[#FFB947]/60 hover:from-[#792990]/20 hover:via-[#792990]/10 hover:shadow-lg hover:shadow-[#792990]/10 hover:scale-[1.01]"
       }`}
     >
       <div className="mb-4">
@@ -315,7 +315,7 @@ export function ProjectMilestonesClient({
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={filteredMilestones.map(m => m.id)} strategy={rectSortingStrategy}>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredMilestones.map((milestone) => (
                 <SortableMilestoneCard
                   key={milestone.id}

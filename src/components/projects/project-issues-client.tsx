@@ -93,21 +93,21 @@ function SortableIssueCard({
     <div
       ref={setNodeRef}
       style={style}
-      className="group flex items-center gap-4 rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent p-4 transition-all hover:border-[#792990]/40 hover:from-[#792990]/10 hover:to-[#792990]/5"
+      className="group flex items-center gap-4 rounded-xl border-2 border-[#792990]/40 bg-gradient-to-r from-[#792990]/15 via-[#792990]/10 to-[#792990]/5 p-5 transition-all hover:border-[#FFB947]/70 hover:from-[#792990]/25 hover:via-[#792990]/20 hover:to-[#792990]/10 hover:shadow-lg hover:shadow-[#792990]/10"
     >
       <div
         {...attributes}
         {...listeners}
         className="cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
       >
-        <GripVertical className="h-4 w-4 text-gray-400 hover:text-[#FFB947]" />
+        <GripVertical className="h-5 w-5 text-gray-400 hover:text-[#FFB947]" />
       </div>
 
-      <div className="flex flex-1 items-center gap-3">
-        <span className="text-sm font-mono text-gray-400">
+      <div className="flex flex-1 items-center gap-4">
+        <span className="text-sm font-mono font-semibold text-[#FFB947] shrink-0">
           #{issue.identifier}
         </span>
-        <span className="text-sm font-medium text-gray-100">
+        <span className="text-base font-semibold text-gray-100">
           {issue.title}
         </span>
         <SLAIndicator issue={issue} compact />
@@ -455,7 +455,7 @@ export function ProjectIssuesClient({
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-100">Issues</h2>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
@@ -479,7 +479,7 @@ export function ProjectIssuesClient({
         </div>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-10">
         {Object.entries(filteredIssuesByStatus).map(([statusType, issues]) => {
           if (issues.length === 0) return null;
 
@@ -502,7 +502,7 @@ export function ProjectIssuesClient({
                     items={issues.map((i: any) => i.id)}
                     strategy={verticalListSortingStrategy}
                   >
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {issues.map((issue) => (
                         <SortableIssueCard
                           key={issue.id}

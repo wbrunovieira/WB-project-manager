@@ -119,7 +119,7 @@ export default async function ProjectDetailPage({
   return (
     <div className="min-h-screen bg-[#350459] p-8">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-12">
         <ProjectDetailHeader
           project={{
             id: project.id,
