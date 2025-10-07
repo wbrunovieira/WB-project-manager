@@ -91,11 +91,17 @@ function SortableIssueCard({
     }
   };
 
+  const isInProgress = issue.status.type === "IN_PROGRESS";
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="group rounded-xl border-2 border-[#792990]/40 bg-gradient-to-r from-[#792990]/15 via-[#792990]/10 to-[#792990]/5 transition-all hover:border-[#FFB947]/70 hover:from-[#792990]/25 hover:via-[#792990]/20 hover:to-[#792990]/10 hover:shadow-lg hover:shadow-[#792990]/10"
+      className={`group rounded-xl border-2 transition-all ${
+        isInProgress
+          ? "border-[#FFB947]/70 bg-gradient-to-r from-[#FFB947]/20 via-[#FFB947]/15 to-[#FFB947]/10 shadow-lg shadow-[#FFB947]/20 hover:border-[#FFB947] hover:from-[#FFB947]/25 hover:via-[#FFB947]/20 hover:to-[#FFB947]/15 hover:shadow-xl hover:shadow-[#FFB947]/30"
+          : "border-[#792990]/40 bg-gradient-to-r from-[#792990]/15 via-[#792990]/10 to-[#792990]/5 hover:border-[#FFB947]/70 hover:from-[#792990]/25 hover:via-[#792990]/20 hover:to-[#792990]/10 hover:shadow-lg hover:shadow-[#792990]/10"
+      }`}
     >
       <div className="flex items-center gap-4 p-5">
         <div
@@ -118,10 +124,16 @@ function SortableIssueCard({
               <ChevronDown className="h-4 w-4" />
             )}
           </button>
+          {isInProgress && (
+            <div className="relative">
+              <div className="absolute inset-0 animate-ping rounded-full bg-[#FFB947] opacity-30"></div>
+              <div className="relative h-2 w-2 rounded-full bg-[#FFB947]"></div>
+            </div>
+          )}
           <span className="text-sm font-mono font-semibold text-[#FFB947] shrink-0">
             #{issue.identifier}
           </span>
-          <span className="text-base font-semibold text-gray-100">
+          <span className={`text-base font-semibold ${isInProgress ? "text-[#FFB947]" : "text-gray-100"}`}>
             {issue.title}
           </span>
           <SLAIndicator issue={issue} compact />
