@@ -263,22 +263,25 @@ function SortableIssueCard({
 
       {/* Expanded Details */}
       {isExpanded && (
-        <div className="border-t border-[#792990]/30 bg-[#792990]/5 p-6 space-y-4">
-          {/* Description */}
-          {issue.description && (
-            <div className="space-y-2">
+        <div className="border-t border-[#792990]/30 bg-[#792990]/5 p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:divide-x lg:divide-[#792990]/30">
+            {/* Left Column - Description */}
+            <div className="space-y-3 lg:pr-8">
               <h4 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-[#FFB947]" />
                 Description
               </h4>
-              <p className="text-sm text-gray-300 whitespace-pre-wrap pl-6">
-                {issue.description}
-              </p>
+              <div className="pl-6">
+                <p className="text-base leading-relaxed text-gray-200 whitespace-pre-wrap">
+                  {issue.description || "No description provided"}
+                </p>
+              </div>
             </div>
-          )}
 
-          {/* Metadata Grid */}
-          <div className="grid grid-cols-2 gap-4 pl-6">
+            {/* Right Column - Metadata */}
+            <div className="space-y-4 lg:pl-8">
+              <h4 className="text-sm font-semibold text-gray-300">Details</h4>
+              <div className="grid grid-cols-2 gap-4 pl-6">
             {/* Type */}
             <div className="space-y-1">
               <p className="text-xs font-medium text-gray-400">Type</p>
@@ -391,29 +394,31 @@ function SortableIssueCard({
                 <p className="text-sm text-gray-200">{issue.reopenCount} times</p>
               </div>
             )}
-          </div>
-
-          {/* Labels (if not shown above) */}
-          {issue.labels.length > 0 && (
-            <div className="space-y-2 pl-6">
-              <p className="text-xs font-medium text-gray-400">Labels</p>
-              <div className="flex flex-wrap gap-2">
-                {issue.labels.map((issueLabel: any) => (
-                  <span
-                    key={issueLabel.labelId}
-                    className="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium shadow-sm"
-                    style={{
-                      backgroundColor: `${issueLabel.label.color}15`,
-                      color: issueLabel.label.color,
-                      border: `1px solid ${issueLabel.label.color}40`,
-                    }}
-                  >
-                    {issueLabel.label.name}
-                  </span>
-                ))}
               </div>
+
+              {/* Labels */}
+              {issue.labels.length > 0 && (
+                <div className="space-y-2 pl-6">
+                  <p className="text-xs font-medium text-gray-400">Labels</p>
+                  <div className="flex flex-wrap gap-2">
+                    {issue.labels.map((issueLabel: any) => (
+                      <span
+                        key={issueLabel.labelId}
+                        className="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium shadow-sm"
+                        style={{
+                          backgroundColor: `${issueLabel.label.color}15`,
+                          color: issueLabel.label.color,
+                          border: `1px solid ${issueLabel.label.color}40`,
+                        }}
+                      >
+                        {issueLabel.label.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>
