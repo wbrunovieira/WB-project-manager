@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withCors } from "@/lib/api-auth";
+import { withAuth, withCors } from "@/lib/api-auth";
 import { auth } from "@/lib/auth";
 import { z } from "zod";
 
@@ -141,14 +141,7 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/issues - Create new issue
-export async function POST(req: NextRequest) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+export const POST = withAuth(async (req: NextRequest, userId: string) => {
   try {
     const body = await req.json();
     console.log("Creating issue with body:", body);
@@ -172,7 +165,7 @@ export async function POST(req: NextRequest) {
     const workspaceMember = await prisma.workspaceMember.findUnique({
       where: {
         userId_workspaceId: {
-          userId: session.user.id,
+          userId,
           workspaceId,
         },
       },
@@ -211,7 +204,7 @@ export async function POST(req: NextRequest) {
         ...data,
         workspaceId,
         identifier,
-        creatorId: session.user.id,
+        creatorId: userId,
         reportedAt: reportedAt && reportedAt !== "" ? new Date(reportedAt) : undefined,
         labels: labelIds
           ? {
@@ -262,7 +255,7 @@ export async function POST(req: NextRequest) {
     );
     return withCors(response);
   }
-}
+});
 
 // OPTIONS handler for CORS
 export async function OPTIONS() {
