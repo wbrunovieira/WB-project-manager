@@ -441,6 +441,7 @@ export function ProjectIssuesClient({
   const [deletingIssue, setDeletingIssue] = useState<any | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     setIsMounted(true);
@@ -563,6 +564,18 @@ export function ProjectIssuesClient({
     }
   };
 
+  const toggleGroupCollapse = (statusType: string) => {
+    setCollapsedGroups((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(statusType)) {
+        newSet.delete(statusType);
+      } else {
+        newSet.add(statusType);
+      }
+      return newSet;
+    });
+  };
+
   // Filter issues by type
   const filteredIssuesByStatus = useMemo(() => {
     if (typeFilter === "all") {
@@ -661,57 +674,70 @@ export function ProjectIssuesClient({
 
           const statusName =
             issues[0]?.status.name || statusType.replace("_", " ");
+          const isCollapsed = collapsedGroups.has(statusType);
 
           return (
             <div key={statusType}>
-              <h3 className="mb-3 text-sm font-semibold text-gray-400 uppercase tracking-wide">
+              <button
+                onClick={() => toggleGroupCollapse(statusType)}
+                className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-400 uppercase tracking-wide hover:text-[#FFB947] transition-colors group"
+              >
+                {isCollapsed ? (
+                  <ChevronDown className="h-4 w-4 transition-transform group-hover:text-[#FFB947]" />
+                ) : (
+                  <ChevronUp className="h-4 w-4 transition-transform group-hover:text-[#FFB947]" />
+                )}
                 {statusName} ({issues.length})
-              </h3>
+              </button>
 
-              {isMounted ? (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={createHandleDragEnd(statusType)}
-                >
-                  <SortableContext
-                    items={issues.map((i: any) => i.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    <div className="space-y-3">
+              {!isCollapsed && (
+                <>
+                  {isMounted ? (
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={createHandleDragEnd(statusType)}
+                    >
+                      <SortableContext
+                        items={issues.map((i: any) => i.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        <div className="space-y-3">
+                          {issues.map((issue) => (
+                            <SortableIssueCard
+                              key={issue.id}
+                              issue={issue}
+                              statuses={statuses}
+                              milestones={milestones || []}
+                              onEdit={setEditingIssue}
+                              onDelete={setDeletingIssue}
+                              onStatusChange={handleStatusChange}
+                              onMilestoneChange={handleMilestoneChange}
+                            />
+                          ))}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
+                  ) : (
+                    <div className="space-y-2">
                       {issues.map((issue) => (
-                        <SortableIssueCard
+                        <div
                           key={issue.id}
-                          issue={issue}
-                          statuses={statuses}
-                          milestones={milestones || []}
-                          onEdit={setEditingIssue}
-                          onDelete={setDeletingIssue}
-                          onStatusChange={handleStatusChange}
-                          onMilestoneChange={handleMilestoneChange}
-                        />
+                          className="group flex items-center gap-4 rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent p-4"
+                        >
+                          <div className="flex flex-1 items-center gap-3">
+                            <span className="text-sm font-mono text-gray-400">
+                              #{issue.identifier}
+                            </span>
+                            <span className="text-sm font-medium text-gray-100">
+                              {issue.title}
+                            </span>
+                          </div>
+                        </div>
                       ))}
                     </div>
-                  </SortableContext>
-                </DndContext>
-              ) : (
-                <div className="space-y-2">
-                  {issues.map((issue) => (
-                    <div
-                      key={issue.id}
-                      className="group flex items-center gap-4 rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent p-4"
-                    >
-                      <div className="flex flex-1 items-center gap-3">
-                        <span className="text-sm font-mono text-gray-400">
-                          #{issue.identifier}
-                        </span>
-                        <span className="text-sm font-medium text-gray-100">
-                          {issue.title}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                  )}
+                </>
               )}
             </div>
           );
