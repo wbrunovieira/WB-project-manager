@@ -92,16 +92,38 @@ function SortableIssueCard({
   };
 
   const isInProgress = issue.status.type === "IN_PROGRESS";
+  const isDone = issue.status.type === "DONE";
+  const isCanceled = issue.status.type === "CANCELED";
+
+  // Calculate fade based on how long ago it was completed
+  const getCompletionFade = () => {
+    if (!isDone || !issue.resolvedAt) return 1;
+    const daysSinceResolved = Math.floor((Date.now() - new Date(issue.resolvedAt).getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSinceResolved > 7) return 0.7;
+    if (daysSinceResolved > 3) return 0.85;
+    return 0.95;
+  };
+
+  const getCardStyles = () => {
+    if (isInProgress) {
+      return "border-[#FFB947]/70 bg-gradient-to-r from-[#FFB947]/20 via-[#FFB947]/15 to-[#FFB947]/10 shadow-lg shadow-[#FFB947]/20 hover:border-[#FFB947] hover:from-[#FFB947]/25 hover:via-[#FFB947]/20 hover:to-[#FFB947]/15 hover:shadow-xl hover:shadow-[#FFB947]/30";
+    }
+    if (isDone) {
+      return "border-[#10b981]/30 bg-gradient-to-r from-[#10b981]/10 via-[#10b981]/5 to-transparent hover:border-[#10b981]/50 hover:from-[#10b981]/15 hover:via-[#10b981]/10";
+    }
+    if (isCanceled) {
+      return "border-[#ef4444]/30 bg-gradient-to-r from-[#ef4444]/10 via-[#ef4444]/5 to-transparent opacity-75 hover:border-[#ef4444]/50";
+    }
+    return "border-[#792990]/40 bg-gradient-to-r from-[#792990]/15 via-[#792990]/10 to-[#792990]/5 hover:border-[#FFB947]/70 hover:from-[#792990]/25 hover:via-[#792990]/20 hover:to-[#792990]/10 hover:shadow-lg hover:shadow-[#792990]/10";
+  };
+
+  const completionFade = getCompletionFade();
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className={`group rounded-xl border-2 transition-all ${
-        isInProgress
-          ? "border-[#FFB947]/70 bg-gradient-to-r from-[#FFB947]/20 via-[#FFB947]/15 to-[#FFB947]/10 shadow-lg shadow-[#FFB947]/20 hover:border-[#FFB947] hover:from-[#FFB947]/25 hover:via-[#FFB947]/20 hover:to-[#FFB947]/15 hover:shadow-xl hover:shadow-[#FFB947]/30"
-          : "border-[#792990]/40 bg-gradient-to-r from-[#792990]/15 via-[#792990]/10 to-[#792990]/5 hover:border-[#FFB947]/70 hover:from-[#792990]/25 hover:via-[#792990]/20 hover:to-[#792990]/10 hover:shadow-lg hover:shadow-[#792990]/10"
-      }`}
+      style={{ ...style, opacity: completionFade }}
+      className={`group rounded-xl border-2 transition-all ${getCardStyles()}`}
     >
       <div className="flex items-center gap-4 p-5">
         <div
@@ -130,12 +152,53 @@ function SortableIssueCard({
               <div className="relative h-2 w-2 rounded-full bg-[#FFB947]"></div>
             </div>
           )}
+          {isDone && (
+            <CheckCircle2 className="h-4 w-4 text-[#10b981] shrink-0" />
+          )}
+          {isCanceled && (
+            <XCircle className="h-4 w-4 text-[#ef4444] shrink-0" />
+          )}
           <span className="text-sm font-mono font-semibold text-[#FFB947] shrink-0">
             #{issue.identifier}
           </span>
-          <span className={`text-base font-semibold ${isInProgress ? "text-[#FFB947]" : "text-gray-100"}`}>
+          <span className={`text-base font-semibold ${
+            isInProgress ? "text-[#FFB947]" :
+            isDone ? "text-gray-300" :
+            isCanceled ? "text-gray-400 line-through" :
+            "text-gray-100"
+          }`}>
             {issue.title}
           </span>
+
+          {/* Resolution Time Badge for Done issues */}
+          {isDone && issue.resolutionTimeMinutes && (
+            <span className="inline-flex items-center gap-1 rounded-md bg-[#10b981]/20 px-2 py-1 text-xs font-medium text-[#10b981] border border-[#10b981]/30">
+              <Clock className="h-3 w-3" />
+              Resolved in {Math.floor(issue.resolutionTimeMinutes / 60)}h {issue.resolutionTimeMinutes % 60}m
+            </span>
+          )}
+
+          {/* High Priority Trophy for Done issues */}
+          {isDone && (issue.priority === "URGENT" || issue.priority === "HIGH") && (
+            <span className="inline-flex items-center text-yellow-500" title="High priority completed!">
+              🏆
+            </span>
+          )}
+
+          {/* Completion Timestamp */}
+          {isDone && issue.resolvedAt && (
+            <span className="text-xs text-gray-400 shrink-0">
+              Completed {(() => {
+                const days = Math.floor((Date.now() - new Date(issue.resolvedAt).getTime()) / (1000 * 60 * 60 * 24));
+                if (days === 0) return "today";
+                if (days === 1) return "yesterday";
+                if (days < 7) return `${days} days ago`;
+                if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
+                return `${Math.floor(days / 30)} months ago`;
+              })()}
+            </span>
+          )}
+
           <SLAIndicator issue={issue} compact />
         </div>
 
