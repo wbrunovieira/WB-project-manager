@@ -208,7 +208,9 @@ export async function PATCH(
           additionalData.resolvedAt = now;
 
           // Calculate resolution time in business hours
-          const startDate = issue.reportedAt || issue.createdAt;
+          const startDate = reportedAt !== undefined
+            ? (reportedAt ? new Date(reportedAt) : issue.createdAt)
+            : (issue.reportedAt || issue.createdAt);
           const resolutionTimeMinutes = calculateBusinessHours(startDate, now);
           additionalData.resolutionTimeMinutes = resolutionTimeMinutes;
         }
@@ -220,6 +222,13 @@ export async function PATCH(
           additionalData.resolutionTimeMinutes = null;
         }
       }
+    }
+
+    // Auto-recalculate resolutionTimeMinutes if reportedAt changed and issue is already resolved
+    if (reportedAt !== undefined && issue.resolvedAt && issue.status.type === "DONE") {
+      const newReportedAt = reportedAt ? new Date(reportedAt) : issue.createdAt;
+      const resolutionTimeMinutes = calculateBusinessHours(newReportedAt, issue.resolvedAt);
+      additionalData.resolutionTimeMinutes = resolutionTimeMinutes;
     }
 
     // Update issue
