@@ -206,18 +206,46 @@ function SortableIssueCard({
             </span>
           )}
 
-          {/* Completion Timestamp */}
+          {/* Completion Timestamp and Resolution Time */}
           {isDone && issue.resolvedAt && (
-            <span className="text-xs text-gray-400 shrink-0">
-              Completed {(() => {
-                const days = Math.floor((Date.now() - new Date(issue.resolvedAt).getTime()) / (1000 * 60 * 60 * 24));
-                if (days === 0) return "today";
-                if (days === 1) return "yesterday";
-                if (days < 7) return `${days} days ago`;
-                if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
-                return `${Math.floor(days / 30)} months ago`;
-              })()}
-            </span>
+            <div className="text-xs text-gray-400 shrink-0 text-right">
+              <div>
+                Resolved {(() => {
+                  const resolvedDate = new Date(issue.resolvedAt);
+                  const today = new Date();
+                  const yesterday = new Date(today);
+                  yesterday.setDate(yesterday.getDate() - 1);
+
+                  // Compare dates (ignoring time)
+                  const isSameDay = (d1: Date, d2: Date) =>
+                    d1.getFullYear() === d2.getFullYear() &&
+                    d1.getMonth() === d2.getMonth() &&
+                    d1.getDate() === d2.getDate();
+
+                  if (isSameDay(resolvedDate, today)) return "today";
+                  if (isSameDay(resolvedDate, yesterday)) return "yesterday";
+
+                  const days = Math.floor((Date.now() - resolvedDate.getTime()) / (1000 * 60 * 60 * 24));
+                  if (days < 7) return `${days} days ago`;
+                  if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
+                  return `${Math.floor(days / 30)} months ago`;
+                })()}
+              </div>
+              {issue.resolutionTimeMinutes !== null && issue.resolutionTimeMinutes < 1440 && (
+                <div className="flex items-center gap-1 justify-end mt-0.5">
+                  <span className="text-yellow-500">🏆</span>
+                  <span>
+                    {(() => {
+                      const minutes = issue.resolutionTimeMinutes;
+                      if (minutes < 60) return `${minutes}m resolution`;
+                      const hours = Math.floor(minutes / 60);
+                      const mins = minutes % 60;
+                      return mins > 0 ? `${hours}h ${mins}m resolution` : `${hours}h resolution`;
+                    })()}
+                  </span>
+                </div>
+              )}
+            </div>
           )}
 
           <SLAIndicator issue={issue} compact />
