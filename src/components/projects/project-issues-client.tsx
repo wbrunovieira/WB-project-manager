@@ -58,10 +58,14 @@ interface SortableIssueCardProps {
   issue: any;
   statuses: Array<{ id: string; name: string; type: string }>;
   milestones: Array<{ id: string; name: string }>;
+  features: Array<{ id: string; name: string; color?: string | null }>;
+  projectId: string;
   onEdit: (issue: any) => void;
   onDelete: (issue: any) => void;
   onStatusChange: (issueId: string, statusId: string) => void;
   onMilestoneChange: (issueId: string, milestoneId: string | null) => void;
+  onFeatureChange: (issueId: string, featureId: string | null) => void;
+  onRequestCreateFeature: (issueId: string) => void;
   onMoveToTop: (issueId: string) => void;
   onMoveToBottom: (issueId: string) => void;
   onCopyLink: (issue: any) => void;
@@ -72,10 +76,14 @@ function SortableIssueCard({
   issue,
   statuses,
   milestones,
+  features,
+  projectId,
   onEdit,
   onDelete,
   onStatusChange,
   onMilestoneChange,
+  onFeatureChange,
+  onRequestCreateFeature,
   onMoveToTop,
   onMoveToBottom,
   onCopyLink,
@@ -84,7 +92,6 @@ function SortableIssueCard({
   const [isExpanded, setIsExpanded] = useState(false);
   const { isIssueTracking } = useTimeTracker();
   const isTimerActive = isIssueTracking(issue.id);
-  const { toast } = useToast();
 
   const {
     attributes,
@@ -140,6 +147,46 @@ function SortableIssueCard({
 
   const completionFade = getCompletionFade();
 
+  const handleCreateFeature = async () => {
+    if (!newFeatureName.trim()) return;
+
+    try {
+      const response = await fetch("/api/features", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newFeatureName.trim(),
+          color: newFeatureColor,
+          projectId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create feature");
+      }
+
+      const newFeature = await response.json();
+
+      // Assign the new feature to the issue
+      onFeatureChange(issue.id, newFeature.id);
+
+      setNewFeatureName("");
+      setNewFeatureColor("#3b82f6");
+      setIsCreatingFeature(false);
+
+      toast({
+        title: "Feature created",
+        description: `Created and assigned "${newFeature.name}"`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create feature",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
@@ -157,42 +204,106 @@ function SortableIssueCard({
           <GripVertical className="h-5 w-5 text-gray-400 hover:text-[#FFB947]" />
         </div>
 
-        <div className="flex flex-1 items-center gap-4">
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-2 shrink-0 text-gray-400 hover:text-[#FFB947] transition-colors"
-            title={isExpanded ? "Collapse" : "Expand"}
-          >
-            {isExpanded ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
+        <div className="flex flex-1 flex-col gap-1.5">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex items-center gap-2 shrink-0 text-gray-400 hover:text-[#FFB947] transition-colors"
+              title={isExpanded ? "Collapse" : "Expand"}
+            >
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </button>
+            {isInProgress && (
+              <div className="relative">
+                <div className="absolute inset-0 animate-ping rounded-full bg-[#FFB947] opacity-30"></div>
+                <div className="relative h-2 w-2 rounded-full bg-[#FFB947]"></div>
+              </div>
             )}
-          </button>
-          {isInProgress && (
-            <div className="relative">
-              <div className="absolute inset-0 animate-ping rounded-full bg-[#FFB947] opacity-30"></div>
-              <div className="relative h-2 w-2 rounded-full bg-[#FFB947]"></div>
-            </div>
-          )}
-          {isDone && (
-            <CheckCircle2 className="h-4 w-4 text-[#10b981] shrink-0" />
-          )}
-          {isCanceled && (
-            <XCircle className="h-4 w-4 text-[#ef4444] shrink-0" />
-          )}
-          <span className="text-sm font-mono font-semibold text-[#FFB947] shrink-0">
-            #{issue.identifier}
-          </span>
-          <span className={`text-base font-semibold ${
-            isInProgress ? "text-[#FFB947]" :
-            isDone ? "text-gray-300" :
-            isCanceled ? "text-gray-400 line-through" :
-            "text-gray-100"
-          }`}>
-            {issue.title}
-          </span>
+            {isDone && (
+              <CheckCircle2 className="h-4 w-4 text-[#10b981] shrink-0" />
+            )}
+            {isCanceled && (
+              <XCircle className="h-4 w-4 text-[#ef4444] shrink-0" />
+            )}
+            <span className="text-sm font-mono font-semibold text-[#FFB947] shrink-0">
+              #{issue.identifier}
+            </span>
+            <span className={`text-base font-semibold ${
+              isInProgress ? "text-[#FFB947]" :
+              isDone ? "text-gray-300" :
+              isCanceled ? "text-gray-400 line-through" :
+              "text-gray-100"
+            }`}>
+              {issue.title}
+            </span>
+          </div>
 
+          {/* Feature Dropdown - Below title with indentation */}
+          <div className="ml-12">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild disabled={isTimerActive}>
+                <button
+                  className={`group/feature inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium transition-all ${
+                    isTimerActive
+                      ? "cursor-not-allowed opacity-50"
+                      : "hover:bg-[#792990]/20"
+                  } ${issue.feature ? "bg-[#792990]/10 border-l-2 shadow-sm" : "border border-dashed border-[#792990]/40"}`}
+                  style={{
+                    borderLeftColor: issue.feature?.color || "#792990",
+                  }}
+                  disabled={isTimerActive}
+                  title={isTimerActive ? "Stop timer to change feature" : "Change feature"}
+                >
+                  <Target className="h-3 w-3" style={{ color: issue.feature?.color || "#792990" }} />
+                  <span className="text-gray-200">
+                    {issue.feature?.name || "Add feature"}
+                  </span>
+                  {!isTimerActive && (
+                    <ChevronDown className="h-3 w-3 text-gray-400 transition-transform group-hover/feature:text-gray-300" />
+                  )}
+                </button>
+              </DropdownMenuTrigger>
+              {!isTimerActive && (
+                <DropdownMenuContent align="start" className="w-64">
+                  <DropdownMenuItem
+                    onClick={() => onFeatureChange(issue.id, null)}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <span className="text-gray-500">No feature</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {features.map((feature) => (
+                    <DropdownMenuItem
+                      key={feature.id}
+                      onClick={() => onFeatureChange(issue.id, feature.id)}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <div
+                        className="h-3 w-1 rounded"
+                        style={{ backgroundColor: feature.color || "#792990" }}
+                      />
+                      <span>{feature.name}</span>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => onRequestCreateFeature(issue.id)}
+                    className="flex items-center gap-2 cursor-pointer text-[#FFB947]"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Create new feature</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              )}
+            </DropdownMenu>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
           {/* Resolution Time Badge for Done issues */}
           {isDone && issue.resolutionTimeMinutes && (
             <span className="inline-flex items-center gap-1 rounded-md bg-[#10b981]/20 px-2 py-1 text-xs font-medium text-[#10b981] border border-[#10b981]/30">
@@ -606,6 +717,27 @@ function SortableIssueCard({
             )}
               </div>
 
+              {/* Feature */}
+              {issue.feature && (
+                <div className="space-y-2 pl-6">
+                  <p className="text-xs font-medium text-gray-400">Feature</p>
+                  <div
+                    className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium bg-[#792990]/10 border-l-4 shadow-sm"
+                    style={{
+                      borderLeftColor: issue.feature.color || "#792990",
+                    }}
+                  >
+                    <Target className="h-4 w-4" style={{ color: issue.feature.color || "#792990" }} />
+                    <div>
+                      <p className="text-gray-200 font-medium">{issue.feature.name}</p>
+                      {issue.feature.description && (
+                        <p className="text-xs text-gray-400 mt-0.5">{issue.feature.description}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Labels */}
               {issue.labels.length > 0 && (
                 <div className="space-y-2 pl-6">
@@ -690,10 +822,33 @@ export function ProjectIssuesClient({
   const [isMounted, setIsMounted] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [features, setFeatures] = useState<Array<{ id: string; name: string; color?: string | null }>>([]);
+  const [isCreatingFeature, setIsCreatingFeature] = useState(false);
+  const [newFeatureName, setNewFeatureName] = useState("");
+  const [newFeatureColor, setNewFeatureColor] = useState("#3b82f6");
+  const [pendingIssueId, setPendingIssueId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Load features for this project
+  useEffect(() => {
+    const fetchFeatures = async () => {
+      try {
+        const response = await fetch(`/api/features?projectId=${projectId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setFeatures(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch features:", error);
+      }
+    };
+
+    fetchFeatures();
+  }, [projectId]);
 
   // Sync internal state with props when they change (e.g., milestone filter)
   useEffect(() => {
@@ -894,6 +1049,112 @@ export function ProjectIssuesClient({
     }
   };
 
+  const handleRequestCreateFeature = (issueId: string) => {
+    setPendingIssueId(issueId);
+    setIsCreatingFeature(true);
+  };
+
+  const handleCreateFeature = async () => {
+    if (!newFeatureName.trim() || !pendingIssueId) return;
+
+    try {
+      const response = await fetch("/api/features", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newFeatureName.trim(),
+          color: newFeatureColor,
+          projectId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create feature");
+      }
+
+      const newFeature = await response.json();
+
+      // Assign the new feature to the pending issue
+      await handleFeatureChange(pendingIssueId, newFeature.id);
+
+      setNewFeatureName("");
+      setNewFeatureColor("#3b82f6");
+      setIsCreatingFeature(false);
+      setPendingIssueId(null);
+
+      toast({
+        title: "Feature created",
+        description: `Created and assigned "${newFeature.name}"`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create feature",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleFeatureChange = async (issueId: string, featureId: string | null) => {
+    // Find the issue
+    let currentIssue: any = null;
+    let currentStatusType: string = "";
+
+    for (const [statusType, issues] of Object.entries(issuesByStatus)) {
+      const issue = issues.find((i: any) => i.id === issueId);
+      if (issue) {
+        currentIssue = issue;
+        currentStatusType = statusType;
+        break;
+      }
+    }
+
+    if (!currentIssue) return;
+
+    // Find the feature
+    const feature = featureId ? features.find((f) => f.id === featureId) : null;
+
+    // Optimistically update the UI
+    const updatedIssue = {
+      ...currentIssue,
+      featureId,
+      feature: feature || null,
+    };
+
+    // Update state optimistically
+    const newIssuesByStatus = { ...issuesByStatus };
+    newIssuesByStatus[currentStatusType] = newIssuesByStatus[currentStatusType].map((i: any) =>
+      i.id === issueId ? updatedIssue : i
+    );
+
+    setIssuesByStatus(newIssuesByStatus);
+
+    try {
+      const response = await fetch(`/api/issues/${issueId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ featureId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update feature");
+      }
+
+      // Refresh features list to include newly created features
+      const featuresResponse = await fetch(`/api/features?projectId=${projectId}`);
+      if (featuresResponse.ok) {
+        const data = await featuresResponse.json();
+        setFeatures(data);
+      }
+
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to update feature:", error);
+      // Revert on error
+      setIssuesByStatus(initialIssuesByStatus);
+    }
+  };
+
   const handleMoveToTop = async (issueId: string) => {
     // Find the issue and its status type
     let currentStatusType: string = "";
@@ -1089,10 +1350,14 @@ export function ProjectIssuesClient({
                               issue={issue}
                               statuses={statuses}
                               milestones={milestones || []}
+                              features={features}
+                              projectId={projectId}
                               onEdit={setEditingIssue}
                               onDelete={setDeletingIssue}
                               onStatusChange={handleStatusChange}
                               onMilestoneChange={handleMilestoneChange}
+                              onFeatureChange={handleFeatureChange}
+                              onRequestCreateFeature={handleRequestCreateFeature}
                               onMoveToTop={handleMoveToTop}
                               onMoveToBottom={handleMoveToBottom}
                               onCopyLink={handleCopyIssueLink}
@@ -1192,6 +1457,77 @@ export function ProjectIssuesClient({
           open={!!deletingIssue}
           onOpenChange={(open) => !open && setDeletingIssue(null)}
         />
+      )}
+
+      {isCreatingFeature && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setIsCreatingFeature(false)}
+        >
+          <div
+            className="bg-[#1a0b2e] border border-[#792990]/40 rounded-lg p-6 w-96 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-gray-100 mb-4">Create New Feature</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                  Feature Name
+                </label>
+                <input
+                  type="text"
+                  value={newFeatureName}
+                  onChange={(e) => setNewFeatureName(e.target.value)}
+                  placeholder="Enter feature name"
+                  className="w-full rounded border border-[#792990]/40 bg-[#350459] px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:border-[#792990] focus:outline-none focus:ring-1 focus:ring-[#792990]"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newFeatureName.trim()) {
+                      handleCreateFeature();
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                  Color
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={newFeatureColor}
+                    onChange={(e) => setNewFeatureColor(e.target.value)}
+                    className="h-10 w-20 rounded border border-[#792990]/40 bg-[#350459] cursor-pointer"
+                  />
+                  <div
+                    className="flex-1 h-10 rounded border border-[#792990]/40"
+                    style={{ backgroundColor: newFeatureColor }}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  onClick={() => {
+                    setIsCreatingFeature(false);
+                    setNewFeatureName("");
+                    setNewFeatureColor("#3b82f6");
+                    setPendingIssueId(null);
+                  }}
+                  className="rounded border border-[#792990]/40 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-[#792990]/10 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateFeature}
+                  disabled={!newFeatureName.trim()}
+                  className="rounded bg-[#792990] px-4 py-2 text-sm font-medium text-white hover:bg-[#792990]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Create & Assign
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

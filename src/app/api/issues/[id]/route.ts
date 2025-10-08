@@ -11,6 +11,7 @@ const updateIssueSchema = z.object({
   statusId: z.string().optional(),
   projectId: z.string().nullable().optional(),
   milestoneId: z.string().nullable().optional(),
+  featureId: z.string().nullable().optional(),
   assigneeId: z.string().nullable().optional(),
   priority: z.enum(["URGENT", "HIGH", "MEDIUM", "LOW", "NO_PRIORITY"]).optional(),
   labelIds: z.array(z.string()).optional(),

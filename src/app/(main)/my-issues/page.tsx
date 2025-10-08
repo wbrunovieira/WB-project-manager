@@ -32,6 +32,7 @@ export default async function MyIssuesPage() {
           name: true,
         },
       },
+      feature: true,
       assignee: {
         select: {
           id: true,

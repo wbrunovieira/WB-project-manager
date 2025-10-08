@@ -17,12 +17,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LabelSelector } from "@/components/ui/label-selector";
+import { FeatureSelector } from "@/components/ui/feature-selector";
 import { useToast } from "@/hooks/use-toast";
 
 interface LabelType {
   id: string;
   name: string;
   color: string;
+}
+
+interface FeatureType {
+  id: string;
+  name: string;
+  color?: string | null;
 }
 
 const createIssueSchema = z.object({
@@ -34,6 +41,7 @@ const createIssueSchema = z.object({
   assigneeId: z.string().optional(),
   projectId: z.string().optional(),
   milestoneId: z.string().optional(),
+  featureId: z.string().optional(),
   reportedAt: z.string().optional(),
 });
 
@@ -67,6 +75,8 @@ export function CreateIssueModal({
   const [isLoading, setIsLoading] = useState(false);
   const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
   const [availableLabels, setAvailableLabels] = useState<LabelType[]>([]);
+  const [selectedFeatureId, setSelectedFeatureId] = useState<string | null>(null);
+  const [availableFeatures, setAvailableFeatures] = useState<FeatureType[]>([]);
   const [createAnother, setCreateAnother] = useState(false);
 
   // Find Bruno Vieira's user ID
@@ -99,6 +109,16 @@ export function CreateIssueModal({
   }, [open, workspaceId]);
 
   useEffect(() => {
+    const projectId = getValues("projectId");
+    if (open && projectId) {
+      fetchFeatures(projectId);
+    } else {
+      setAvailableFeatures([]);
+      setSelectedFeatureId(null);
+    }
+  }, [open, getValues("projectId")]);
+
+  useEffect(() => {
     if (open && !createAnother) {
       // Reset form with Bruno Vieira as default assignee when opening modal
       reset({
@@ -128,6 +148,18 @@ export function CreateIssueModal({
     }
   };
 
+  const fetchFeatures = async (projId: string) => {
+    try {
+      const response = await fetch(`/api/features?projectId=${projId}`);
+      if (response.ok) {
+        const features = await response.json();
+        setAvailableFeatures(features);
+      }
+    } catch (error) {
+      console.error("Failed to fetch features:", error);
+    }
+  };
+
   const handleCreateLabel = async (name: string, color: string) => {
     const response = await fetch("/api/labels", {
       method: "POST",
@@ -145,6 +177,28 @@ export function CreateIssueModal({
     return newLabel;
   };
 
+  const handleCreateFeature = async (name: string, color: string) => {
+    const projectId = getValues("projectId");
+    if (!projectId) {
+      throw new Error("Please select a project first");
+    }
+
+    const response = await fetch("/api/features", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, color, projectId }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to create feature");
+    }
+
+    const newFeature = await response.json();
+    setAvailableFeatures([...availableFeatures, newFeature]);
+    return newFeature;
+  };
+
   const onSubmit = async (data: CreateIssueForm) => {
     setIsLoading(true);
 
@@ -160,6 +214,7 @@ export function CreateIssueModal({
           assigneeId: data.assigneeId || undefined,
           projectId: data.projectId || undefined,
           milestoneId: data.milestoneId || undefined,
+          featureId: selectedFeatureId || undefined,
           reportedAt: data.reportedAt || undefined,
           labelIds: selectedLabelIds.length > 0 ? selectedLabelIds : undefined,
         }),
@@ -361,6 +416,21 @@ export function CreateIssueModal({
               </div>
             )}
           </div>
+
+          {getValues("projectId") && (
+            <div className="space-y-2">
+              <Label className="text-gray-300">Feature (optional)</Label>
+              <FeatureSelector
+                availableFeatures={availableFeatures}
+                selectedFeatureId={selectedFeatureId}
+                onFeatureChange={setSelectedFeatureId}
+                onCreateFeature={handleCreateFeature}
+              />
+              <p className="text-xs text-gray-400">
+                Features are specific to this project and help organize issues by functionality
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="reportedAt" className="text-gray-300">

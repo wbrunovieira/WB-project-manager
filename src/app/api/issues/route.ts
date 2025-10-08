@@ -11,6 +11,7 @@ const createIssueSchema = z.object({
   statusId: z.string(),
   projectId: z.string().optional(),
   milestoneId: z.string().optional(),
+  featureId: z.string().optional(),
   assigneeId: z.string().optional(),
   priority: z.enum(["URGENT", "HIGH", "MEDIUM", "LOW", "NO_PRIORITY"]).optional(),
   type: z.enum(["FEATURE", "MAINTENANCE", "BUG", "IMPROVEMENT"]).default("FEATURE"),
@@ -97,6 +98,7 @@ export async function GET(req: NextRequest) {
             name: true,
           },
         },
+        feature: true,
         assignee: {
           select: {
             id: true,
@@ -222,6 +224,7 @@ export const POST = withAuth(async (req: NextRequest, userId: string) => {
             name: true,
           },
         },
+        feature: true,
         assignee: {
           select: {
             id: true,

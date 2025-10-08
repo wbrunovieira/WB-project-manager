@@ -159,7 +159,7 @@ function SortableMilestoneCard({
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-[#792990]/20">
           <div
-            className="h-full bg-gradient-to-r from-[#FFB947] to-[#792990] transition-all"
+            className="h-full bg-[#792990] transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Plus, Circle, CircleDot, CheckCircle2, XCircle, AlertCircle, Edit, Trash2, GripVertical } from "lucide-react";
+import { Plus, Circle, CircleDot, CheckCircle2, XCircle, AlertCircle, Edit, Trash2, GripVertical, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateIssueModal } from "@/components/issues/create-issue-modal";
 import { EditIssueModal } from "@/components/issues/edit-issue-modal";
@@ -205,6 +205,17 @@ function SortableIssueRow({
       </td>
       <td className="px-6 py-4">
         <div className="flex gap-1.5 flex-wrap">
+          {issue.feature && (
+            <div
+              className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium bg-[#792990]/10 border-l-2 shadow-sm"
+              style={{
+                borderLeftColor: issue.feature.color || "#792990",
+              }}
+            >
+              <Target className="h-3 w-3" style={{ color: issue.feature.color || "#792990" }} />
+              <span className="text-gray-200">{issue.feature.name}</span>
+            </div>
+          )}
           {issue.labels && issue.labels.length > 0 ? (
             issue.labels.map((issueLabel) => (
               <span
@@ -219,9 +230,9 @@ function SortableIssueRow({
                 {issueLabel.label.name}
               </span>
             ))
-          ) : (
+          ) : !issue.feature ? (
             <span className="text-xs text-gray-400 italic">No labels</span>
-          )}
+          ) : null}
         </div>
       </td>
       <td className="px-6 py-4">
