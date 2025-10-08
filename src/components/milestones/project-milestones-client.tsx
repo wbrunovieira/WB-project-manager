@@ -39,6 +39,11 @@ interface Milestone {
     status: {
       type: string;
     };
+    feature?: {
+      id: string;
+      name: string;
+      color: string | null;
+    } | null;
   }>;
 }
 
@@ -87,6 +92,17 @@ function SortableMilestoneCard({
     totalIssues > 0
       ? Math.round((completedIssues / totalIssues) * 100)
       : 0;
+
+  // Get unique features from issues
+  const uniqueFeatures = milestone.issues
+    ? Array.from(
+        new Map(
+          milestone.issues
+            .filter((issue) => issue.feature)
+            .map((issue) => [issue.feature!.id, issue.feature!])
+        ).values()
+      )
+    : [];
 
   return (
     <div
@@ -184,6 +200,24 @@ function SortableMilestoneCard({
           </div>
         )}
       </div>
+
+      {/* Features */}
+      {uniqueFeatures.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-[#792990]/20">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Target className="h-3.5 w-3.5 text-gray-400" />
+            {uniqueFeatures.map((feature) => (
+              <div
+                key={feature.id}
+                className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium bg-[#792990]/10 border-l-2"
+                style={{ borderLeftColor: feature.color || "#792990" }}
+              >
+                <span className="text-gray-200">{feature.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

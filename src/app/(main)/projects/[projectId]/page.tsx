@@ -69,6 +69,50 @@ export default async function ProjectDetailPage({
   const progress =
     totalIssues > 0 ? Math.round((completedIssues / totalIssues) * 100) : 0;
 
+  // Calculate feature statistics
+  const featureStats = new Map<string, { name: string; color: string | null; count: number; labels: Map<string, { name: string; color: string; count: number }> }>();
+  const labelStats = new Map<string, { name: string; color: string; count: number }>();
+
+  project.issues.forEach((issue) => {
+    // Count features
+    if (issue.feature) {
+      if (!featureStats.has(issue.feature.id)) {
+        featureStats.set(issue.feature.id, {
+          name: issue.feature.name,
+          color: issue.feature.color,
+          count: 0,
+          labels: new Map(),
+        });
+      }
+      const featureStat = featureStats.get(issue.feature.id)!;
+      featureStat.count++;
+
+      // Count labels within this feature
+      issue.labels.forEach((issueLabel) => {
+        if (!featureStat.labels.has(issueLabel.label.id)) {
+          featureStat.labels.set(issueLabel.label.id, {
+            name: issueLabel.label.name,
+            color: issueLabel.label.color,
+            count: 0,
+          });
+        }
+        featureStat.labels.get(issueLabel.label.id)!.count++;
+      });
+    }
+
+    // Count all labels (general)
+    issue.labels.forEach((issueLabel) => {
+      if (!labelStats.has(issueLabel.label.id)) {
+        labelStats.set(issueLabel.label.id, {
+          name: issueLabel.label.name,
+          color: issueLabel.label.color,
+          count: 0,
+        });
+      }
+      labelStats.get(issueLabel.label.id)!.count++;
+    });
+  });
+
   // Get statuses and users for create modal
   const statuses = await prisma.status.findMany({
     where: { workspaceId: project.workspaceId },
@@ -109,6 +153,7 @@ export default async function ProjectDetailPage({
       issues: {
         include: {
           status: true,
+          feature: true,
         },
       },
     },
@@ -153,6 +198,79 @@ export default async function ProjectDetailPage({
           startDate={project.startDate}
           targetDate={project.targetDate}
         />
+
+        {/* Statistics */}
+        <div className="mt-8 space-y-6">
+          {/* Features Statistics */}
+          {featureStats.size > 0 && (
+            <div className="rounded-lg border border-[#792990]/30 bg-gradient-to-r from-[#792990]/5 to-transparent p-6">
+              <h3 className="text-lg font-semibold text-gray-100 mb-4">Issues por Feature</h3>
+              <div className="space-y-4">
+                {Array.from(featureStats.entries()).map(([featureId, feature]) => (
+                  <div key={featureId} className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="h-3 w-1 rounded"
+                        style={{ backgroundColor: feature.color || "#792990" }}
+                      />
+                      <span className="font-medium text-gray-200">{feature.name}</span>
+                      <span className="text-sm text-gray-400">
+                        ({feature.count} {feature.count === 1 ? "issue" : "issues"})
+                      </span>
+                    </div>
+                    {feature.labels.size > 0 && (
+                      <div className="ml-6 flex flex-wrap gap-2">
+                        {Array.from(feature.labels.entries()).map(([labelId, label]) => (
+                          <div
+                            key={labelId}
+                            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium"
+                            style={{
+                              backgroundColor: `${label.color}20`,
+                              color: label.color,
+                              borderColor: `${label.color}40`,
+                              borderWidth: "1px",
+                            }}
+                          >
+                            <span>{label.name}</span>
+                            <span className="text-[0.7rem] opacity-70">
+                              {label.count}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Labels Statistics */}
+          {labelStats.size > 0 && (
+            <div className="rounded-lg border border-[#792990]/30 bg-gradient-to-r from-[#792990]/5 to-transparent p-6">
+              <h3 className="text-lg font-semibold text-gray-100 mb-4">Issues por Label (Geral)</h3>
+              <div className="flex flex-wrap gap-2">
+                {Array.from(labelStats.entries()).map(([labelId, label]) => (
+                  <div
+                    key={labelId}
+                    className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium"
+                    style={{
+                      backgroundColor: `${label.color}20`,
+                      color: label.color,
+                      borderColor: `${label.color}40`,
+                      borderWidth: "1px",
+                    }}
+                  >
+                    <span>{label.name}</span>
+                    <span className="rounded-full bg-black/20 px-2 py-0.5 text-xs">
+                      {label.count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Milestones and Issues Section */}
