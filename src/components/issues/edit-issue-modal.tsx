@@ -33,6 +33,7 @@ const editIssueSchema = z.object({
   assigneeId: z.string().optional(),
   projectId: z.string().optional(),
   milestoneId: z.string().optional(),
+  reportedAt: z.string().optional(),
 });
 
 type EditIssueForm = z.infer<typeof editIssueSchema>;
@@ -46,6 +47,7 @@ interface Issue {
   assigneeId?: string | null;
   projectId?: string | null;
   milestoneId?: string | null;
+  reportedAt?: string | null;
   workspaceId: string;
   labels?: Array<{
     labelId: string;
@@ -98,6 +100,7 @@ export function EditIssueModal({
       assigneeId: issue.assigneeId || "",
       projectId: issue.projectId || "",
       milestoneId: issue.milestoneId || "",
+      reportedAt: issue.reportedAt ? new Date(issue.reportedAt).toISOString().split('T')[0] : "",
     },
   });
 
@@ -111,6 +114,7 @@ export function EditIssueModal({
       assigneeId: issue.assigneeId || "",
       projectId: issue.projectId || "",
       milestoneId: issue.milestoneId || "",
+      reportedAt: issue.reportedAt ? new Date(issue.reportedAt).toISOString().split('T')[0] : "",
     });
     setSelectedLabelIds(issue.labels?.map((label) => label.labelId) || []);
   }, [issue, reset]);
@@ -165,6 +169,7 @@ export function EditIssueModal({
           assigneeId: data.assigneeId || null,
           projectId: data.projectId || null,
           milestoneId: data.milestoneId || null,
+          reportedAt: data.reportedAt || null,
           labelIds: selectedLabelIds.length > 0 ? selectedLabelIds : undefined,
         }),
       });
@@ -206,7 +211,7 @@ export function EditIssueModal({
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title" className="text-gray-300">Title</Label>
             <Input
               id="title"
               placeholder="Fix login bug"
@@ -219,7 +224,7 @@ export function EditIssueModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description (optional)</Label>
+            <Label htmlFor="description" className="text-gray-300">Description (optional)</Label>
             <textarea
               id="description"
               placeholder="Add more details..."
@@ -228,9 +233,22 @@ export function EditIssueModal({
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="reportedAt" className="text-gray-300">Reported Date (optional)</Label>
+            <Input
+              id="reportedAt"
+              type="date"
+              {...register("reportedAt")}
+              placeholder="When was this issue reported?"
+            />
+            <p className="text-xs text-gray-400">
+              The date when the issue was originally reported (used for SLA calculations)
+            </p>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="statusId">Status</Label>
+              <Label htmlFor="statusId" className="text-gray-300">Status</Label>
               <select
                 id="statusId"
                 {...register("statusId")}
@@ -245,7 +263,7 @@ export function EditIssueModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
+              <Label htmlFor="priority" className="text-gray-300">Priority</Label>
               <select
                 id="priority"
                 {...register("priority")}
@@ -262,7 +280,7 @@ export function EditIssueModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="assigneeId">Assignee (optional)</Label>
+              <Label htmlFor="assigneeId" className="text-gray-300">Assignee (optional)</Label>
               <select
                 id="assigneeId"
                 {...register("assigneeId")}
@@ -279,7 +297,7 @@ export function EditIssueModal({
 
             {projects.length > 0 && (
               <div className="space-y-2">
-                <Label htmlFor="projectId">Project (optional)</Label>
+                <Label htmlFor="projectId" className="text-gray-300">Project (optional)</Label>
                 <select
                   id="projectId"
                   {...register("projectId")}
@@ -298,7 +316,7 @@ export function EditIssueModal({
 
           {milestones.length > 0 && (
             <div className="space-y-2">
-              <Label htmlFor="milestoneId">Milestone (optional)</Label>
+              <Label htmlFor="milestoneId" className="text-gray-300">Milestone (optional)</Label>
               <select
                 id="milestoneId"
                 {...register("milestoneId")}
@@ -315,7 +333,7 @@ export function EditIssueModal({
           )}
 
           <div className="space-y-2">
-            <Label>Labels (optional)</Label>
+            <Label className="text-gray-300">Labels (optional)</Label>
             <LabelSelector
               availableLabels={availableLabels}
               selectedLabelIds={selectedLabelIds}
@@ -330,6 +348,7 @@ export function EditIssueModal({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
+              className="text-gray-300"
             >
               Cancel
             </Button>

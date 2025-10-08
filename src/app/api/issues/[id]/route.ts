@@ -14,6 +14,7 @@ const updateIssueSchema = z.object({
   assigneeId: z.string().nullable().optional(),
   priority: z.enum(["URGENT", "HIGH", "MEDIUM", "LOW", "NO_PRIORITY"]).optional(),
   labelIds: z.array(z.string()).optional(),
+  reportedAt: z.string().nullable().optional(),
 });
 
 // GET /api/issues/:id - Get issue by ID
@@ -178,7 +179,12 @@ export async function PATCH(
       return withCors(response);
     }
 
-    const { labelIds, ...data } = validated.data;
+    const { labelIds, reportedAt, ...data } = validated.data;
+
+    // Handle reportedAt conversion
+    const reportedAtData = reportedAt !== undefined
+      ? { reportedAt: reportedAt ? new Date(reportedAt) : null }
+      : {};
 
     // Check if status is changing
     let additionalData: any = {};
@@ -221,6 +227,7 @@ export async function PATCH(
       where: { id },
       data: {
         ...data,
+        ...reportedAtData,
         ...additionalData,
         ...(labelIds !== undefined && {
           labels: {
