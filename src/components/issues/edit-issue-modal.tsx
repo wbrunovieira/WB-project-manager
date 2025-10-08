@@ -100,7 +100,15 @@ export function EditIssueModal({
       assigneeId: issue.assigneeId || "",
       projectId: issue.projectId || "",
       milestoneId: issue.milestoneId || "",
-      reportedAt: issue.reportedAt ? new Date(issue.reportedAt).toISOString().split('T')[0] : "",
+      reportedAt: issue.reportedAt
+        ? (() => {
+            try {
+              return new Date(issue.reportedAt).toISOString().split('T')[0];
+            } catch {
+              return "";
+            }
+          })()
+        : "",
     },
   });
 
@@ -114,7 +122,15 @@ export function EditIssueModal({
       assigneeId: issue.assigneeId || "",
       projectId: issue.projectId || "",
       milestoneId: issue.milestoneId || "",
-      reportedAt: issue.reportedAt ? new Date(issue.reportedAt).toISOString().split('T')[0] : "",
+      reportedAt: issue.reportedAt
+        ? (() => {
+            try {
+              return new Date(issue.reportedAt).toISOString().split('T')[0];
+            } catch {
+              return "";
+            }
+          })()
+        : "",
     });
     setSelectedLabelIds(issue.labels?.map((label) => label.labelId) || []);
   }, [issue, reset]);
