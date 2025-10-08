@@ -89,7 +89,7 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
           return (
             <div
               key={project.id}
-              className="group relative rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent p-6 transition-all hover:border-[#792990]/40 hover:from-[#792990]/10 hover:to-[#792990]/5"
+              className="group relative rounded-lg border border-[#792990]/40 bg-gradient-to-br from-[#792990]/15 via-[#792990]/10 to-[#792990]/5 p-6 transition-all hover:border-[#792990]/60 hover:from-[#792990]/20 hover:via-[#792990]/15 hover:to-[#792990]/10 hover:shadow-lg hover:shadow-[#792990]/10"
             >
               <Link href={`/projects/${project.id}`} className="block">
                 <div className="mb-4">
@@ -107,7 +107,7 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
                     <span
                       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium mt-6 border ${
                         project.status === "IN_PROGRESS"
-                          ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                          ? "bg-[#792990]/20 text-[#FFB947] border-[#792990]/40"
                           : project.status === "COMPLETED"
                           ? "bg-green-500/10 text-green-400 border-green-500/20"
                           : project.status === "PLANNED"
@@ -133,7 +133,7 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full bg-[#792990]/20">
                       <div
-                        className="h-full bg-gradient-to-r from-[#FFB947] to-[#792990] transition-all"
+                        className="h-full bg-[#792990] transition-all"
                         style={{ width: `${progress}%` }}
                       />
                     </div>
