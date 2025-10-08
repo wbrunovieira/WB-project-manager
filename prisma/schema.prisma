@@ -99,11 +99,13 @@ model Milestone {
   targetDate  DateTime?
   project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId   String
+  sortOrder   Int       @default(0)
   issues      Issue[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   @@index([projectId])
+  @@index([projectId, sortOrder])
 }
 
 enum ProjectStatus {

@@ -229,14 +229,16 @@ export function ProjectMilestonesClient({
     const newMilestones = arrayMove(milestones, oldIndex, newIndex);
     setMilestones(newMilestones);
 
-    // Update sortOrder in the backend
+    // Update sortOrder in the backend with all sorted milestone IDs
     try {
+      const sortedMilestoneIds = newMilestones.map((m) => m.id);
+
       await fetch("/api/milestones/reorder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           milestoneId: active.id,
-          newIndex,
+          sortedMilestoneIds,
         }),
       });
     } catch (error) {

@@ -112,7 +112,7 @@ export default async function ProjectDetailPage({
       },
     },
     orderBy: {
-      createdAt: "desc",
+      sortOrder: "asc",
     },
   });
 

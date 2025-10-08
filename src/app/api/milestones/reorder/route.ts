@@ -14,11 +14,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { milestoneId, newIndex } = body;
+    const { milestoneId, sortedMilestoneIds } = body;
 
-    if (!milestoneId || newIndex === undefined) {
+    if (!milestoneId || !Array.isArray(sortedMilestoneIds)) {
       const response = NextResponse.json(
-        { error: "Missing milestoneId or newIndex" },
+        { error: "Missing milestoneId or sortedMilestoneIds array" },
         { status: 400 }
       );
       return withCors(response);
@@ -58,8 +58,16 @@ export async function POST(req: NextRequest) {
       return withCors(response);
     }
 
-    // Note: We're using a simple index-based approach for now
-    // In production, you might want to store a sortOrder field in the database
+    // Update all milestones with their new sortOrder in a transaction
+    await prisma.$transaction(
+      sortedMilestoneIds.map((id: string, index: number) =>
+        prisma.milestone.update({
+          where: { id },
+          data: { sortOrder: index },
+        })
+      )
+    );
+
     const response = NextResponse.json({ success: true });
     return withCors(response);
   } catch (error) {
