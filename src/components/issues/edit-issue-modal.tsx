@@ -66,6 +66,7 @@ interface EditIssueModalProps {
   milestones?: Array<{ id: string; name: string }>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onIssueUpdated?: (updatedIssue: any) => void;
 }
 
 export function EditIssueModal({
@@ -76,6 +77,7 @@ export function EditIssueModal({
   milestones = [],
   open,
   onOpenChange,
+  onIssueUpdated,
 }: EditIssueModalProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -201,6 +203,11 @@ export function EditIssueModal({
         title: "Issue updated",
         description: `${updatedIssue.title} has been updated successfully.`,
       });
+
+      // Call callback to update parent component state
+      if (onIssueUpdated) {
+        onIssueUpdated(updatedIssue);
+      }
 
       onOpenChange(false);
       router.refresh();

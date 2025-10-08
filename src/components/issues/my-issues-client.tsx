@@ -717,6 +717,25 @@ export function MyIssuesClient({
           milestones={milestones}
           open={!!editingIssue}
           onOpenChange={(open) => !open && setEditingIssue(null)}
+          onIssueUpdated={(updatedIssue) => {
+            // Update the issue in the local state
+            const updatedIssuesByStatus = { ...issuesByStatus };
+
+            // Find which status group the issue belongs to
+            for (const [statusType, issues] of Object.entries(updatedIssuesByStatus)) {
+              const issueIndex = issues.findIndex((i: any) => i.id === updatedIssue.id);
+              if (issueIndex !== -1) {
+                // Update the issue in place
+                updatedIssuesByStatus[statusType][issueIndex] = {
+                  ...updatedIssuesByStatus[statusType][issueIndex],
+                  ...updatedIssue,
+                };
+                break;
+              }
+            }
+
+            setIssuesByStatus(updatedIssuesByStatus);
+          }}
         />
       )}
 
