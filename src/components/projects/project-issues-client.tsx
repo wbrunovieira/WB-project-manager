@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Plus, Edit, Trash2, GripVertical, Circle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Target, User, Calendar, Clock, AlertCircle, Lock, MoreVertical, ArrowUp, ArrowDown, Copy, Link2, Files } from "lucide-react";
+import { Plus, Edit, Trash2, GripVertical, Circle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Target, User, Calendar, Clock, AlertCircle, Lock, MoreVertical, ArrowUp, ArrowDown, Copy, Link2, Files, ClipboardCopy } from "lucide-react";
 import { TimerButton } from "@/components/time-tracker/timer-button";
 import { IssueTimeDisplay } from "@/components/time-tracker/issue-time-display";
 import { SLAIndicator } from "@/components/issues/sla-indicator";
 import { useTimeTracker } from "@/contexts/time-tracker-context";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { CreateIssueModal } from "@/components/issues/create-issue-modal";
 import { EditIssueModal } from "@/components/issues/edit-issue-modal";
 import { DeleteIssueDialog } from "@/components/issues/delete-issue-dialog";
@@ -83,6 +84,7 @@ function SortableIssueCard({
   const [isExpanded, setIsExpanded] = useState(false);
   const { isIssueTracking } = useTimeTracker();
   const isTimerActive = isIssueTracking(issue.id);
+  const { toast } = useToast();
 
   const {
     attributes,
@@ -454,6 +456,30 @@ function SortableIssueCard({
               <h4 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-[#FFB947]" />
                 Description
+                {issue.description && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(issue.description);
+                        toast({
+                          title: "Copied!",
+                          description: "Description copied to clipboard",
+                        });
+                      } catch (error) {
+                        console.error("Failed to copy description:", error);
+                        toast({
+                          title: "Error",
+                          description: "Failed to copy description",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                    className="ml-auto text-gray-400 hover:text-[#FFB947] transition-colors"
+                    title="Copy description"
+                  >
+                    <ClipboardCopy className="h-4 w-4" />
+                  </button>
+                )}
               </h4>
               <div className="pl-6">
                 <p className="text-base leading-relaxed text-gray-200 whitespace-pre-wrap">
