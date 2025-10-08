@@ -601,12 +601,16 @@ export function ProjectIssuesClient({
       setIssuesByStatus(updatedIssuesByStatus);
 
       try {
+        // Send all sorted issue IDs to maintain correct order
+        const sortedIssueIds = newIssues.map((i: any) => i.id);
+
         await fetch("/api/issues/reorder", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             issueId: active.id,
-            newIndex,
+            statusType,
+            sortedIssueIds,
           }),
         });
       } catch (error) {

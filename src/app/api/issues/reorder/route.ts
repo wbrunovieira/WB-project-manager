@@ -14,11 +14,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { issueId, newIndex } = body;
+    const { issueId, statusType, sortedIssueIds } = body;
 
-    if (!issueId || newIndex === undefined) {
+    if (!issueId || !statusType || !sortedIssueIds || !Array.isArray(sortedIssueIds)) {
       const response = NextResponse.json(
-        { error: "Missing issueId or newIndex" },
+        { error: "Missing issueId, statusType, or sortedIssueIds" },
         { status: 400 }
       );
       return withCors(response);
@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
     // Get the issue to check access
     const issue = await prisma.issue.findUnique({
       where: { id: issueId },
+      include: { status: true },
     });
 
     if (!issue) {
@@ -55,11 +56,25 @@ export async function POST(req: NextRequest) {
       return withCors(response);
     }
 
-    // Update the sortOrder
-    await prisma.issue.update({
-      where: { id: issueId },
-      data: { sortOrder: newIndex },
-    });
+    // Verify the status type matches
+    if (issue.status.type !== statusType) {
+      const response = NextResponse.json(
+        { error: "Status type mismatch" },
+        { status: 400 }
+      );
+      return withCors(response);
+    }
+
+    // Update sortOrder for all issues in the sorted list
+    // Using a transaction to ensure atomicity
+    await prisma.$transaction(
+      sortedIssueIds.map((id: string, index: number) =>
+        prisma.issue.update({
+          where: { id },
+          data: { sortOrder: index },
+        })
+      )
+    );
 
     const response = NextResponse.json({ success: true });
     return withCors(response);
