@@ -15,7 +15,7 @@ const updateProjectSchema = z.object({
 // GET /api/projects/:id - Get project by ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
 
@@ -24,9 +24,11 @@ export async function GET(
     return withCors(response);
   }
 
+  const { id } = await params;
+
   try {
     const project = await prisma.project.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         workspace: {
           select: {
@@ -38,7 +40,6 @@ export async function GET(
         issues: {
           include: {
             status: true,
-            team: true,
             assignee: {
               select: {
                 id: true,
@@ -98,7 +99,7 @@ export async function GET(
 // PATCH /api/projects/:id - Update project
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
 
@@ -107,20 +108,22 @@ export async function PATCH(
     return withCors(response);
   }
 
+  const { id } = await params;
+
   try {
     const body = await req.json();
     const validated = updateProjectSchema.safeParse(body);
 
     if (!validated.success) {
       const response = NextResponse.json(
-        { error: validated.error.errors[0].message },
+        { error: validated.error.issues[0]?.message || "Validation failed" },
         { status: 400 }
       );
       return withCors(response);
     }
 
     const project = await prisma.project.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!project) {
@@ -152,7 +155,7 @@ export async function PATCH(
     const { startDate, targetDate, ...data } = validated.data;
 
     const updated = await prisma.project.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...data,
         ...(startDate !== undefined && {
@@ -188,7 +191,7 @@ export async function PATCH(
 // DELETE /api/projects/:id - Delete project
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
 
@@ -197,9 +200,11 @@ export async function DELETE(
     return withCors(response);
   }
 
+  const { id } = await params;
+
   try {
     const project = await prisma.project.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!project) {
@@ -229,7 +234,7 @@ export async function DELETE(
     }
 
     await prisma.project.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     const response = NextResponse.json(

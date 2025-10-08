@@ -151,8 +151,8 @@ export const POST = withAuth(async (req: NextRequest, userId: string) => {
       console.log("Validation failed:", validated.error);
       const response = NextResponse.json(
         {
-          error: validated.error?.errors?.[0]?.message || "Validation failed",
-          details: validated.error?.errors || []
+          error: validated.error?.issues?.[0]?.message || "Validation failed",
+          details: validated.error?.issues || []
         },
         { status: 400 }
       );

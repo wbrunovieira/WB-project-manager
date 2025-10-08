@@ -78,8 +78,8 @@ export default async function HomePage() {
                   <span
                     className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium"
                     style={{
-                      backgroundColor: `${issue.status.color}20`,
-                      color: issue.status.color,
+                      backgroundColor: `${issue.status.color || '#666'}20`,
+                      color: issue.status.color || '#666',
                     }}
                   >
                     {issue.status.name}

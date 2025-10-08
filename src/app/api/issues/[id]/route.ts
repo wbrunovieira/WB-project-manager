@@ -19,7 +19,7 @@ const updateIssueSchema = z.object({
 // GET /api/issues/:id - Get issue by ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
 
@@ -28,9 +28,11 @@ export async function GET(
     return withCors(response);
   }
 
+  const { id } = await params;
+
   try {
     const issue = await prisma.issue.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         status: true,
         project: {
@@ -118,7 +120,7 @@ export async function GET(
 // PATCH /api/issues/:id - Update issue
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
 
@@ -126,6 +128,8 @@ export async function PATCH(
     const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     return withCors(response);
   }
+
+  const { id } = await params;
 
   try {
     const body = await req.json();
@@ -135,14 +139,14 @@ export async function PATCH(
     if (!validated.success) {
       console.log("Validation error:", validated.error);
       const response = NextResponse.json(
-        { error: validated.error.errors[0]?.message || "Validation failed" },
+        { error: validated.error.issues[0]?.message || "Validation failed" },
         { status: 400 }
       );
       return withCors(response);
     }
 
     const issue = await prisma.issue.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         status: true,
       },
@@ -214,7 +218,7 @@ export async function PATCH(
 
     // Update issue
     const updated = await prisma.issue.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...data,
         ...additionalData,
@@ -273,7 +277,7 @@ export async function PATCH(
 // DELETE /api/issues/:id - Delete issue
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
 
@@ -282,9 +286,11 @@ export async function DELETE(
     return withCors(response);
   }
 
+  const { id } = await params;
+
   try {
     const issue = await prisma.issue.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!issue) {
@@ -314,7 +320,7 @@ export async function DELETE(
     }
 
     await prisma.issue.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     const response = NextResponse.json(

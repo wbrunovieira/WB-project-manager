@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Plus, Edit, Trash2, GripVertical, Circle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Target, User, Calendar, Clock, AlertCircle, Lock } from "lucide-react";
+import { Plus, Edit, Trash2, GripVertical, Circle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Target, User, Calendar, Clock, AlertCircle, Lock, MoreVertical, ArrowUp, ArrowDown, Copy, Link2, Files } from "lucide-react";
 import { TimerButton } from "@/components/time-tracker/timer-button";
 import { IssueTimeDisplay } from "@/components/time-tracker/issue-time-display";
 import { SLAIndicator } from "@/components/issues/sla-indicator";
@@ -33,7 +33,15 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+  ContextMenuSeparator,
+} from "@/components/ui/context-menu";
 
 interface ProjectIssuesClientProps {
   projectId: string;
@@ -53,6 +61,10 @@ interface SortableIssueCardProps {
   onDelete: (issue: any) => void;
   onStatusChange: (issueId: string, statusId: string) => void;
   onMilestoneChange: (issueId: string, milestoneId: string | null) => void;
+  onMoveToTop: (issueId: string) => void;
+  onMoveToBottom: (issueId: string) => void;
+  onCopyLink: (issue: any) => void;
+  onDuplicate: (issue: any) => void;
 }
 
 function SortableIssueCard({
@@ -63,6 +75,10 @@ function SortableIssueCard({
   onDelete,
   onStatusChange,
   onMilestoneChange,
+  onMoveToTop,
+  onMoveToBottom,
+  onCopyLink,
+  onDuplicate,
 }: SortableIssueCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { isIssueTracking } = useTimeTracker();
@@ -123,12 +139,14 @@ function SortableIssueCard({
   const completionFade = getCompletionFade();
 
   return (
-    <div
-      ref={setNodeRef}
-      style={{ ...style, opacity: completionFade }}
-      className={`group rounded-xl border-2 transition-all ${getCardStyles()}`}
-    >
-      <div className="flex items-center gap-4 p-5">
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div
+          ref={setNodeRef}
+          style={{ ...style, opacity: completionFade }}
+          className={`group rounded-xl border-2 transition-all ${getCardStyles()}`}
+        >
+          <div className="flex items-center gap-4 p-5">
         <div
           {...attributes}
           {...listeners}
@@ -345,36 +363,56 @@ function SortableIssueCard({
             issueStatusType={issue.status.type}
             size="icon"
           />
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => !isTimerActive && onEdit(issue)}
-              disabled={isTimerActive}
-              className={`h-8 w-8 ${
-                isTimerActive
-                  ? "cursor-not-allowed opacity-30 text-gray-500"
-                  : "text-gray-300 hover:text-gray-100 hover:bg-[#792990]/20"
-              }`}
-              title={isTimerActive ? "Stop timer to edit" : "Edit issue"}
-            >
-              {isTimerActive ? <Lock className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => !isTimerActive && onDelete(issue)}
-              disabled={isTimerActive}
-              className={`h-8 w-8 ${
-                isTimerActive
-                  ? "cursor-not-allowed opacity-30 text-gray-500"
-                  : "text-red-400 hover:text-red-300 hover:bg-[#792990]/20"
-              }`}
-              title={isTimerActive ? "Stop timer to delete" : "Delete issue"}
-            >
-              {isTimerActive ? <Lock className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
-            </Button>
-          </div>
+
+          {/* Kebab Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-gray-400 hover:text-gray-100 hover:bg-[#792990]/20"
+                title="More actions"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => onMoveToTop(issue.id)} className="cursor-pointer">
+                <ArrowUp className="mr-2 h-4 w-4" />
+                Move to Top
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onMoveToBottom(issue.id)} className="cursor-pointer">
+                <ArrowDown className="mr-2 h-4 w-4" />
+                Move to Bottom
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onDuplicate(issue)} className="cursor-pointer">
+                <Files className="mr-2 h-4 w-4" />
+                Duplicate Issue
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onCopyLink(issue)} className="cursor-pointer">
+                <Link2 className="mr-2 h-4 w-4" />
+                Copy Issue Link
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => !isTimerActive && onEdit(issue)}
+                disabled={isTimerActive}
+                className="cursor-pointer"
+              >
+                {isTimerActive ? <Lock className="mr-2 h-4 w-4" /> : <Edit className="mr-2 h-4 w-4" />}
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => !isTimerActive && onDelete(issue)}
+                disabled={isTimerActive}
+                className="cursor-pointer text-red-600 focus:text-red-600"
+              >
+                {isTimerActive ? <Lock className="mr-2 h-4 w-4" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
       </div>
@@ -539,7 +577,45 @@ function SortableIssueCard({
           </div>
         </div>
       )}
-    </div>
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent className="w-56">
+        <ContextMenuItem onClick={() => onMoveToTop(issue.id)} className="cursor-pointer">
+          <ArrowUp className="mr-2 h-4 w-4" />
+          Move to Top
+        </ContextMenuItem>
+        <ContextMenuItem onClick={() => onMoveToBottom(issue.id)} className="cursor-pointer">
+          <ArrowDown className="mr-2 h-4 w-4" />
+          Move to Bottom
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={() => onDuplicate(issue)} className="cursor-pointer">
+          <Files className="mr-2 h-4 w-4" />
+          Duplicate Issue
+        </ContextMenuItem>
+        <ContextMenuItem onClick={() => onCopyLink(issue)} className="cursor-pointer">
+          <Link2 className="mr-2 h-4 w-4" />
+          Copy Issue Link
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem
+          onClick={() => !isTimerActive && onEdit(issue)}
+          disabled={isTimerActive}
+          className="cursor-pointer"
+        >
+          {isTimerActive ? <Lock className="mr-2 h-4 w-4" /> : <Edit className="mr-2 h-4 w-4" />}
+          Edit
+        </ContextMenuItem>
+        <ContextMenuItem
+          onClick={() => !isTimerActive && onDelete(issue)}
+          disabled={isTimerActive}
+          className="cursor-pointer text-red-600 focus:text-red-600"
+        >
+          {isTimerActive ? <Lock className="mr-2 h-4 w-4" /> : <Trash2 className="mr-2 h-4 w-4" />}
+          Delete
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }
 
@@ -764,6 +840,134 @@ export function ProjectIssuesClient({
     }
   };
 
+  const handleMoveToTop = async (issueId: string) => {
+    // Find the issue and its status type
+    let currentStatusType: string = "";
+
+    for (const [statusType, issues] of Object.entries(issuesByStatus)) {
+      const issue = issues.find((i: any) => i.id === issueId);
+      if (issue) {
+        currentStatusType = statusType;
+        break;
+      }
+    }
+
+    if (!currentStatusType) return;
+
+    const issues = issuesByStatus[currentStatusType];
+    const currentIndex = issues.findIndex((i: any) => i.id === issueId);
+
+    if (currentIndex === -1 || currentIndex === 0) return; // Already at top
+
+    // Move to top
+    const newIssues = arrayMove(issues, currentIndex, 0);
+    const updatedIssuesByStatus = {
+      ...issuesByStatus,
+      [currentStatusType]: newIssues,
+    };
+    setIssuesByStatus(updatedIssuesByStatus);
+
+    try {
+      const sortedIssueIds = newIssues.map((i: any) => i.id);
+
+      await fetch("/api/issues/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          issueId,
+          statusType: currentStatusType,
+          sortedIssueIds,
+        }),
+      });
+    } catch (error) {
+      console.error("Failed to move issue to top:", error);
+      setIssuesByStatus(issuesByStatus);
+    }
+  };
+
+  const handleMoveToBottom = async (issueId: string) => {
+    // Find the issue and its status type
+    let currentStatusType: string = "";
+
+    for (const [statusType, issues] of Object.entries(issuesByStatus)) {
+      const issue = issues.find((i: any) => i.id === issueId);
+      if (issue) {
+        currentStatusType = statusType;
+        break;
+      }
+    }
+
+    if (!currentStatusType) return;
+
+    const issues = issuesByStatus[currentStatusType];
+    const currentIndex = issues.findIndex((i: any) => i.id === issueId);
+    const lastIndex = issues.length - 1;
+
+    if (currentIndex === -1 || currentIndex === lastIndex) return; // Already at bottom
+
+    // Move to bottom
+    const newIssues = arrayMove(issues, currentIndex, lastIndex);
+    const updatedIssuesByStatus = {
+      ...issuesByStatus,
+      [currentStatusType]: newIssues,
+    };
+    setIssuesByStatus(updatedIssuesByStatus);
+
+    try {
+      const sortedIssueIds = newIssues.map((i: any) => i.id);
+
+      await fetch("/api/issues/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          issueId,
+          statusType: currentStatusType,
+          sortedIssueIds,
+        }),
+      });
+    } catch (error) {
+      console.error("Failed to move issue to bottom:", error);
+      setIssuesByStatus(issuesByStatus);
+    }
+  };
+
+  const handleCopyIssueLink = async (issue: any) => {
+    const issueUrl = `${window.location.origin}/projects/${projectId}?issue=${issue.identifier}`;
+    try {
+      await navigator.clipboard.writeText(issueUrl);
+      // Could add a toast notification here
+    } catch (error) {
+      console.error("Failed to copy link:", error);
+    }
+  };
+
+  const handleDuplicateIssue = async (issue: any) => {
+    try {
+      const response = await fetch("/api/issues", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `${issue.title} (Copy)`,
+          description: issue.description,
+          type: issue.type,
+          priority: issue.priority,
+          statusId: issue.statusId,
+          projectId: issue.projectId,
+          milestoneId: issue.milestoneId,
+          workspaceId: issue.workspaceId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to duplicate issue");
+      }
+
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to duplicate issue:", error);
+    }
+  };
+
   return (
     <>
       <div className="mb-6 flex items-center justify-between">
@@ -835,6 +1039,10 @@ export function ProjectIssuesClient({
                               onDelete={setDeletingIssue}
                               onStatusChange={handleStatusChange}
                               onMilestoneChange={handleMilestoneChange}
+                              onMoveToTop={handleMoveToTop}
+                              onMoveToBottom={handleMoveToBottom}
+                              onCopyLink={handleCopyIssueLink}
+                              onDuplicate={handleDuplicateIssue}
                             />
                           ))}
                         </div>

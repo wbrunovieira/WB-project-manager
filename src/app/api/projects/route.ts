@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
 
     if (!validated.success) {
       const response = NextResponse.json(
-        { error: validated.error.errors[0].message },
+        { error: validated.error.issues[0]?.message || "Validation failed" },
         { status: 400 }
       );
       return withCors(response);
