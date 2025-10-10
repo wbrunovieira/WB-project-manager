@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Plus, Edit, Trash2, GripVertical, Circle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Target, User, Calendar, Clock, AlertCircle, Lock, MoreVertical, ArrowUp, ArrowDown, Copy, Link2, Files, ClipboardCopy } from "lucide-react";
+import { Plus, Edit, Trash2, GripVertical, Circle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Target, User, Calendar, Clock, AlertCircle, Lock, MoreVertical, ArrowUp, ArrowDown, Copy, Link2, Files, ClipboardCopy, Search, X } from "lucide-react";
 import { TimerButton } from "@/components/time-tracker/timer-button";
 import { IssueTimeDisplay } from "@/components/time-tracker/issue-time-display";
 import { SLAIndicator } from "@/components/issues/sla-indicator";
@@ -825,6 +825,7 @@ export function ProjectIssuesClient({
   const [deletingIssue, setDeletingIssue] = useState<any | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [features, setFeatures] = useState<Array<{ id: string; name: string; color?: string | null }>>([]);
   const [isCreatingFeature, setIsCreatingFeature] = useState(false);
@@ -992,18 +993,40 @@ export function ProjectIssuesClient({
     });
   };
 
-  // Filter issues by type
+  // Filter issues by type and search query
   const filteredIssuesByStatus = useMemo(() => {
-    if (typeFilter === "all") {
-      return issuesByStatus;
+    let filtered = issuesByStatus;
+
+    // Apply type filter
+    if (typeFilter !== "all") {
+      const typeFiltered: Record<string, any[]> = {};
+      for (const [statusType, issues] of Object.entries(issuesByStatus)) {
+        typeFiltered[statusType] = issues.filter((issue: any) => issue.type === typeFilter);
+      }
+      filtered = typeFiltered;
     }
 
-    const filtered: Record<string, any[]> = {};
-    for (const [statusType, issues] of Object.entries(issuesByStatus)) {
-      filtered[statusType] = issues.filter((issue: any) => issue.type === typeFilter);
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const searchLower = searchQuery.toLowerCase().trim();
+      const searchFiltered: Record<string, any[]> = {};
+
+      for (const [statusType, issues] of Object.entries(filtered)) {
+        searchFiltered[statusType] = issues.filter((issue: any) => {
+          const titleMatch = issue.title?.toLowerCase().includes(searchLower);
+          const descriptionMatch = issue.description?.toLowerCase().includes(searchLower);
+          const identifierMatch = issue.identifier?.toString().includes(searchLower);
+          const assigneeMatch = issue.assignee?.name?.toLowerCase().includes(searchLower);
+          const assigneeEmailMatch = issue.assignee?.email?.toLowerCase().includes(searchLower);
+
+          return titleMatch || descriptionMatch || identifierMatch || assigneeMatch || assigneeEmailMatch;
+        });
+      }
+      filtered = searchFiltered;
     }
+
     return filtered;
-  }, [issuesByStatus, typeFilter]);
+  }, [issuesByStatus, typeFilter, searchQuery]);
 
   const handleMilestoneChange = async (issueId: string, milestoneId: string | null) => {
     // Find the issue
@@ -1317,9 +1340,38 @@ export function ProjectIssuesClient({
 
   return (
     <>
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-100">Issues</h2>
+      <div className="mb-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-gray-100">Issues</h2>
+          <Button onClick={() => setIsCreateModalOpen(true)} className="bg-[#FFB947] text-gray-900 hover:bg-[#FFB947]/90">
+            <Plus className="mr-2 h-4 w-4" />
+            New Issue
+          </Button>
+        </div>
+
         <div className="flex items-center gap-4">
+          {/* Search Input */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search issues by title, description, assignee..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-md border border-[#792990]/40 bg-[#350459] pl-10 pr-10 py-2 text-sm text-gray-200 placeholder:text-gray-500 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]/50"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors"
+                title="Clear search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Type Filter */}
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-gray-300">Type:</label>
             <select
@@ -1334,11 +1386,14 @@ export function ProjectIssuesClient({
               <option value="MAINTENANCE">Maintenance</option>
             </select>
           </div>
-          <Button onClick={() => setIsCreateModalOpen(true)} className="bg-[#FFB947] text-gray-900 hover:bg-[#FFB947]/90">
-            <Plus className="mr-2 h-4 w-4" />
-            New Issue
-          </Button>
         </div>
+
+        {/* Search results info */}
+        {searchQuery && (
+          <div className="text-sm text-gray-400">
+            {Object.values(filteredIssuesByStatus).flat().length} result{Object.values(filteredIssuesByStatus).flat().length !== 1 ? 's' : ''} found for "{searchQuery}"
+          </div>
+        )}
       </div>
 
       <div className="space-y-10">
