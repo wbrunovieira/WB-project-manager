@@ -825,6 +825,7 @@ export function ProjectIssuesClient({
   const [deletingIssue, setDeletingIssue] = useState<any | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [features, setFeatures] = useState<Array<{ id: string; name: string; color?: string | null }>>([]);
@@ -993,14 +994,24 @@ export function ProjectIssuesClient({
     });
   };
 
-  // Filter issues by type and search query
+  // Filter issues by type, status and search query
   const filteredIssuesByStatus = useMemo(() => {
     let filtered = issuesByStatus;
+
+    // Apply status filter first
+    if (statusFilter !== "all") {
+      const statusFiltered: Record<string, any[]> = {};
+      // Only include the selected status type
+      if (issuesByStatus[statusFilter]) {
+        statusFiltered[statusFilter] = issuesByStatus[statusFilter];
+      }
+      filtered = statusFiltered;
+    }
 
     // Apply type filter
     if (typeFilter !== "all") {
       const typeFiltered: Record<string, any[]> = {};
-      for (const [statusType, issues] of Object.entries(issuesByStatus)) {
+      for (const [statusType, issues] of Object.entries(filtered)) {
         typeFiltered[statusType] = issues.filter((issue: any) => issue.type === typeFilter);
       }
       filtered = typeFiltered;
@@ -1026,7 +1037,7 @@ export function ProjectIssuesClient({
     }
 
     return filtered;
-  }, [issuesByStatus, typeFilter, searchQuery]);
+  }, [issuesByStatus, typeFilter, statusFilter, searchQuery]);
 
   const handleMilestoneChange = async (issueId: string, milestoneId: string | null) => {
     // Find the issue
@@ -1371,6 +1382,23 @@ export function ProjectIssuesClient({
             )}
           </div>
 
+          {/* Status Filter */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-300">Status:</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="rounded-md border border-[#792990]/40 bg-[#350459] px-3 py-2 text-sm text-gray-200 focus:border-[#792990] focus:outline-none focus:ring-2 focus:ring-[#792990]/50"
+            >
+              <option value="all">All Statuses</option>
+              <option value="BACKLOG">Backlog</option>
+              <option value="TODO">Todo</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="DONE">Done</option>
+              <option value="CANCELED">Canceled</option>
+            </select>
+          </div>
+
           {/* Type Filter */}
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-gray-300">Type:</label>
@@ -1388,10 +1416,39 @@ export function ProjectIssuesClient({
           </div>
         </div>
 
-        {/* Search results info */}
-        {searchQuery && (
-          <div className="text-sm text-gray-400">
-            {Object.values(filteredIssuesByStatus).flat().length} result{Object.values(filteredIssuesByStatus).flat().length !== 1 ? 's' : ''} found for "{searchQuery}"
+        {/* Search and filter info */}
+        {(searchQuery || statusFilter !== "all" || typeFilter !== "all") && (
+          <div className="flex items-center gap-2 text-sm text-gray-400">
+            <span>
+              {Object.values(filteredIssuesByStatus).flat().length} result{Object.values(filteredIssuesByStatus).flat().length !== 1 ? 's' : ''}
+            </span>
+            {searchQuery && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-[#792990]/20 px-2 py-0.5 text-[#FFB947]">
+                searching: "{searchQuery}"
+              </span>
+            )}
+            {statusFilter !== "all" && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-[#792990]/20 px-2 py-0.5 text-[#FFB947]">
+                status: {statuses.find(s => s.type === statusFilter)?.name || statusFilter}
+              </span>
+            )}
+            {typeFilter !== "all" && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-[#792990]/20 px-2 py-0.5 text-[#FFB947]">
+                type: {typeFilter}
+              </span>
+            )}
+            {(searchQuery || statusFilter !== "all" || typeFilter !== "all") && (
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setStatusFilter("all");
+                  setTypeFilter("all");
+                }}
+                className="text-[#FFB947] hover:text-[#FFB947]/80 transition-colors underline"
+              >
+                Clear all filters
+              </button>
+            )}
           </div>
         )}
       </div>
