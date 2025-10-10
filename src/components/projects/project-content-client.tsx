@@ -20,12 +20,14 @@ export function ProjectContentClient({
   totalIssues,
   statuses,
   users,
-  milestones,
+  milestones: initialMilestones,
   workspaceId,
 }: ProjectContentClientProps) {
   const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>(null);
   const [filteredIssuesByStatus, setFilteredIssuesByStatus] = useState(initialIssuesByStatus);
   const [filteredTotalIssues, setFilteredTotalIssues] = useState(totalIssues);
+  const [milestones, setMilestones] = useState(initialMilestones);
+  const [issueUpdateTrigger, setIssueUpdateTrigger] = useState(0);
 
   // Update filtered issues when milestone selection changes
   useEffect(() => {
@@ -42,6 +44,33 @@ export function ProjectContentClient({
       setFilteredTotalIssues(totalIssues);
     }
   }, [selectedMilestoneId, initialIssuesByStatus, totalIssues]);
+
+  // Function to refresh milestones data
+  const refreshMilestones = async () => {
+    try {
+      const response = await fetch(`/api/milestones?projectId=${projectId}`);
+      if (response.ok) {
+        const updatedMilestones = await response.json();
+        setMilestones(updatedMilestones);
+      }
+    } catch (error) {
+      console.error("Failed to refresh milestones:", error);
+    }
+  };
+
+  // Handle when a new issue is created
+  const handleIssueCreated = async (newIssue: any) => {
+    // Refresh milestones to update counts and stats
+    await refreshMilestones();
+  };
+
+  // Handle when an issue is updated (status change, etc)
+  const handleIssueUpdated = async () => {
+    // Refresh milestones to update progress and stats
+    await refreshMilestones();
+    // Trigger update counter to force re-render
+    setIssueUpdateTrigger(prev => prev + 1);
+  };
 
   return (
     <>
@@ -69,7 +98,9 @@ export function ProjectContentClient({
         users={users}
         milestones={milestones.map((m) => ({ id: m.id, name: m.name }))}
         workspaceId={workspaceId}
-        key={selectedMilestoneId || "all"}
+        onIssueCreated={handleIssueCreated}
+        onIssueUpdated={handleIssueUpdated}
+        key={`${selectedMilestoneId || "all"}-${issueUpdateTrigger}`}
       />
     </>
   );

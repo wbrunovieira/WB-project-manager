@@ -52,6 +52,8 @@ interface ProjectIssuesClientProps {
   users: Array<{ id: string; name: string | null; email: string }>;
   milestones?: Array<{ id: string; name: string }>;
   workspaceId: string;
+  onIssueCreated?: (issue: any) => void;
+  onIssueUpdated?: () => void;
 }
 
 interface SortableIssueCardProps {
@@ -813,6 +815,8 @@ export function ProjectIssuesClient({
   users,
   milestones,
   workspaceId,
+  onIssueCreated,
+  onIssueUpdated,
 }: ProjectIssuesClientProps) {
   const router = useRouter();
   const [issuesByStatus, setIssuesByStatus] = useState(initialIssuesByStatus);
@@ -960,6 +964,11 @@ export function ProjectIssuesClient({
 
       if (!response.ok) {
         throw new Error("Failed to update status");
+      }
+
+      // Notify parent that issue was updated
+      if (onIssueUpdated) {
+        onIssueUpdated();
       }
 
       // Refresh to get updated data from server
@@ -1283,6 +1292,29 @@ export function ProjectIssuesClient({
     }
   };
 
+  const handleIssueCreated = (newIssue: any) => {
+    // Add the new issue to the correct status group
+    const statusType = newIssue.status.type;
+    const updatedIssuesByStatus = { ...issuesByStatus };
+
+    if (!updatedIssuesByStatus[statusType]) {
+      updatedIssuesByStatus[statusType] = [];
+    }
+
+    // Add the new issue at the end of its status group
+    updatedIssuesByStatus[statusType] = [
+      ...updatedIssuesByStatus[statusType],
+      newIssue,
+    ];
+
+    setIssuesByStatus(updatedIssuesByStatus);
+
+    // Notify parent component
+    if (onIssueCreated) {
+      onIssueCreated(newIssue);
+    }
+  };
+
   return (
     <>
       <div className="mb-6 flex items-center justify-between">
@@ -1416,6 +1448,7 @@ export function ProjectIssuesClient({
         onOpenChange={setIsCreateModalOpen}
         defaultProjectId={projectId}
         workspaceId={workspaceId}
+        onIssueCreated={handleIssueCreated}
       />
 
       {editingIssue && (

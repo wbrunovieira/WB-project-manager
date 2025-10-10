@@ -63,9 +63,15 @@ export async function GET(req: NextRequest) {
             issues: true,
           },
         },
+        issues: {
+          include: {
+            status: true,
+            feature: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: "desc",
+        sortOrder: "asc",
       },
     });
 
