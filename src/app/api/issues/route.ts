@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
 
     const accessibleWorkspaceIds = workspaceMemberships.map((wm) => wm.workspaceId);
 
-    const where: any = {
+    const where: Record<string, unknown> = {
       workspaceId: { in: accessibleWorkspaceIds },
     };
 

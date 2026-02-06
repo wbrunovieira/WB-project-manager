@@ -188,7 +188,7 @@ export async function PATCH(
       : {};
 
     // Check if status is changing
-    let additionalData: any = {};
+    const additionalData: Record<string, unknown> = {};
     if (data.statusId && data.statusId !== issue.statusId) {
       const newStatus = await prisma.status.findUnique({
         where: { id: data.statusId },

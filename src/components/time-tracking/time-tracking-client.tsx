@@ -2,20 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Clock, Calendar, Tag, FolderKanban, ChevronDown, ChevronRight, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-interface TimeTrackingClientProps {
-  projects: any[];
-  milestones: any[];
-  labels: any[];
-}
 
 interface TimeEntry {
   id: string;
@@ -70,17 +57,6 @@ function formatTime(seconds: number): string {
   }
 }
 
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 interface ProjectStats {
   projectId: string;
   projectName: string;
@@ -120,17 +96,7 @@ interface PeriodStats {
   labelBreakdown: Map<string, { name: string; color: string; seconds: number }>;
 }
 
-interface PeriodComparison {
-  current: number;
-  previous: number;
-  percentChange: number;
-}
-
-export function TimeTrackingClient({
-  projects,
-  milestones,
-  labels,
-}: TimeTrackingClientProps) {
+export function TimeTrackingClient() {
   const [viewMode, setViewMode] = useState<"project" | "milestone" | "label">("project");
   const [timeData, setTimeData] = useState<{
     totalSeconds: number;

@@ -69,6 +69,7 @@ export default async function MyIssuesPage() {
     select: {
       id: true,
       name: true,
+      type: true,
     },
     orderBy: {
       position: "asc",
@@ -112,10 +113,17 @@ export default async function MyIssuesPage() {
     },
   });
 
+  const serializedIssues = issues.map((issue) => ({
+    ...issue,
+    reportedAt: issue.reportedAt?.toISOString() ?? null,
+    createdAt: issue.createdAt.toISOString(),
+    resolvedAt: issue.resolvedAt?.toISOString() ?? null,
+  }));
+
   return (
     <div className="min-h-screen bg-[#350459]">
       <MyIssuesClient
-        issues={issues}
+        issues={serializedIssues}
         statuses={statuses}
         users={users}
         projects={projects}

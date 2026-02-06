@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { Plus, Circle, CircleDot, CheckCircle2, XCircle, AlertCircle, Edit, Trash2, GripVertical, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,13 +40,20 @@ interface Issue {
   title: string;
   priority: string;
   type: string;
-  reportedAt?: Date | null;
-  createdAt: Date;
-  resolvedAt?: Date | null;
+  statusId: string;
+  workspaceId: string;
+  reportedAt?: string | null;
+  createdAt: string;
+  resolvedAt?: string | null;
   status: {
     name: string;
     type: string;
   };
+  feature?: {
+    id: string;
+    name: string;
+    color?: string | null;
+  } | null;
   project?: {
     id: string;
     name: string;
@@ -71,7 +78,7 @@ interface Issue {
 
 interface MyIssuesClientProps {
   issues: Issue[];
-  statuses: Array<{ id: string; name: string }>;
+  statuses: Array<{ id: string; name: string; type: string }>;
   users: Array<{ id: string; name: string | null; email: string }>;
   projects: Array<{ id: string; name: string }>;
   milestones?: Array<{ id: string; name: string }>;
@@ -85,10 +92,9 @@ interface SortableIssueRowProps {
   onEdit: (issue: Issue) => void;
   onDelete: (issue: Issue) => void;
   onStatusChange: (issueId: string, statusId: string) => void;
-  statuses: Array<{ id: string; name: string }>;
-  getPriorityColor: (priority: string) => string;
-  getPriorityIcon: (priority: string) => JSX.Element;
-  getStatusIcon: (statusType: string) => JSX.Element;
+  statuses: Array<{ id: string; name: string; type: string }>;
+  getPriorityIcon: (priority: string) => React.ReactElement;
+  getStatusIcon: (statusType: string) => React.ReactElement;
 }
 
 function SortableIssueRow({
@@ -97,7 +103,6 @@ function SortableIssueRow({
   onDelete,
   onStatusChange,
   statuses,
-  getPriorityColor,
   getPriorityIcon,
   getStatusIcon,
 }: SortableIssueRowProps) {
@@ -162,7 +167,7 @@ function SortableIssueRow({
                 onClick={() => onStatusChange(issue.id, status.id)}
                 className="flex items-center gap-2 cursor-pointer text-gray-200 hover:bg-[#792990]/30 focus:bg-[#792990]/30"
               >
-                {getStatusIcon(status.name === "Done" ? "DONE" : status.name === "Canceled" ? "CANCELED" : "TODO")}
+                {getStatusIcon(status.type)}
                 <span>{status.name}</span>
               </DropdownMenuItem>
             ))}
@@ -284,21 +289,6 @@ export function MyIssuesClient({
     })
   );
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "URGENT":
-        return "text-red-600";
-      case "HIGH":
-        return "text-orange-600";
-      case "MEDIUM":
-        return "text-yellow-600";
-      case "LOW":
-        return "text-blue-600";
-      default:
-        return "text-gray-600";
-    }
-  };
-
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
       case "URGENT":
@@ -406,9 +396,9 @@ export function MyIssuesClient({
     }
   };
 
-  const handleIssueCreated = (newIssue: any) => {
+  const handleIssueCreated = (newIssue: Record<string, unknown>) => {
     // Add the new issue to the top of the list
-    setIssues([newIssue, ...issues]);
+    setIssues([newIssue as unknown as Issue, ...issues]);
   };
 
   const groupedIssues = useMemo(() => {
@@ -569,7 +559,7 @@ export function MyIssuesClient({
                       onDelete={setDeletingIssue}
                       onStatusChange={handleStatusChange}
                       statuses={statuses}
-                      getPriorityColor={getPriorityColor}
+
                       getPriorityIcon={getPriorityIcon}
                       getStatusIcon={getStatusIcon}
                     />
@@ -625,7 +615,7 @@ export function MyIssuesClient({
                           onDelete={setDeletingIssue}
                           onStatusChange={handleStatusChange}
                           statuses={statuses}
-                          getPriorityColor={getPriorityColor}
+    
                           getPriorityIcon={getPriorityIcon}
                           getStatusIcon={getStatusIcon}
                         />
@@ -690,7 +680,7 @@ export function MyIssuesClient({
                                   onDelete={setDeletingIssue}
                                   onStatusChange={handleStatusChange}
                                   statuses={statuses}
-                                  getPriorityColor={getPriorityColor}
+            
                                   getPriorityIcon={getPriorityIcon}
                                   getStatusIcon={getStatusIcon}
                                 />
@@ -729,23 +719,13 @@ export function MyIssuesClient({
           open={!!editingIssue}
           onOpenChange={(open) => !open && setEditingIssue(null)}
           onIssueUpdated={(updatedIssue) => {
-            // Update the issue in the local state
-            const updatedIssuesByStatus = { ...issuesByStatus };
-
-            // Find which status group the issue belongs to
-            for (const [statusType, issues] of Object.entries(updatedIssuesByStatus)) {
-              const issueIndex = issues.findIndex((i: any) => i.id === updatedIssue.id);
-              if (issueIndex !== -1) {
-                // Update the issue in place
-                updatedIssuesByStatus[statusType][issueIndex] = {
-                  ...updatedIssuesByStatus[statusType][issueIndex],
-                  ...updatedIssue,
-                };
-                break;
-              }
-            }
-
-            setIssuesByStatus(updatedIssuesByStatus);
+            setIssues((prev) =>
+              prev.map((issue) =>
+                issue.id === updatedIssue.id
+                  ? { ...issue, ...updatedIssue }
+                  : issue
+              )
+            );
           }}
         />
       )}

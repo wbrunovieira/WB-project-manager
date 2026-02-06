@@ -7,9 +7,9 @@ interface SLAIndicatorProps {
   issue: {
     type: string;
     priority: string;
-    reportedAt?: Date | null;
-    createdAt: Date;
-    resolvedAt?: Date | null;
+    reportedAt?: Date | string | null;
+    createdAt: Date | string;
+    resolvedAt?: Date | string | null;
     status: {
       type: string;
     };

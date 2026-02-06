@@ -1,5 +1,4 @@
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { TimeTrackingClient } from "@/components/time-tracking/time-tracking-client";
 
@@ -9,57 +8,6 @@ export default async function TimeTrackingPage() {
   if (!session?.user?.id) {
     redirect("/auth/signin");
   }
-
-  // Get user's workspaces
-  const userWorkspaces = await prisma.workspaceMember.findMany({
-    where: {
-      userId: session.user.id,
-    },
-    select: {
-      workspaceId: true,
-    },
-  });
-
-  const workspaceIds = userWorkspaces.map((wm) => wm.workspaceId);
-
-  // Fetch all projects, milestones, and labels for filters
-  const [projects, milestones, labels] = await Promise.all([
-    prisma.project.findMany({
-      where: {
-        workspaceId: {
-          in: workspaceIds,
-        },
-      },
-      orderBy: {
-        name: "asc",
-      },
-    }),
-    prisma.milestone.findMany({
-      where: {
-        project: {
-          workspaceId: {
-            in: workspaceIds,
-          },
-        },
-      },
-      include: {
-        project: true,
-      },
-      orderBy: {
-        name: "asc",
-      },
-    }),
-    prisma.label.findMany({
-      where: {
-        workspaceId: {
-          in: workspaceIds,
-        },
-      },
-      orderBy: {
-        name: "asc",
-      },
-    }),
-  ]);
 
   return (
     <div className="min-h-screen bg-[#350459]">
@@ -71,11 +19,7 @@ export default async function TimeTrackingPage() {
           </p>
         </div>
 
-        <TimeTrackingClient
-          projects={projects}
-          milestones={milestones}
-          labels={labels}
-        />
+        <TimeTrackingClient />
       </div>
     </div>
   );

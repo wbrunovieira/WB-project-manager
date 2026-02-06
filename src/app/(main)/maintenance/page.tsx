@@ -2,7 +2,6 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { MaintenanceDashboardClient } from "@/components/maintenance/maintenance-dashboard-client";
-import { calculateBusinessHours } from "@/lib/business-hours";
 
 export default async function MaintenanceDashboardPage() {
   const session = await auth();

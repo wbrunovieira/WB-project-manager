@@ -31,7 +31,7 @@ interface CreateMilestoneModalProps {
   projectId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onMilestoneCreated?: (milestone: any) => void;
+  onMilestoneCreated?: (milestone: { id: string; name: string; [key: string]: unknown }) => void;
 }
 
 export function CreateMilestoneModal({

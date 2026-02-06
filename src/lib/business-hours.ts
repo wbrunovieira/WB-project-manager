@@ -22,7 +22,7 @@ function isWeekend(date: Date): boolean {
 /**
  * Check if a date is within business hours
  */
-function isBusinessHours(date: Date): boolean {
+export function isBusinessHours(date: Date): boolean {
   const hour = date.getHours();
   return hour >= BUSINESS_HOURS_START && hour < BUSINESS_HOURS_END;
 }

@@ -50,15 +50,6 @@ export default async function DashboardPage() {
     },
   });
 
-  // Get unique labels from all issues
-  const allLabels = await prisma.label.findMany({
-    where: {
-      workspaceId: {
-        in: workspaceIds,
-      },
-    },
-  });
-
   return (
     <>
       {/* Welcome Section */}
@@ -87,7 +78,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <DashboardClient issues={issues} labels={allLabels} />
+      <DashboardClient issues={issues} />
     </>
   );
 }

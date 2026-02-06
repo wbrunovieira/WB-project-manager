@@ -66,7 +66,7 @@ interface EditIssueModalProps {
   milestones?: Array<{ id: string; name: string }>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onIssueUpdated?: (updatedIssue: any) => void;
+  onIssueUpdated?: (updatedIssue: Record<string, unknown>) => void;
 }
 
 export function EditIssueModal({

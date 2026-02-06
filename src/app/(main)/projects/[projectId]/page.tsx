@@ -62,6 +62,21 @@ export default async function ProjectDetailPage({
     }
   });
 
+  // Serialize dates for client component (Prisma Date → JSON string)
+  const serializedIssuesByStatus = Object.fromEntries(
+    Object.entries(issuesByStatus).map(([statusType, issues]) => [
+      statusType,
+      issues.map((issue) => ({
+        ...issue,
+        reportedAt: issue.reportedAt?.toISOString() ?? null,
+        createdAt: issue.createdAt.toISOString(),
+        updatedAt: issue.updatedAt.toISOString(),
+        resolvedAt: issue.resolvedAt?.toISOString() ?? null,
+        firstResponseAt: issue.firstResponseAt?.toISOString() ?? null,
+      })),
+    ])
+  );
+
   const totalIssues = project.issues.length;
   const completedIssues = project.issues.filter(
     (issue) => issue.status.type === "DONE"
@@ -276,7 +291,7 @@ export default async function ProjectDetailPage({
       {/* Milestones and Issues Section */}
       <ProjectContentClient
         projectId={project.id}
-        issuesByStatus={issuesByStatus}
+        issuesByStatus={serializedIssuesByStatus}
         totalIssues={totalIssues}
         statuses={statuses}
         users={users}

@@ -143,7 +143,7 @@ export async function PATCH(
 
     const { startDate, targetDate, ...data } = validated.data;
 
-    const updateData: any = { ...data };
+    const updateData: Record<string, unknown> = { ...data };
     if (startDate !== undefined) {
       updateData.startDate = startDate ? new Date(startDate) : null;
     }

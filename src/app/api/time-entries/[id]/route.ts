@@ -17,8 +17,7 @@ export async function PATCH(
 
   try {
     const { id } = await context.params;
-    const body = await req.json();
-    const { action } = body; // "pause" or "stop"
+    await req.json();
 
     const timeEntry = await prisma.timeEntry.findUnique({
       where: { id },

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Clock, CheckCircle, AlertTriangle, TrendingUp, Calendar, BarChart3 } from "lucide-react";
-import { formatBusinessHours, calculateBusinessHours } from "@/lib/business-hours";
+import { Clock, CheckCircle, AlertTriangle, TrendingUp, BarChart3 } from "lucide-react";
+import { calculateBusinessHours } from "@/lib/business-hours";
 import Link from "next/link";
 
 interface Issue {
@@ -199,7 +199,7 @@ export function MaintenanceDashboardClient({
           <label className="text-sm font-medium text-gray-300">Period:</label>
           <select
             value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value as any)}
+            onChange={(e) => setSelectedPeriod(e.target.value as "week" | "month" | "quarter" | "all")}
             className="rounded-md border border-[#792990]/40 bg-[#350459] px-3 py-2 text-sm text-gray-200 focus:border-[#792990] focus:outline-none focus:ring-2 focus:ring-[#792990]/50"
           >
             <option value="week">Last 7 Days</option>
@@ -338,7 +338,7 @@ export function MaintenanceDashboardClient({
           <h3 className="text-lg font-semibold text-gray-100 mb-4">Issues by Priority</h3>
           <div className="space-y-3">
             {Object.entries(issuesByPriority)
-              .filter(([_, count]) => count > 0)
+              .filter(([, count]) => count > 0)
               .map(([priority, count]) => {
                 const percentage = metrics.total > 0 ? (count / metrics.total) * 100 : 0;
                 return (

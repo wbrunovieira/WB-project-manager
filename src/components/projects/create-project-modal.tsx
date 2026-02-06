@@ -103,7 +103,7 @@ export function CreateProjectModal({
         <DialogHeader>
           <DialogTitle>Create Project</DialogTitle>
           <DialogDescription>
-            Add a new project to organize your team's work.
+            Add a new project to organize your team&apos;s work.
           </DialogDescription>
         </DialogHeader>
 

@@ -18,7 +18,8 @@ vi.mock('@/lib/prisma', () => ({
 // Import after mocking
 import { withAuth, withCors } from '@/lib/api-auth';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+
+const mockAuth = auth as unknown as ReturnType<typeof vi.fn>;
 
 describe('withAuth wrapper', () => {
   beforeEach(() => {
@@ -155,7 +156,7 @@ describe('withAuth wrapper', () => {
 
   describe('Session Authentication', () => {
     test('aceita sessão válida', async () => {
-      vi.mocked(auth).mockResolvedValue({
+      mockAuth.mockResolvedValue({
         user: { id: 'session-user-id', email: 'user@example.com' },
         expires: new Date().toISOString(),
       });
@@ -171,7 +172,7 @@ describe('withAuth wrapper', () => {
     });
 
     test('rejeita sessão inválida/expirada', async () => {
-      vi.mocked(auth).mockResolvedValue(null);
+      mockAuth.mockResolvedValue(null);
 
       const handler = vi.fn();
       const wrappedHandler = withAuth(handler);
@@ -187,7 +188,7 @@ describe('withAuth wrapper', () => {
     });
 
     test('rejeita sessão sem user.id', async () => {
-      vi.mocked(auth).mockResolvedValue({
+      mockAuth.mockResolvedValue({
         user: { email: 'user@example.com' }, // Sem id
         expires: new Date().toISOString(),
       });
@@ -205,7 +206,7 @@ describe('withAuth wrapper', () => {
 
     test('extrai userId da sessão corretamente', async () => {
       const userId = 'unique-user-id-123';
-      vi.mocked(auth).mockResolvedValue({
+      mockAuth.mockResolvedValue({
         user: { id: userId, email: 'user@example.com', name: 'Test User' },
         expires: new Date().toISOString(),
       });
@@ -224,7 +225,7 @@ describe('withAuth wrapper', () => {
   describe('Authentication Fallback', () => {
     test('tenta API key primeiro, depois sessão', async () => {
       // API key inválida, sessão válida
-      vi.mocked(auth).mockResolvedValue({
+      mockAuth.mockResolvedValue({
         user: { id: 'session-user-id', email: 'user@example.com' },
         expires: new Date().toISOString(),
       });
@@ -246,7 +247,7 @@ describe('withAuth wrapper', () => {
     });
 
     test('usa sessão quando não há header Authorization', async () => {
-      vi.mocked(auth).mockResolvedValue({
+      mockAuth.mockResolvedValue({
         user: { id: 'session-user-id', email: 'user@example.com' },
         expires: new Date().toISOString(),
       });
@@ -258,12 +259,12 @@ describe('withAuth wrapper', () => {
 
       await wrappedHandler(request);
 
-      expect(auth).toHaveBeenCalled();
+      expect(mockAuth).toHaveBeenCalled();
       expect(handler).toHaveBeenCalledWith(request, 'session-user-id');
     });
 
     test('retorna 401 se ambos falharem', async () => {
-      vi.mocked(auth).mockResolvedValue(null);
+      mockAuth.mockResolvedValue(null);
 
       const handler = vi.fn();
       const wrappedHandler = withAuth(handler);
@@ -395,7 +396,7 @@ describe('withCors wrapper', () => {
 
 describe('Integration: withAuth + withCors', () => {
   test('withAuth e withCors podem ser usados juntos', async () => {
-    vi.mocked(auth).mockResolvedValue({
+    mockAuth.mockResolvedValue({
       user: { id: 'user-id', email: 'user@example.com' },
       expires: new Date().toISOString(),
     });
@@ -416,7 +417,7 @@ describe('Integration: withAuth + withCors', () => {
   });
 
   test('CORS headers presentes mesmo em erro 401', async () => {
-    vi.mocked(auth).mockResolvedValue(null);
+    mockAuth.mockResolvedValue(null);
 
     const handler = withAuth(async (req, userId) => {
       const response = NextResponse.json({ userId });

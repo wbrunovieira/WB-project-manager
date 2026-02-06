@@ -56,7 +56,7 @@ interface CreateIssueModalProps {
   onOpenChange: (open: boolean) => void;
   defaultProjectId?: string;
   workspaceId: string;
-  onIssueCreated?: (issue: any) => void;
+  onIssueCreated?: (issue: Record<string, unknown>) => void;
 }
 
 export function CreateIssueModal({
@@ -90,6 +90,7 @@ export function CreateIssueModal({
     formState: { errors },
     reset,
     getValues,
+    watch,
   } = useForm<CreateIssueForm>({
     resolver: zodResolver(createIssueSchema),
     defaultValues: {
@@ -108,15 +109,16 @@ export function CreateIssueModal({
     }
   }, [open, workspaceId]);
 
+  const watchedProjectId = watch("projectId");
+
   useEffect(() => {
-    const projectId = getValues("projectId");
-    if (open && projectId) {
-      fetchFeatures(projectId);
+    if (open && watchedProjectId) {
+      fetchFeatures(watchedProjectId);
     } else {
       setAvailableFeatures([]);
       setSelectedFeatureId(null);
     }
-  }, [open, getValues("projectId")]);
+  }, [open, watchedProjectId]);
 
   useEffect(() => {
     if (open && !createAnother) {

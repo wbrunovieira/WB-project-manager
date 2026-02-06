@@ -35,7 +35,7 @@ export default function RegisterPage() {
       }
 
       router.push("/login?registered=true");
-    } catch (error) {
+    } catch {
       setError("An error occurred. Please try again.");
       setLoading(false);
     }

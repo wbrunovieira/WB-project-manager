@@ -24,7 +24,6 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useRouter } from "next/navigation";
 
 interface Milestone {
   id: string;
@@ -228,7 +227,6 @@ export function ProjectMilestonesClient({
   selectedMilestoneId: externalSelectedMilestoneId,
   onMilestoneSelect,
 }: ProjectMilestonesClientProps) {
-  const router = useRouter();
   const [milestones, setMilestones] = useState<Milestone[]>(initialMilestones);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null);
@@ -282,7 +280,7 @@ export function ProjectMilestonesClient({
     }
   };
 
-  const handleMilestoneCreated = (newMilestone: any) => {
+  const handleMilestoneCreated = (newMilestone: { id: string; name: string; [key: string]: unknown }) => {
     // Add the new milestone with default structure
     const milestoneWithCounts = {
       ...newMilestone,

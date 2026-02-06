@@ -19,32 +19,28 @@ export async function GET(req: NextRequest) {
     const projectId = searchParams.get("projectId");
 
     // Build where clause based on filters
-    const where: any = {
-      userId: session.user.id,
-    };
+    const issueFilter: Record<string, unknown> = {};
 
     if (milestoneId) {
-      where.issue = {
-        milestoneId,
-      };
+      issueFilter.milestoneId = milestoneId;
     }
 
     if (projectId && !milestoneId) {
-      where.issue = {
-        projectId,
-      };
+      issueFilter.projectId = projectId;
     }
 
     if (labelId) {
-      where.issue = {
-        ...where.issue,
-        labels: {
-          some: {
-            labelId,
-          },
+      issueFilter.labels = {
+        some: {
+          labelId,
         },
       };
     }
+
+    const where: Record<string, unknown> = {
+      userId: session.user.id,
+      ...(Object.keys(issueFilter).length > 0 ? { issue: issueFilter } : {}),
+    };
 
     // Fetch time entries with all related data
     const timeEntries = await prisma.timeEntry.findMany({
@@ -92,7 +88,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Group by issue for summary
-    const groupedByIssue = formattedEntries.reduce((acc: any, entry) => {
+    const groupedByIssue = formattedEntries.reduce((acc: Record<string, { issue: typeof entry.issue; totalSeconds: number; entries: typeof formattedEntries }>, entry) => {
       const issueId = entry.issue.id;
       if (!acc[issueId]) {
         acc[issueId] = {

@@ -4,13 +4,88 @@ import { useState, useEffect } from "react";
 import { ProjectMilestonesClient } from "@/components/milestones/project-milestones-client";
 import { ProjectIssuesClient } from "@/components/projects/project-issues-client";
 
+interface Issue {
+  id: string;
+  identifier: string;
+  title: string;
+  description?: string | null;
+  type: string;
+  priority: string;
+  statusId: string;
+  projectId: string | null;
+  workspaceId: string;
+  milestoneId?: string | null;
+  featureId?: string | null;
+  sortOrder: number;
+  reportedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string | null;
+  firstResponseAt?: string | null;
+  resolutionTimeMinutes?: number | null;
+  reopenCount: number;
+  status: {
+    id: string;
+    name: string;
+    type: string;
+  };
+  assignee?: {
+    id: string;
+    name: string | null;
+    email: string;
+  } | null;
+  creator?: {
+    id: string;
+    name: string | null;
+    email: string;
+  } | null;
+  milestone?: {
+    id: string;
+    name: string;
+  } | null;
+  feature?: {
+    id: string;
+    name: string;
+    color?: string | null;
+    description?: string | null;
+  } | null;
+  labels: Array<{
+    labelId: string;
+    label: {
+      name: string;
+      color: string;
+    };
+  }>;
+}
+
+interface Milestone {
+  id: string;
+  name: string;
+  description?: string | null;
+  startDate?: Date | null;
+  targetDate?: Date | null;
+  _count: {
+    issues: number;
+  };
+  issues?: Array<{
+    status: {
+      type: string;
+    };
+    feature?: {
+      id: string;
+      name: string;
+      color: string | null;
+    } | null;
+  }>;
+}
+
 interface ProjectContentClientProps {
   projectId: string;
-  issuesByStatus: Record<string, any[]>;
+  issuesByStatus: Record<string, Issue[]>;
   totalIssues: number;
   statuses: Array<{ id: string; name: string; type: string }>;
   users: Array<{ id: string; name: string | null; email: string }>;
-  milestones: any[];
+  milestones: Milestone[];
   workspaceId: string;
 }
 
@@ -35,7 +110,7 @@ export function ProjectContentClient({
       const filtered = Object.entries(initialIssuesByStatus).reduce((acc, [statusType, issues]) => {
         acc[statusType] = issues.filter((issue) => issue.milestoneId === selectedMilestoneId);
         return acc;
-      }, {} as Record<string, any[]>);
+      }, {} as Record<string, Issue[]>);
 
       setFilteredIssuesByStatus(filtered);
       setFilteredTotalIssues(Object.values(filtered).flat().length);
@@ -59,7 +134,7 @@ export function ProjectContentClient({
   };
 
   // Handle when a new issue is created
-  const handleIssueCreated = async (newIssue: any) => {
+  const handleIssueCreated = async () => {
     // Refresh milestones to update counts and stats
     await refreshMilestones();
   };

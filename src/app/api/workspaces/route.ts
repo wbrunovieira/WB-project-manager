@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withCors } from "@/lib/api-auth";
 import { auth } from "@/lib/auth";
 import { z } from "zod";
+import { StatusType } from "@/generated/prisma";
 
 const createWorkspaceSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -14,7 +15,7 @@ const createWorkspaceSchema = z.object({
 });
 
 // GET /api/workspaces - List all workspaces for the user
-export async function GET(req: NextRequest) {
+export async function GET() {
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -115,7 +116,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Create default statuses for the new workspace
-    const statuses = [
+    const statuses: Array<{ name: string; type: StatusType; position: number; color: string }> = [
       { name: "Backlog", type: "BACKLOG", position: 0, color: "#94a3b8" },
       { name: "Todo", type: "TODO", position: 1, color: "#64748b" },
       { name: "In Progress", type: "IN_PROGRESS", position: 2, color: "#3b82f6" },

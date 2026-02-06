@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
 }
 
 // GET /api/time-entries - Get all active time entries for current user
-export async function GET(req: NextRequest) {
+export async function GET() {
   const session = await auth();
 
   if (!session?.user?.id) {

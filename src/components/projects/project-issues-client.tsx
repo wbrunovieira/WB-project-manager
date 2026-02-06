@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Plus, Edit, Trash2, GripVertical, Circle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Target, User, Calendar, Clock, AlertCircle, Lock, MoreVertical, ArrowUp, ArrowDown, Copy, Link2, Files, ClipboardCopy, Search, X } from "lucide-react";
+import { Plus, Edit, Trash2, GripVertical, Circle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Target, User, Calendar, Clock, AlertCircle, Lock, MoreVertical, ArrowUp, ArrowDown, Link2, Files, ClipboardCopy, Search, X } from "lucide-react";
 import { TimerButton } from "@/components/time-tracker/timer-button";
 import { IssueTimeDisplay } from "@/components/time-tracker/issue-time-display";
 import { SLAIndicator } from "@/components/issues/sla-indicator";
@@ -44,34 +44,90 @@ import {
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
 
+interface IssueLabel {
+  labelId: string;
+  label: {
+    name: string;
+    color: string;
+  };
+}
+
+interface Issue {
+  id: string;
+  identifier: string;
+  title: string;
+  description?: string | null;
+  type: string;
+  priority: string;
+  statusId: string;
+  projectId: string | null;
+  workspaceId: string;
+  milestoneId?: string | null;
+  featureId?: string | null;
+  sortOrder: number;
+  reportedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string | null;
+  firstResponseAt?: string | null;
+  resolutionTimeMinutes?: number | null;
+  reopenCount: number;
+  status: {
+    id: string;
+    name: string;
+    type: string;
+  };
+  assignee?: {
+    id: string;
+    name: string | null;
+    email: string;
+  } | null;
+  creator?: {
+    id: string;
+    name: string | null;
+    email: string;
+  } | null;
+  milestone?: {
+    id: string;
+    name: string;
+  } | null;
+  feature?: {
+    id: string;
+    name: string;
+    color?: string | null;
+    description?: string | null;
+  } | null;
+  labels: IssueLabel[];
+}
+
 interface ProjectIssuesClientProps {
   projectId: string;
-  issuesByStatus: Record<string, any[]>;
+  issuesByStatus: Record<string, Issue[]>;
   totalIssues: number;
   statuses: Array<{ id: string; name: string; type: string }>;
   users: Array<{ id: string; name: string | null; email: string }>;
   milestones?: Array<{ id: string; name: string }>;
   workspaceId: string;
-  onIssueCreated?: (issue: any) => void;
+  onIssueCreated?: (issue: Record<string, unknown>) => void;
   onIssueUpdated?: () => void;
 }
 
 interface SortableIssueCardProps {
-  issue: any;
+  issue: Issue;
   statuses: Array<{ id: string; name: string; type: string }>;
   milestones: Array<{ id: string; name: string }>;
   features: Array<{ id: string; name: string; color?: string | null }>;
   projectId: string;
-  onEdit: (issue: any) => void;
-  onDelete: (issue: any) => void;
+  onEdit: (issue: Issue) => void;
+  onDelete: (issue: Issue) => void;
   onStatusChange: (issueId: string, statusId: string) => void;
   onMilestoneChange: (issueId: string, milestoneId: string | null) => void;
   onFeatureChange: (issueId: string, featureId: string | null) => void;
   onRequestCreateFeature: (issueId: string) => void;
   onMoveToTop: (issueId: string) => void;
   onMoveToBottom: (issueId: string) => void;
-  onCopyLink: (issue: any) => void;
-  onDuplicate: (issue: any) => void;
+  onCopyLink: (issue: Issue) => void;
+  onDuplicate: (issue: Issue) => void;
 }
 
 function SortableIssueCard({
@@ -79,7 +135,6 @@ function SortableIssueCard({
   statuses,
   milestones,
   features,
-  projectId,
   onEdit,
   onDelete,
   onStatusChange,
@@ -148,46 +203,7 @@ function SortableIssueCard({
   };
 
   const completionFade = getCompletionFade();
-
-  const handleCreateFeature = async () => {
-    if (!newFeatureName.trim()) return;
-
-    try {
-      const response = await fetch("/api/features", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newFeatureName.trim(),
-          color: newFeatureColor,
-          projectId,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create feature");
-      }
-
-      const newFeature = await response.json();
-
-      // Assign the new feature to the issue
-      onFeatureChange(issue.id, newFeature.id);
-
-      setNewFeatureName("");
-      setNewFeatureColor("#3b82f6");
-      setIsCreatingFeature(false);
-
-      toast({
-        title: "Feature created",
-        description: `Created and assigned "${newFeature.name}"`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create feature",
-        variant: "destructive",
-      });
-    }
-  };
+  const { toast } = useToast();
 
   return (
     <ContextMenu>
@@ -346,12 +362,12 @@ function SortableIssueCard({
                   return `${Math.floor(days / 30)} months ago`;
                 })()}
               </div>
-              {issue.resolutionTimeMinutes !== null && issue.resolutionTimeMinutes < 1440 && (
+              {issue.resolutionTimeMinutes != null && issue.resolutionTimeMinutes < 1440 && (
                 <div className="flex items-center gap-1 justify-end mt-0.5">
                   <span className="text-yellow-500">🏆</span>
                   <span>
                     {(() => {
-                      const minutes = issue.resolutionTimeMinutes;
+                      const minutes = issue.resolutionTimeMinutes!;
                       if (minutes < 60) return `${minutes}m resolution`;
                       const hours = Math.floor(minutes / 60);
                       const mins = minutes % 60;
@@ -408,7 +424,7 @@ function SortableIssueCard({
         </DropdownMenu>
 
         {/* Labels */}
-        {issue.labels.map((issueLabel: any) => (
+        {issue.labels.map((issueLabel: IssueLabel) => (
           <span
             key={issueLabel.labelId}
             className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium shadow-sm"
@@ -573,7 +589,7 @@ function SortableIssueCard({
                   <button
                     onClick={async () => {
                       try {
-                        await navigator.clipboard.writeText(issue.description);
+                        await navigator.clipboard.writeText(issue.description ?? "");
                         toast({
                           title: "Copied!",
                           description: "Description copied to clipboard",
@@ -745,7 +761,7 @@ function SortableIssueCard({
                 <div className="space-y-2 pl-6">
                   <p className="text-xs font-medium text-gray-400">Labels</p>
                   <div className="flex flex-wrap gap-2">
-                    {issue.labels.map((issueLabel: any) => (
+                    {issue.labels.map((issueLabel: IssueLabel) => (
                       <span
                         key={issueLabel.labelId}
                         className="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium shadow-sm"
@@ -821,8 +837,8 @@ export function ProjectIssuesClient({
   const router = useRouter();
   const [issuesByStatus, setIssuesByStatus] = useState(initialIssuesByStatus);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [editingIssue, setEditingIssue] = useState<any | null>(null);
-  const [deletingIssue, setDeletingIssue] = useState<any | null>(null);
+  const [editingIssue, setEditingIssue] = useState<Issue | null>(null);
+  const [deletingIssue, setDeletingIssue] = useState<Issue | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -877,8 +893,8 @@ export function ProjectIssuesClient({
       }
 
       const issues = issuesByStatus[statusType];
-      const oldIndex = issues.findIndex((i: any) => i.id === active.id);
-      const newIndex = issues.findIndex((i: any) => i.id === over.id);
+      const oldIndex = issues.findIndex((i: Issue) => i.id === active.id);
+      const newIndex = issues.findIndex((i: Issue) => i.id === over.id);
 
       if (oldIndex === -1 || newIndex === -1) {
         return;
@@ -893,7 +909,7 @@ export function ProjectIssuesClient({
 
       try {
         // Send all sorted issue IDs to maintain correct order
-        const sortedIssueIds = newIssues.map((i: any) => i.id);
+        const sortedIssueIds = newIssues.map((i: Issue) => i.id);
 
         await fetch("/api/issues/reorder", {
           method: "POST",
@@ -913,11 +929,11 @@ export function ProjectIssuesClient({
 
   const handleStatusChange = async (issueId: string, statusId: string) => {
     // Find the issue and its current status
-    let currentIssue: any = null;
+    let currentIssue: Issue | null = null;
     let currentStatusType: string = "";
 
     for (const [statusType, issues] of Object.entries(issuesByStatus)) {
-      const issue = issues.find((i: any) => i.id === issueId);
+      const issue = issues.find((i: Issue) => i.id === issueId);
       if (issue) {
         currentIssue = issue;
         currentStatusType = statusType;
@@ -946,7 +962,7 @@ export function ProjectIssuesClient({
 
     // Remove from old status
     newIssuesByStatus[currentStatusType] = newIssuesByStatus[currentStatusType].filter(
-      (i: any) => i.id !== issueId
+      (i: Issue) => i.id !== issueId
     );
 
     // Add to new status
@@ -1000,7 +1016,7 @@ export function ProjectIssuesClient({
 
     // Apply status filter first
     if (statusFilter !== "all") {
-      const statusFiltered: Record<string, any[]> = {};
+      const statusFiltered: Record<string, Issue[]> = {};
       // Only include the selected status type
       if (issuesByStatus[statusFilter]) {
         statusFiltered[statusFilter] = issuesByStatus[statusFilter];
@@ -1010,9 +1026,9 @@ export function ProjectIssuesClient({
 
     // Apply type filter
     if (typeFilter !== "all") {
-      const typeFiltered: Record<string, any[]> = {};
+      const typeFiltered: Record<string, Issue[]> = {};
       for (const [statusType, issues] of Object.entries(filtered)) {
-        typeFiltered[statusType] = issues.filter((issue: any) => issue.type === typeFilter);
+        typeFiltered[statusType] = issues.filter((issue: Issue) => issue.type === typeFilter);
       }
       filtered = typeFiltered;
     }
@@ -1020,10 +1036,10 @@ export function ProjectIssuesClient({
     // Apply search filter
     if (searchQuery.trim()) {
       const searchLower = searchQuery.toLowerCase().trim();
-      const searchFiltered: Record<string, any[]> = {};
+      const searchFiltered: Record<string, Issue[]> = {};
 
       for (const [statusType, issues] of Object.entries(filtered)) {
-        searchFiltered[statusType] = issues.filter((issue: any) => {
+        searchFiltered[statusType] = issues.filter((issue: Issue) => {
           const titleMatch = issue.title?.toLowerCase().includes(searchLower);
           const descriptionMatch = issue.description?.toLowerCase().includes(searchLower);
           const identifierMatch = issue.identifier?.toString().includes(searchLower);
@@ -1041,11 +1057,11 @@ export function ProjectIssuesClient({
 
   const handleMilestoneChange = async (issueId: string, milestoneId: string | null) => {
     // Find the issue
-    let currentIssue: any = null;
+    let currentIssue: Issue | null = null;
     let currentStatusType: string = "";
 
     for (const [statusType, issues] of Object.entries(issuesByStatus)) {
-      const issue = issues.find((i: any) => i.id === issueId);
+      const issue = issues.find((i: Issue) => i.id === issueId);
       if (issue) {
         currentIssue = issue;
         currentStatusType = statusType;
@@ -1067,7 +1083,7 @@ export function ProjectIssuesClient({
 
     // Update state optimistically
     const newIssuesByStatus = { ...issuesByStatus };
-    newIssuesByStatus[currentStatusType] = newIssuesByStatus[currentStatusType].map((i: any) =>
+    newIssuesByStatus[currentStatusType] = newIssuesByStatus[currentStatusType].map((i: Issue) =>
       i.id === issueId ? updatedIssue : i
     );
 
@@ -1129,7 +1145,7 @@ export function ProjectIssuesClient({
         title: "Feature created",
         description: `Created and assigned "${newFeature.name}"`,
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to create feature",
@@ -1140,11 +1156,11 @@ export function ProjectIssuesClient({
 
   const handleFeatureChange = async (issueId: string, featureId: string | null) => {
     // Find the issue
-    let currentIssue: any = null;
+    let currentIssue: Issue | null = null;
     let currentStatusType: string = "";
 
     for (const [statusType, issues] of Object.entries(issuesByStatus)) {
-      const issue = issues.find((i: any) => i.id === issueId);
+      const issue = issues.find((i: Issue) => i.id === issueId);
       if (issue) {
         currentIssue = issue;
         currentStatusType = statusType;
@@ -1166,7 +1182,7 @@ export function ProjectIssuesClient({
 
     // Update state optimistically
     const newIssuesByStatus = { ...issuesByStatus };
-    newIssuesByStatus[currentStatusType] = newIssuesByStatus[currentStatusType].map((i: any) =>
+    newIssuesByStatus[currentStatusType] = newIssuesByStatus[currentStatusType].map((i: Issue) =>
       i.id === issueId ? updatedIssue : i
     );
 
@@ -1203,7 +1219,7 @@ export function ProjectIssuesClient({
     let currentStatusType: string = "";
 
     for (const [statusType, issues] of Object.entries(issuesByStatus)) {
-      const issue = issues.find((i: any) => i.id === issueId);
+      const issue = issues.find((i: Issue) => i.id === issueId);
       if (issue) {
         currentStatusType = statusType;
         break;
@@ -1213,7 +1229,7 @@ export function ProjectIssuesClient({
     if (!currentStatusType) return;
 
     const issues = issuesByStatus[currentStatusType];
-    const currentIndex = issues.findIndex((i: any) => i.id === issueId);
+    const currentIndex = issues.findIndex((i: Issue) => i.id === issueId);
 
     if (currentIndex === -1 || currentIndex === 0) return; // Already at top
 
@@ -1226,7 +1242,7 @@ export function ProjectIssuesClient({
     setIssuesByStatus(updatedIssuesByStatus);
 
     try {
-      const sortedIssueIds = newIssues.map((i: any) => i.id);
+      const sortedIssueIds = newIssues.map((i: Issue) => i.id);
 
       await fetch("/api/issues/reorder", {
         method: "POST",
@@ -1248,7 +1264,7 @@ export function ProjectIssuesClient({
     let currentStatusType: string = "";
 
     for (const [statusType, issues] of Object.entries(issuesByStatus)) {
-      const issue = issues.find((i: any) => i.id === issueId);
+      const issue = issues.find((i: Issue) => i.id === issueId);
       if (issue) {
         currentStatusType = statusType;
         break;
@@ -1258,7 +1274,7 @@ export function ProjectIssuesClient({
     if (!currentStatusType) return;
 
     const issues = issuesByStatus[currentStatusType];
-    const currentIndex = issues.findIndex((i: any) => i.id === issueId);
+    const currentIndex = issues.findIndex((i: Issue) => i.id === issueId);
     const lastIndex = issues.length - 1;
 
     if (currentIndex === -1 || currentIndex === lastIndex) return; // Already at bottom
@@ -1272,7 +1288,7 @@ export function ProjectIssuesClient({
     setIssuesByStatus(updatedIssuesByStatus);
 
     try {
-      const sortedIssueIds = newIssues.map((i: any) => i.id);
+      const sortedIssueIds = newIssues.map((i: Issue) => i.id);
 
       await fetch("/api/issues/reorder", {
         method: "POST",
@@ -1289,7 +1305,7 @@ export function ProjectIssuesClient({
     }
   };
 
-  const handleCopyIssueLink = async (issue: any) => {
+  const handleCopyIssueLink = async (issue: Issue) => {
     const issueUrl = `${window.location.origin}/projects/${projectId}?issue=${issue.identifier}`;
     try {
       await navigator.clipboard.writeText(issueUrl);
@@ -1299,7 +1315,7 @@ export function ProjectIssuesClient({
     }
   };
 
-  const handleDuplicateIssue = async (issue: any) => {
+  const handleDuplicateIssue = async (issue: Issue) => {
     try {
       const response = await fetch("/api/issues", {
         method: "POST",
@@ -1326,9 +1342,10 @@ export function ProjectIssuesClient({
     }
   };
 
-  const handleIssueCreated = (newIssue: any) => {
+  const handleIssueCreated = (newIssue: Record<string, unknown>) => {
     // Add the new issue to the correct status group
-    const statusType = newIssue.status.type;
+    const issue = newIssue as unknown as Issue;
+    const statusType = issue.status.type;
     const updatedIssuesByStatus = { ...issuesByStatus };
 
     if (!updatedIssuesByStatus[statusType]) {
@@ -1338,7 +1355,7 @@ export function ProjectIssuesClient({
     // Add the new issue at the end of its status group
     updatedIssuesByStatus[statusType] = [
       ...updatedIssuesByStatus[statusType],
-      newIssue,
+      issue,
     ];
 
     setIssuesByStatus(updatedIssuesByStatus);
@@ -1424,7 +1441,7 @@ export function ProjectIssuesClient({
             </span>
             {searchQuery && (
               <span className="inline-flex items-center gap-1 rounded-md bg-[#792990]/20 px-2 py-0.5 text-[#FFB947]">
-                searching: "{searchQuery}"
+                searching: &ldquo;{searchQuery}&rdquo;
               </span>
             )}
             {statusFilter !== "all" && (
@@ -1484,7 +1501,7 @@ export function ProjectIssuesClient({
                       onDragEnd={createHandleDragEnd(statusType)}
                     >
                       <SortableContext
-                        items={issues.map((i: any) => i.id)}
+                        items={issues.map((i: Issue) => i.id)}
                         strategy={verticalListSortingStrategy}
                       >
                         <div className="space-y-3">
@@ -1578,7 +1595,7 @@ export function ProjectIssuesClient({
 
             // Find which status group the issue belongs to
             for (const [statusType, issues] of Object.entries(updatedIssuesByStatus)) {
-              const issueIndex = issues.findIndex((i: any) => i.id === updatedIssue.id);
+              const issueIndex = issues.findIndex((i: Issue) => i.id === updatedIssue.id);
               if (issueIndex !== -1) {
                 // Update the issue in place
                 updatedIssuesByStatus[statusType][issueIndex] = {

@@ -13,14 +13,49 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
+interface DashboardIssueLabel {
+  labelId: string;
+  label: {
+    id: string;
+    name: string;
+    color: string;
+  };
+}
+
+interface DashboardIssue {
+  id: string;
+  identifier: string;
+  title: string;
+  type: string;
+  priority: string;
+  reportedAt?: Date | string | null;
+  createdAt: Date | string;
+  resolvedAt?: Date | string | null;
+  status: {
+    id: string;
+    name: string;
+    type: string;
+  };
+  project: {
+    id: string;
+    name: string;
+  } | null;
+  assignee?: {
+    id: string;
+    name: string | null;
+    email: string;
+  } | null;
+  labels: DashboardIssueLabel[];
+  groupDisplayName?: string;
+}
+
 interface DashboardClientProps {
-  issues: any[];
-  labels: any[];
+  issues: DashboardIssue[];
 }
 
 type GroupBy = "project" | "status" | "label";
 
-export function DashboardClient({ issues, labels }: DashboardClientProps) {
+export function DashboardClient({ issues }: DashboardClientProps) {
   const [groupBy, setGroupBy] = useState<GroupBy>("project");
 
   const getStatusIcon = (statusType: string) => {
@@ -35,7 +70,7 @@ export function DashboardClient({ issues, labels }: DashboardClientProps) {
   };
 
   const groupIssues = () => {
-    const grouped: Record<string, any[]> = {};
+    const grouped: Record<string, DashboardIssue[]> = {};
 
     issues.forEach((issue) => {
       let key: string;
@@ -43,8 +78,8 @@ export function DashboardClient({ issues, labels }: DashboardClientProps) {
 
       switch (groupBy) {
         case "project":
-          key = issue.project.id;
-          displayName = issue.project.name;
+          key = issue.project?.id ?? "no-project";
+          displayName = issue.project?.name ?? "No Project";
           break;
         case "status":
           key = issue.status.id;
@@ -61,8 +96,8 @@ export function DashboardClient({ issues, labels }: DashboardClientProps) {
           }
           break;
         default:
-          key = issue.project.id;
-          displayName = issue.project.name;
+          key = issue.project?.id ?? "no-project";
+          displayName = issue.project?.name ?? "No Project";
       }
 
       if (!grouped[key]) {
@@ -149,7 +184,7 @@ export function DashboardClient({ issues, labels }: DashboardClientProps) {
                       <SLAIndicator issue={issue} compact />
                       {groupBy !== "project" && (
                         <span className="text-xs text-gray-500 flex-shrink-0">
-                          {issue.project.name}
+                          {issue.project?.name ?? "No Project"}
                         </span>
                       )}
                     </div>
@@ -177,7 +212,7 @@ export function DashboardClient({ issues, labels }: DashboardClientProps) {
 
                       {/* Labels */}
                       {groupBy !== "label" &&
-                        issue.labels.map((issueLabel: any) => (
+                        issue.labels.map((issueLabel: DashboardIssueLabel) => (
                           <span
                             key={issueLabel.labelId}
                             className="inline-flex items-center rounded px-2 py-1 text-xs font-medium border"

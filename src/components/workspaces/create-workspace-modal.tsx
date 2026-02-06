@@ -47,14 +47,12 @@ export function CreateWorkspaceModal({
     handleSubmit,
     formState: { errors },
     reset,
-    watch,
     setValue,
   } = useForm<CreateWorkspaceForm>({
     resolver: zodResolver(createWorkspaceSchema),
   });
 
   // Auto-generate slug from name
-  const watchName = watch("name");
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
     const slug = name
