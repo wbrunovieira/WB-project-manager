@@ -21,13 +21,14 @@
 
     - name: Create .env file
       raw: |
-        cat > {{ app_dir }}/.env << 'EOF'
+        cat > {{ app_dir }}/.env << EOF
         AUTH_SECRET={{ vault_auth_secret }}
         NEXTAUTH_URL={{ nextauth_url }}
         ALLOWED_ORIGIN={{ allowed_origin }}
         API_KEY={{ vault_api_key }}
         API_KEY_USER_ID={{ vault_api_key_user_id }}
         EOF
+        sed -i 's/^[[:space:]]*//' {{ app_dir }}/.env
       no_log: true
 
     - name: Build and start containers
