@@ -15,6 +15,7 @@ services:
       - ALLOWED_ORIGIN=${ALLOWED_ORIGIN}
       - API_KEY=${API_KEY}
       - API_KEY_USER_ID=${API_KEY_USER_ID}
+      - AUTH_TRUST_HOST=true
       - TZ=America/Sao_Paulo
     volumes:
       - /opt/wb-project-manager/data:/app/data
