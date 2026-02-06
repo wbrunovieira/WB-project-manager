@@ -9,21 +9,37 @@ This is a Next.js 15-based project management application with issue tracking, t
 ## Development Commands
 
 ```bash
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
-
-# Lint code
-npm run lint
-
-# Seed database with initial data
-npm run db:seed
+npm run dev              # Start development server
+npm run build            # Build for production
+npm run lint             # Lint code
+npm run db:seed          # Seed database with initial data
+npx prisma migrate dev   # Run migrations after schema changes
+npx prisma generate      # Regenerate Prisma client after schema changes
 ```
+
+## Testing
+
+Tests use **Vitest** with `happy-dom` environment. Test files are in `__tests__/`.
+
+```bash
+npm test                                          # Run all tests in watch mode
+npm test -- --run                                 # Run all tests once (no watch)
+npm run test:unit                                 # Run only unit tests
+npm test -- __tests__/unit/business-hours.test.ts # Run a specific test file
+npm test -- -t "test name pattern"                # Run tests matching a name pattern
+npm run test:coverage                             # Run with coverage report
+npm run test:ui                                   # Visual test UI in browser
+```
+
+**Test structure:**
+- `__tests__/unit/` - Unit tests for `src/lib/` (business-hours, auth/api-auth, validation)
+- `__tests__/integration/` - Integration tests (planned)
+- `__tests__/api/` - API endpoint tests (planned)
+
+**Test setup** (`vitest.setup.ts`):
+- Auto-mocks `@/lib/auth` (NextAuth) and `@/lib/prisma` (Prisma client with all models)
+- Sets test environment variables (`DATABASE_URL`, `AUTH_SECRET`, `API_KEY`, etc.)
+- Uses `mockReset`, `restoreMocks`, `clearMocks` between tests — mocks reset automatically
 
 ## API Endpoints for External Integration
 
@@ -186,12 +202,21 @@ When updating issue status:
 - Moving to DONE: Set `resolvedAt` and calculate `resolutionTimeMinutes`
 - Moving from DONE to non-DONE: Increment `reopenCount`, clear `resolvedAt`
 
+### Layout Hierarchy
+
+```
+app/layout.tsx (Root: Toaster, global styles)
+└── (main)/layout.tsx (Protected pages)
+    └── TimeTrackerProvider (global time tracking state)
+        ├── Sidebar
+        ├── Header
+        ├── {page content}
+        └── FloatingTimer (active timer overlay)
+```
+
 ### Client Components
 
-Most UI components are client components (`"use client"`) due to:
-- Interactive forms and modals
-- Time tracker context consumption
-- Real-time updates and state management
+Most UI components are client components (`"use client"`) due to interactive forms, time tracker context consumption, and real-time state management.
 
 ## Path Aliases
 
