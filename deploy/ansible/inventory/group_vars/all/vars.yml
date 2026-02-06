@@ -1,0 +1,13 @@
+app_name: wb-project-manager
+app_dir: /opt/wb-project-manager
+app_port: 3002
+app_domain: projects.wbdigitalsolutions.com
+
+git_repo: https://github.com/wbrunovieira/WB-project-manager.git
+git_branch: main
+
+compose_file: docker-compose.prod.yml
+certbot_email: waborges@gmail.com
+
+nextauth_url: "https://projects.wbdigitalsolutions.com"
+allowed_origin: "https://projects.wbdigitalsolutions.com"

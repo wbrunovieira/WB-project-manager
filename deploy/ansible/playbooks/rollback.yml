@@ -1,0 +1,40 @@
+---
+- name: Rollback WB Project Manager
+  hosts: production
+  gather_facts: false
+
+  tasks:
+    - name: Show current status
+      raw: |
+        echo "Container status:"
+        docker ps -a --filter name=wb-project-manager --format "table {{ '{{' }}.Names{{ '}}' }}\t{{ '{{' }}.Status{{ '}}' }}\t{{ '{{' }}.Image{{ '}}' }}"
+        echo ""
+        echo "Recent git commits:"
+        cd {{ app_dir }} && git log --oneline -5
+      changed_when: false
+
+    - name: Rollback to previous commit
+      raw: |
+        cd {{ app_dir }}
+        git log --oneline -5
+        PREV_COMMIT=$(git rev-parse HEAD~1)
+        echo "Rolling back to: $PREV_COMMIT"
+        git checkout $PREV_COMMIT
+
+    - name: Rebuild and restart
+      raw: "cd {{ app_dir }} && docker compose -f {{ compose_file }} up -d --build --force-recreate 2>&1 | tail -20"
+
+    - name: Wait for services
+      raw: sleep 20
+
+    - name: Health check
+      raw: |
+        HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:{{ app_port }}/api/health)
+        echo "Health check: $HTTP_CODE"
+        if [ "$HTTP_CODE" = "200" ]; then
+          echo "Rollback successful!"
+        else
+          echo "WARNING: Health check returned $HTTP_CODE"
+          docker logs wb-project-manager --tail 30
+        fi
+      changed_when: false

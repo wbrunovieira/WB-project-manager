@@ -1,0 +1,30 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wb-project-manager
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3002:3002"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/prod.db
+      - AUTH_SECRET=${AUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - ALLOWED_ORIGIN=${ALLOWED_ORIGIN}
+      - API_KEY=${API_KEY}
+      - API_KEY_USER_ID=${API_KEY_USER_ID}
+      - TZ=America/Sao_Paulo
+    volumes:
+      - /opt/wb-project-manager/data:/app/data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    networks:
+      - wb-project-manager-network
+
+networks:
+  wb-project-manager-network:
+    driver: bridge

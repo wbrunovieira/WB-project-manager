@@ -1,0 +1,49 @@
+---
+- name: Deploy WB Project Manager
+  hosts: production
+  gather_facts: false
+
+  tasks:
+    - name: Verify Docker
+      raw: "docker --version && docker compose version"
+      changed_when: false
+
+    - name: Create app and data directories
+      raw: "mkdir -p {{ app_dir }}/data"
+
+    - name: Clone or pull repo
+      raw: |
+        if [ -d "{{ app_dir }}/.git" ]; then
+          cd {{ app_dir }} && git fetch origin && git reset --hard origin/{{ git_branch }}
+        else
+          git clone -b {{ git_branch }} {{ git_repo }} {{ app_dir }}
+        fi
+
+    - name: Create .env file
+      raw: |
+        cat > {{ app_dir }}/.env << 'EOF'
+        AUTH_SECRET={{ vault_auth_secret }}
+        NEXTAUTH_URL={{ nextauth_url }}
+        ALLOWED_ORIGIN={{ allowed_origin }}
+        API_KEY={{ vault_api_key }}
+        API_KEY_USER_ID={{ vault_api_key_user_id }}
+        EOF
+      no_log: true
+
+    - name: Build and start containers
+      raw: "cd {{ app_dir }} && docker compose -f {{ compose_file }} up -d --build 2>&1 | tail -30"
+
+    - name: Wait for services to start
+      raw: sleep 20
+
+    - name: Health check
+      raw: |
+        HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:{{ app_port }}/api/health)
+        echo "Health check: $HTTP_CODE"
+        if [ "$HTTP_CODE" = "200" ]; then
+          echo "Deploy successful!"
+        else
+          echo "WARNING: Health check returned $HTTP_CODE"
+          docker logs wb-project-manager --tail 30
+        fi
+      changed_when: false
