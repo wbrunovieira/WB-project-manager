@@ -2,7 +2,24 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CalendarDays, CheckCircle2, Edit, Trash2 } from "lucide-react";
+import { CalendarDays, CheckCircle2, Edit, GripVertical, Trash2 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import { DateDisplay } from "@/components/ui/date-display";
 import { EditProjectModal } from "./edit-project-modal";
@@ -13,6 +30,7 @@ interface Project {
   name: string;
   description?: string | null;
   status: string;
+  sortOrder: number;
   startDate?: Date | null;
   targetDate?: Date | null;
   workspace: {
@@ -38,14 +56,210 @@ interface ProjectsListClientProps {
   workspacesWithProjects: WorkspaceWithProjects[];
 }
 
+interface SortableProjectCardProps {
+  project: Project;
+  onEdit: (project: Project) => void;
+  onDelete: (project: Project) => void;
+}
+
+function SortableProjectCard({ project, onEdit, onDelete }: SortableProjectCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: project.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const totalIssues = project.issues.length;
+  const completedIssues = project.issues.filter(
+    (issue) => issue.status.type === "DONE"
+  ).length;
+  const progress =
+    totalIssues > 0
+      ? Math.round((completedIssues / totalIssues) * 100)
+      : 0;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="group relative rounded-lg border border-[#792990]/40 bg-gradient-to-br from-[#792990]/15 via-[#792990]/10 to-[#792990]/5 p-6 transition-all hover:border-[#792990]/60 hover:from-[#792990]/20 hover:via-[#792990]/15 hover:to-[#792990]/10 hover:shadow-lg hover:shadow-[#792990]/10"
+    >
+      {/* Drag Handle */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute left-2 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity z-10"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <GripVertical className="h-5 w-5 text-gray-400 hover:text-[#FFB947]" />
+      </div>
+
+      <Link href={`/projects/${project.id}`} className="block pl-6">
+        <div className="mb-4">
+          <div className="flex items-start justify-between">
+            <div className="flex-1 pr-20">
+              <h3 className="text-lg font-semibold text-gray-100 group-hover:text-[#FFB947] transition-colors">
+                {project.name}
+              </h3>
+              {project.description && (
+                <p className="mt-1 text-sm text-gray-400">
+                  {project.description}
+                </p>
+              )}
+            </div>
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium mt-6 border ${
+                project.status === "IN_PROGRESS"
+                  ? "bg-[#792990]/20 text-[#FFB947] border-[#792990]/40"
+                  : project.status === "COMPLETED"
+                  ? "bg-green-500/10 text-green-400 border-green-500/20"
+                  : project.status === "PLANNED"
+                  ? "bg-gray-500/10 text-gray-400 border-gray-500/20"
+                  : "bg-red-500/10 text-red-400 border-red-500/20"
+              }`}
+            >
+              {project.status.replace("_", " ")}
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {/* Progress Bar */}
+          <div>
+            <div className="mb-1 flex items-center justify-between text-xs">
+              <span className="text-gray-400">
+                {completedIssues} of {totalIssues} completed
+              </span>
+              <span className="font-medium text-gray-300">
+                {progress}%
+              </span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-[#792990]/20">
+              <div
+                className="h-full bg-[#792990] transition-all"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Dates */}
+          <div className="flex items-center gap-4 text-xs text-gray-400">
+            {project.startDate && (
+              <div className="flex items-center gap-1">
+                <CalendarDays className="h-3.5 w-3.5" />
+                <span>
+                  Start: <DateDisplay date={project.startDate} />
+                </span>
+              </div>
+            )}
+            {project.targetDate && (
+              <div className="flex items-center gap-1">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>
+                  Target: <DateDisplay date={project.targetDate} />
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </Link>
+
+      {/* Action Buttons */}
+      <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onEdit(project);
+          }}
+          className="h-8 w-8 bg-[#350459]/90 hover:bg-[#792990]/50 text-gray-300 hover:text-gray-100 border border-[#792990]/30"
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onDelete(project);
+          }}
+          className="h-8 w-8 bg-[#350459]/90 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-[#792990]/30 hover:border-red-500/30"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClientProps) {
+  const [workspaces, setWorkspaces] = useState(workspacesWithProjects);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
 
-  const totalProjects = workspacesWithProjects.reduce(
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const totalProjects = workspaces.reduce(
     (sum, ws) => sum + ws.projects.length,
     0
   );
+
+  const createHandleDragEnd = (workspaceId: string) => {
+    return async (event: DragEndEvent) => {
+      const { active, over } = event;
+
+      if (!over || active.id === over.id) {
+        return;
+      }
+
+      const wsIndex = workspaces.findIndex((ws) => ws.id === workspaceId);
+      if (wsIndex === -1) return;
+
+      const projects = workspaces[wsIndex].projects;
+      const oldIndex = projects.findIndex((p) => p.id === active.id);
+      const newIndex = projects.findIndex((p) => p.id === over.id);
+
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const newProjects = arrayMove(projects, oldIndex, newIndex);
+      const newWorkspaces = [...workspaces];
+      newWorkspaces[wsIndex] = { ...newWorkspaces[wsIndex], projects: newProjects };
+      setWorkspaces(newWorkspaces);
+
+      try {
+        const sortedProjectIds = newProjects.map((p) => p.id);
+
+        await fetch("/api/projects/reorder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            projectId: active.id,
+            sortedProjectIds,
+          }),
+        });
+      } catch {
+        // Revert on error
+        setWorkspaces(workspaces);
+      }
+    };
+  };
 
   if (totalProjects === 0) {
     return (
@@ -58,7 +272,7 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
   return (
     <>
       <div className="space-y-8">
-        {workspacesWithProjects.map((workspace) => {
+        {workspaces.map((workspace) => {
           if (workspace.projects.length === 0) return null;
 
           return (
@@ -75,123 +289,27 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
                 <div className="h-px flex-1 bg-gradient-to-l from-[#792990] to-transparent"></div>
               </div>
 
-              <div className="grid gap-4">
-                {workspace.projects.map((project) => {
-          const totalIssues = project.issues.length;
-          const completedIssues = project.issues.filter(
-            (issue) => issue.status.type === "DONE"
-          ).length;
-          const progress =
-            totalIssues > 0
-              ? Math.round((completedIssues / totalIssues) * 100)
-              : 0;
-
-          return (
-            <div
-              key={project.id}
-              className="group relative rounded-lg border border-[#792990]/40 bg-gradient-to-br from-[#792990]/15 via-[#792990]/10 to-[#792990]/5 p-6 transition-all hover:border-[#792990]/60 hover:from-[#792990]/20 hover:via-[#792990]/15 hover:to-[#792990]/10 hover:shadow-lg hover:shadow-[#792990]/10"
-            >
-              <Link href={`/projects/${project.id}`} className="block">
-                <div className="mb-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 pr-20">
-                      <h3 className="text-lg font-semibold text-gray-100 group-hover:text-[#FFB947] transition-colors">
-                        {project.name}
-                      </h3>
-                      {project.description && (
-                        <p className="mt-1 text-sm text-gray-400">
-                          {project.description}
-                        </p>
-                      )}
-                    </div>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium mt-6 border ${
-                        project.status === "IN_PROGRESS"
-                          ? "bg-[#792990]/20 text-[#FFB947] border-[#792990]/40"
-                          : project.status === "COMPLETED"
-                          ? "bg-green-500/10 text-green-400 border-green-500/20"
-                          : project.status === "PLANNED"
-                          ? "bg-gray-500/10 text-gray-400 border-gray-500/20"
-                          : "bg-red-500/10 text-red-400 border-red-500/20"
-                      }`}
-                    >
-                      {project.status.replace("_", " ")}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {/* Progress Bar */}
-                  <div>
-                    <div className="mb-1 flex items-center justify-between text-xs">
-                      <span className="text-gray-400">
-                        {completedIssues} of {totalIssues} completed
-                      </span>
-                      <span className="font-medium text-gray-300">
-                        {progress}%
-                      </span>
-                    </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-[#792990]/20">
-                      <div
-                        className="h-full bg-[#792990] transition-all"
-                        style={{ width: `${progress}%` }}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={createHandleDragEnd(workspace.id)}
+              >
+                <SortableContext
+                  items={workspace.projects.map((p) => p.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="grid gap-4">
+                    {workspace.projects.map((project) => (
+                      <SortableProjectCard
+                        key={project.id}
+                        project={project}
+                        onEdit={setEditingProject}
+                        onDelete={setDeletingProject}
                       />
-                    </div>
+                    ))}
                   </div>
-
-                  {/* Dates */}
-                  <div className="flex items-center gap-4 text-xs text-gray-400">
-                    {project.startDate && (
-                      <div className="flex items-center gap-1">
-                        <CalendarDays className="h-3.5 w-3.5" />
-                        <span>
-                          Start: <DateDisplay date={project.startDate} />
-                        </span>
-                      </div>
-                    )}
-                    {project.targetDate && (
-                      <div className="flex items-center gap-1">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        <span>
-                          Target: <DateDisplay date={project.targetDate} />
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Link>
-
-              {/* Action Buttons */}
-              <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setEditingProject(project);
-                  }}
-                  className="h-8 w-8 bg-[#350459]/90 hover:bg-[#792990]/50 text-gray-300 hover:text-gray-100 border border-[#792990]/30"
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setDeletingProject(project);
-                  }}
-                  className="h-8 w-8 bg-[#350459]/90 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-[#792990]/30 hover:border-red-500/30"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          );
-        })}
-              </div>
+                </SortableContext>
+              </DndContext>
             </div>
           );
         })}

@@ -124,10 +124,18 @@ export async function POST(req: NextRequest) {
       return withCors(response);
     }
 
+    // Auto-assign next sortOrder within the workspace
+    const maxSort = await prisma.project.aggregate({
+      where: { workspaceId },
+      _max: { sortOrder: true },
+    });
+    const nextSortOrder = (maxSort._max.sortOrder ?? -1) + 1;
+
     const project = await prisma.project.create({
       data: {
         ...data,
         workspaceId,
+        sortOrder: nextSortOrder,
         startDate: startDate ? new Date(startDate) : null,
         targetDate: targetDate ? new Date(targetDate) : null,
       },

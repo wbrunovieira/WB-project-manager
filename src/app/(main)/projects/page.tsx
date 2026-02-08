@@ -28,7 +28,7 @@ export default async function ProjectsPage() {
               },
             },
             orderBy: {
-              updatedAt: "desc",
+              sortOrder: "asc",
             },
           },
         },
