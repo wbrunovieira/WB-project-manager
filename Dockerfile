@@ -23,13 +23,11 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Copy Prisma files for migrate deploy (including transitive deps)
+# Copy Prisma schema and install prisma CLI with all transitive deps
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/effect ./node_modules/effect
-COPY --from=builder /app/node_modules/fast-check ./node_modules/fast-check
+RUN npm install prisma@6.16.3 --prefix /app --no-save 2>/dev/null
 
 # Copy entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/
