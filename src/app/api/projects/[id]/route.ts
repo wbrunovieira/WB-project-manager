@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withCors } from "@/lib/api-auth";
-import { auth } from "@/lib/auth";
+import { withAuth, withCors } from "@/lib/api-auth";
 import { z } from "zod";
 
 const updateProjectSchema = z.object({
@@ -13,18 +12,12 @@ const updateProjectSchema = z.object({
 });
 
 // GET /api/projects/:id - Get project by ID
-export async function GET(
+export const GET = withAuth<{ params: Promise<{ id: string }> }>(async (
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
-  const { id } = await params;
+  userId: string,
+  ctx
+) => {
+  const { id } = await ctx.params;
 
   try {
     const project = await prisma.project.findUnique({
@@ -70,7 +63,7 @@ export async function GET(
     const membership = await prisma.workspaceMember.findUnique({
       where: {
         userId_workspaceId: {
-          userId: session.user.id,
+          userId,
           workspaceId: project.workspaceId,
         },
       },
@@ -94,21 +87,15 @@ export async function GET(
     );
     return withCors(response);
   }
-}
+});
 
 // PATCH /api/projects/:id - Update project
-export async function PATCH(
+export const PATCH = withAuth<{ params: Promise<{ id: string }> }>(async (
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
-  const { id } = await params;
+  userId: string,
+  ctx
+) => {
+  const { id } = await ctx.params;
 
   try {
     const body = await req.json();
@@ -138,7 +125,7 @@ export async function PATCH(
     const membership = await prisma.workspaceMember.findUnique({
       where: {
         userId_workspaceId: {
-          userId: session.user.id,
+          userId,
           workspaceId: project.workspaceId,
         },
       },
@@ -186,21 +173,15 @@ export async function PATCH(
     );
     return withCors(response);
   }
-}
+});
 
 // DELETE /api/projects/:id - Delete project
-export async function DELETE(
+export const DELETE = withAuth<{ params: Promise<{ id: string }> }>(async (
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
-  const { id } = await params;
+  userId: string,
+  ctx
+) => {
+  const { id } = await ctx.params;
 
   try {
     const project = await prisma.project.findUnique({
@@ -219,7 +200,7 @@ export async function DELETE(
     const membership = await prisma.workspaceMember.findUnique({
       where: {
         userId_workspaceId: {
-          userId: session.user.id,
+          userId,
           workspaceId: project.workspaceId,
         },
       },
@@ -250,7 +231,7 @@ export async function DELETE(
     );
     return withCors(response);
   }
-}
+});
 
 // OPTIONS handler for CORS
 export async function OPTIONS() {

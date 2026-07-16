@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withCors } from "@/lib/api-auth";
-import { auth } from "@/lib/auth";
+import { withAuth, withCors } from "@/lib/api-auth";
 import { z } from "zod";
 
 const createProjectSchema = z.object({
@@ -15,14 +14,7 @@ const createProjectSchema = z.object({
 });
 
 // GET /api/projects - List all projects
-export async function GET(req: NextRequest) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+export const GET = withAuth(async (req: NextRequest, userId: string) => {
   try {
     const { searchParams } = new URL(req.url);
     const workspaceId = searchParams.get("workspaceId");
@@ -30,7 +22,7 @@ export async function GET(req: NextRequest) {
 
     // Get user's workspaces
     const workspaceMemberships = await prisma.workspaceMember.findMany({
-      where: { userId: session.user.id },
+      where: { userId },
       select: { workspaceId: true },
     });
 
@@ -81,17 +73,10 @@ export async function GET(req: NextRequest) {
     );
     return withCors(response);
   }
-}
+});
 
 // POST /api/projects - Create new project
-export async function POST(req: NextRequest) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+export const POST = withAuth(async (req: NextRequest, userId: string) => {
   try {
     const body = await req.json();
     const validated = createProjectSchema.safeParse(body);
@@ -110,7 +95,7 @@ export async function POST(req: NextRequest) {
     const membership = await prisma.workspaceMember.findUnique({
       where: {
         userId_workspaceId: {
-          userId: session.user.id,
+          userId,
           workspaceId,
         },
       },
@@ -160,7 +145,7 @@ export async function POST(req: NextRequest) {
     );
     return withCors(response);
   }
-}
+});
 
 // OPTIONS handler for CORS
 export async function OPTIONS() {

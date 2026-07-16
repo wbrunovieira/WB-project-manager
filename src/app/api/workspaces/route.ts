@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withCors } from "@/lib/api-auth";
-import { auth } from "@/lib/auth";
+import { withAuth, withCors } from "@/lib/api-auth";
 import { z } from "zod";
 import { StatusType } from "@/generated/prisma";
 
@@ -15,18 +14,11 @@ const createWorkspaceSchema = z.object({
 });
 
 // GET /api/workspaces - List all workspaces for the user
-export async function GET() {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+export const GET = withAuth(async (req: NextRequest, userId: string) => {
   try {
     const workspaceMemberships = await prisma.workspaceMember.findMany({
       where: {
-        userId: session.user.id,
+        userId,
       },
       include: {
         workspace: {
@@ -62,17 +54,10 @@ export async function GET() {
     );
     return withCors(response);
   }
-}
+});
 
 // POST /api/workspaces - Create new workspace
-export async function POST(req: NextRequest) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+export const POST = withAuth(async (req: NextRequest, userId: string) => {
   try {
     const body = await req.json();
     const validated = createWorkspaceSchema.safeParse(body);
@@ -108,7 +93,7 @@ export async function POST(req: NextRequest) {
         icon: icon || null,
         members: {
           create: {
-            userId: session.user.id,
+            userId,
             role: "OWNER",
           },
         },
@@ -141,7 +126,7 @@ export async function POST(req: NextRequest) {
     );
     return withCors(response);
   }
-}
+});
 
 // OPTIONS handler for CORS
 export async function OPTIONS() {

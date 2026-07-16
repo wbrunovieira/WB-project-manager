@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withCors } from "@/lib/api-auth";
-import { auth } from "@/lib/auth";
+import { withAuth, withCors } from "@/lib/api-auth";
 import { z } from "zod";
 
 const updateMilestoneSchema = z.object({
@@ -12,19 +11,13 @@ const updateMilestoneSchema = z.object({
 });
 
 // GET /api/milestones/[id] - Get milestone by ID
-export async function GET(
+export const GET = withAuth<{ params: Promise<{ id: string }> }>(async (
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+  userId: string,
+  ctx
+) => {
   try {
-    const { id } = await params;
+    const { id } = await ctx.params;
 
     const milestone = await prisma.milestone.findUnique({
       where: { id },
@@ -34,7 +27,7 @@ export async function GET(
             workspace: {
               include: {
                 members: {
-                  where: { userId: session.user.id },
+                  where: { userId },
                 },
               },
             },
@@ -80,22 +73,16 @@ export async function GET(
     );
     return withCors(response);
   }
-}
+});
 
 // PATCH /api/milestones/[id] - Update milestone
-export async function PATCH(
+export const PATCH = withAuth<{ params: Promise<{ id: string }> }>(async (
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+  userId: string,
+  ctx
+) => {
   try {
-    const { id } = await params;
+    const { id } = await ctx.params;
     const body = await req.json();
     const validated = updateMilestoneSchema.safeParse(body);
 
@@ -116,7 +103,7 @@ export async function PATCH(
             workspace: {
               include: {
                 members: {
-                  where: { userId: session.user.id },
+                  where: { userId },
                 },
               },
             },
@@ -166,22 +153,16 @@ export async function PATCH(
     );
     return withCors(response);
   }
-}
+});
 
 // DELETE /api/milestones/[id] - Delete milestone
-export async function DELETE(
+export const DELETE = withAuth<{ params: Promise<{ id: string }> }>(async (
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+  userId: string,
+  ctx
+) => {
   try {
-    const { id } = await params;
+    const { id } = await ctx.params;
 
     // Check access
     const milestone = await prisma.milestone.findUnique({
@@ -192,7 +173,7 @@ export async function DELETE(
             workspace: {
               include: {
                 members: {
-                  where: { userId: session.user.id },
+                  where: { userId },
                 },
               },
             },
@@ -231,7 +212,7 @@ export async function DELETE(
     );
     return withCors(response);
   }
-}
+});
 
 // OPTIONS handler for CORS
 export async function OPTIONS() {

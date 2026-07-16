@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withCors } from "@/lib/api-auth";
-import { auth } from "@/lib/auth";
+import { withAuth, withCors } from "@/lib/api-auth";
 
 // POST /api/projects/reorder - Reorder projects within a workspace
-export async function POST(req: NextRequest) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+export const POST = withAuth(async (req: NextRequest, userId: string) => {
   try {
     const body = await req.json();
     const { projectId, sortedProjectIds } = body;
@@ -39,7 +31,7 @@ export async function POST(req: NextRequest) {
     const workspaceMember = await prisma.workspaceMember.findUnique({
       where: {
         userId_workspaceId: {
-          userId: session.user.id,
+          userId,
           workspaceId: project.workspaceId,
         },
       },
@@ -72,7 +64,7 @@ export async function POST(req: NextRequest) {
     );
     return withCors(response);
   }
-}
+});
 
 export async function OPTIONS() {
   const response = new NextResponse(null, { status: 204 });

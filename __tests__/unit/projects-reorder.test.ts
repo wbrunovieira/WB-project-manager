@@ -60,7 +60,7 @@ describe("POST /api/projects/reorder", () => {
     expect(response.status).toBe(401);
 
     const data = await response.json();
-    expect(data.error).toBe("Unauthorized");
+    expect(data.error).toContain("Unauthorized");
   });
 
   test("returns 400 when projectId is missing", async () => {
