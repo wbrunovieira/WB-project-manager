@@ -192,9 +192,12 @@ import type { Issue } from "@/generated/prisma";
 
 Production server at `45.90.123.190` (`projects.wbdigitalsolutions.com`), port 3002, deployed via Docker + Ansible.
 
+Preferred: push to `main` → CI green → approve the `production` environment in GitHub Actions (CD runs the same playbook).
+
 ```bash
-# Quick redeploy (git pull + docker rebuild)
-TMPFILE=$(mktemp) && printf '%s' 'wb2026@' > "$TMPFILE" && cd deploy/ansible && ansible-playbook playbooks/quick-deploy.yml --vault-password-file "$TMPFILE" -v; rm -f "$TMPFILE"
+# Manual redeploy (git pull + docker rebuild). Vault password lives OUTSIDE the
+# repo, in ~/.ansible/vault-pass-wb-project-manager (chmod 600) — NEVER commit it.
+cd deploy/ansible && ansible-playbook playbooks/quick-deploy.yml --vault-password-file ~/.ansible/vault-pass-wb-project-manager -v
 ```
 
 The Docker build uses pnpm (via corepack, Node 24) for the deps/build stages. The Prisma CLI for runtime migrations comes from a dedicated `prisma-cli` stage that npm-installs `prisma` (flat layout, version read from package.json) into `/app/prisma-cli/node_modules` — kept separate from the standalone build's `node_modules` to avoid symlink collisions. The entrypoint invokes it via `node prisma-cli/node_modules/prisma/build/index.js migrate deploy` (no `npx`/`pnpm` in the runner).
