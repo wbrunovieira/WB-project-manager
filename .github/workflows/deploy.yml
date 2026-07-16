@@ -1,0 +1,81 @@
+name: CD
+
+# Deploy contínuo → VPS (projects.wbdigitalsolutions.com) via Ansible.
+#
+# Gates de segurança:
+#   1. Só dispara quando o workflow CI termina VERDE na main (nunca em PR).
+#   2. Environment `production` exige APROVAÇÃO MANUAL (required reviewer).
+#   3. Host key do VPS pinada em deploy/ci/known_hosts (sem TOFU/keyscan em runtime).
+#   4. Migrations rodam dentro do container no boot (docker-entrypoint.sh →
+#      prisma migrate deploy), então o quick-deploy já cobre schema changes.
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Um deploy por vez; nunca cancela um deploy em andamento.
+concurrency:
+  group: cd-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy → VPS
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # workflow_run: só se o CI concluiu com sucesso. workflow_dispatch: sempre permite
+    # (o environment ainda exige aprovação manual).
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    environment:
+      name: production
+      url: https://projects.wbdigitalsolutions.com
+    steps:
+      - uses: actions/checkout@v5
+
+      # ssh-agent manual (sem action de terceiro tocando a chave privada)
+      - name: Start ssh-agent with deploy key
+        env:
+          SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+        run: |
+          eval "$(ssh-agent -s)"
+          echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> "$GITHUB_ENV"
+          echo "SSH_AGENT_PID=$SSH_AGENT_PID" >> "$GITHUB_ENV"
+          ssh-add - <<< "$SSH_DEPLOY_KEY"
+
+      - name: Pin VPS host key (no TOFU)
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          grep -v '^#' deploy/ci/known_hosts > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Install Ansible
+        run: pipx install ansible-core
+
+      # Inventory do CI: host/usuário vêm de secrets; a chave vem do ssh-agent.
+      - name: Build CI inventory
+        working-directory: deploy/ansible
+        run: |
+          cat > inventory/ci.yml <<EOF
+          all:
+            hosts:
+              production:
+                ansible_host: ${{ secrets.VPS_HOST }}
+                ansible_user: ${{ secrets.VPS_USER }}
+                ansible_python_interpreter: /usr/bin/python3
+          EOF
+
+      - name: Deploy (quick-deploy)
+        working-directory: deploy/ansible
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "True"
+        run: |
+          printf '%s' "${{ secrets.ANSIBLE_VAULT_PASSWORD }}" > "$RUNNER_TEMP/vault-pass"
+          ansible-playbook -i inventory/ci.yml playbooks/quick-deploy.yml \
+            --vault-password-file "$RUNNER_TEMP/vault-pass"
+          rm -f "$RUNNER_TEMP/vault-pass"

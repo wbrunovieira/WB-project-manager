@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Um run por ref; cancela o anterior ao empurrar de novo.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Segredos dummy — NUNCA reais. Só pra o app buildar/testar em CI.
+  DATABASE_URL: file:./ci.db
+  AUTH_SECRET: ci-dummy-auth-secret
+  NEXTAUTH_URL: http://localhost:3000
+  API_KEY: ci-dummy-api-key
+  API_KEY_USER_ID: ci-dummy-user-id
+  ALLOWED_ORIGIN: http://localhost:3000
+
+jobs:
+  app:
+    name: App (lint · unit · build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # Lê a versão do pnpm do campo packageManager do package.json
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      # postinstall do @prisma/client roda prisma generate (allowBuilds no pnpm-workspace.yaml)
+      - run: pnpm install --frozen-lockfile
+      - name: Lint (eslint)
+        run: pnpm lint
+      - name: Unit tests (Vitest)
+        run: pnpm exec vitest run
+      - name: Build (next build)
+        run: pnpm build
