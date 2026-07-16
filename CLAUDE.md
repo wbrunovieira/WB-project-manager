@@ -4,17 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Next.js 15-based project management application with issue tracking, time tracking, and SLA monitoring capabilities. Built with TypeScript, Prisma (SQLite), and NextAuth for authentication.
+Next.js 15 project management app with issue tracking, time tracking, and SLA monitoring. Stack: TypeScript, Prisma 6 (SQLite), NextAuth v5 (beta), React 19, Tailwind CSS 4, shadcn/ui.
 
 ## Development Commands
 
+Package manager: **pnpm** (pinned via `packageManager` in package.json; build scripts approved in `pnpm-workspace.yaml` `allowBuilds`).
+
 ```bash
-npm run dev              # Start development server
-npm run build            # Build for production
-npm run lint             # Lint code
-npm run db:seed          # Seed database with initial data
-npx prisma migrate dev   # Run migrations after schema changes
-npx prisma generate      # Regenerate Prisma client after schema changes
+pnpm dev                       # Start development server
+pnpm build                     # Build for production
+pnpm lint                      # Lint code
+pnpm db:seed                   # Seed database with initial data
+pnpm exec prisma migrate dev   # Run migrations after schema changes
+pnpm exec prisma generate      # Regenerate Prisma client after schema changes
 ```
 
 ## Testing
@@ -22,54 +24,39 @@ npx prisma generate      # Regenerate Prisma client after schema changes
 Tests use **Vitest** with `happy-dom` environment. Test files are in `__tests__/`.
 
 ```bash
-npm test                                          # Run all tests in watch mode
-npm test -- --run                                 # Run all tests once (no watch)
-npm run test:unit                                 # Run only unit tests
-npm test -- __tests__/unit/business-hours.test.ts # Run a specific test file
-npm test -- -t "test name pattern"                # Run tests matching a name pattern
-npm run test:coverage                             # Run with coverage report
-npm run test:ui                                   # Visual test UI in browser
+pnpm test                                          # Run all tests in watch mode
+pnpm test -- --run                                 # Run all tests once (no watch)
+pnpm test:unit                                     # Run only unit tests
+pnpm test __tests__/unit/business-hours.test.ts    # Run a specific test file
+pnpm test -- -t "test name pattern"                # Run tests matching a name pattern
+pnpm test:coverage                                 # Run with coverage report
+pnpm test:ui                                       # Visual test UI in browser
 ```
 
 **Test structure:**
-- `__tests__/unit/` - Unit tests for `src/lib/` (business-hours, auth/api-auth, validation)
-- `__tests__/integration/` - Integration tests (planned)
-- `__tests__/api/` - API endpoint tests (planned)
+- `__tests__/unit/` — unit tests for `src/lib/` (business-hours, auth/api-auth, validation, reorder)
+- `__tests__/integration/` and `__tests__/api/` — planned, not yet implemented
 
 **Test setup** (`vitest.setup.ts`):
 - Auto-mocks `@/lib/auth` (NextAuth) and `@/lib/prisma` (Prisma client with all models)
 - Sets test environment variables (`DATABASE_URL`, `AUTH_SECRET`, `API_KEY`, etc.)
-- Uses `mockReset`, `restoreMocks`, `clearMocks` between tests — mocks reset automatically
-
-## API Endpoints for External Integration
-
-### Single Issue Creation
-```
-POST /api/issues
-```
-Creates a single issue. See `scripts/API-KEY-AUTH.md` for details.
-
-### Bulk Issue Creation
-```
-POST /api/issues/bulk
-```
-Creates multiple issues (1-100) in a single transaction. See `scripts/BULK-CREATE-API.md` for details.
-
-Both endpoints support API Key (Bearer token) and Session Cookie authentication.
+- Mocks reset automatically between tests via `mockReset`, `restoreMocks`, `clearMocks`
+- Cast NextAuth mock: `const mockAuth = auth as unknown as ReturnType<typeof vi.fn>`
 
 ## Database Setup
 
 1. Copy `.env.example` to `.env` and configure:
-   - `DATABASE_URL` - SQLite database path (default: `file:./dev.db`)
-   - `AUTH_SECRET` - Random secret for NextAuth
-   - `NEXTAUTH_URL` - Application URL
+   - `DATABASE_URL` — SQLite database path (default: `file:./dev.db`)
+   - `AUTH_SECRET` — Random secret for NextAuth
+   - `NEXTAUTH_URL` — Application URL
    - Seed user credentials (`SEED_USER_NAME`, `SEED_USER_EMAIL`, `SEED_USER_PASSWORD`)
-   - `ALLOWED_ORIGIN` - For CORS if integrating external apps
+   - `ALLOWED_ORIGIN` — For CORS if integrating external apps
+   - `API_KEY` / `API_KEY_USER_ID` — For API key authentication
 
 2. Run Prisma migrations and seed:
 ```bash
-npx prisma migrate dev
-npm run db:seed
+pnpm exec prisma migrate dev
+pnpm db:seed
 ```
 
 ## Architecture
@@ -77,88 +64,84 @@ npm run db:seed
 ### Authentication & Authorization
 
 - **NextAuth v5** (beta) with JWT strategy configured in `src/lib/auth.ts`
-- Credentials provider with bcrypt password hashing
-- Session management via JWT tokens with user ID in session
-- Middleware (`src/middleware.ts`) protects routes, redirects unauthenticated users to `/login`
-- API routes use `withAuth` wrapper from `src/lib/api-auth.ts` for authentication checks
+- Credentials provider with bcrypt password hashing; session includes user ID
+- Middleware (`src/middleware.ts`) protects all routes except `/api/*`, `/_next/*`, favicon; redirects unauthenticated users to `/login`
+- API routes use `withAuth` wrapper from `src/lib/api-auth.ts` — supports both API Key (Bearer token) and Session Cookie auth
+- API Key validated using SHA-256 hash comparison against `API_KEY` env var
 - CORS configured in `withCors` helper for external app integration
 
 ### Application Structure
 
 **Route Groups:**
-- `app/(auth)/` - Public authentication pages (login, register)
-- `app/(main)/` - Protected application pages with layout and sidebar
-- `app/api/` - API routes for CRUD operations
+- `app/(auth)/` — Public authentication pages (login, register)
+- `app/(main)/` — Protected application pages with shared layout
+- `app/api/` — API routes for CRUD operations
 
-**Key Routes:**
-- `/` - Landing page (redirects to `/login` or dashboard based on auth)
-- `/(main)/dashboard` - Main dashboard
-- `/(main)/projects` - Projects list and detail views
-- `/(main)/my-issues` - User's assigned issues
-- `/(main)/time-tracking` - Time tracking overview
-- `/(main)/maintenance` - Maintenance dashboard
-- `/(main)/workspaces` - Workspace management
+**Key Protected Routes:**
+- `/(main)/dashboard` — Main dashboard
+- `/(main)/projects` — Projects list and `[projectId]` detail view
+- `/(main)/my-issues` — User's assigned issues
+- `/(main)/time-tracking` — Time tracking overview
+- `/(main)/maintenance` — Maintenance dashboard
+- `/(main)/workspaces` — Workspace management
 
 ### Data Model Hierarchy
 
 **Workspace → Projects → Issues**
 
-1. **Workspace**: Top-level organization unit
-   - Contains projects, issues, labels, statuses
-   - Has members with roles (OWNER, ADMIN, MEMBER, GUEST)
+1. **Workspace**: Top-level org unit with members (roles: OWNER, ADMIN, MEMBER, GUEST), labels, and statuses
+2. **Project**: Types (DEVELOPMENT, MAINTENANCE), statuses (PLANNED, IN_PROGRESS, COMPLETED, CANCELED). Contains milestones, features (categorization with colors), and SLA configs
+3. **Issue**: Types (FEATURE, MAINTENANCE, BUG, IMPROVEMENT), priorities (URGENT, HIGH, MEDIUM, LOW, NO_PRIORITY). Linked to status, assignee, labels, milestone, feature. Tracks comments, time entries, and SLA metrics
 
-2. **Project**: Groups related issues
-   - Types: DEVELOPMENT or MAINTENANCE
-   - Statuses: PLANNED, IN_PROGRESS, COMPLETED, CANCELED
-   - Contains milestones and SLA configurations
-
-3. **Issue**: Individual task/bug/feature
-   - Has type (FEATURE, MAINTENANCE, BUG, IMPROVEMENT)
-   - Priority levels (URGENT, HIGH, MEDIUM, LOW, NO_PRIORITY)
-   - Linked to status, assignee, labels, milestone
-   - Tracks time entries and SLA metrics
+**Ordering**: Issues, milestones, and projects each have an `order` field. Reorder via `PUT /api/issues/reorder`, `PUT /api/milestones/reorder`, `PUT /api/projects/reorder`.
 
 ### Time Tracking System
 
-- **Context**: `TimeTrackerContext` (`src/contexts/time-tracker-context.tsx`) provides global time tracking state
-- Active time entries are tracked per issue with real-time elapsed time updates
-- Users can have multiple concurrent timers running
-- `FloatingTimer` component shows active timers in UI
-- API endpoints: `POST /api/time-entries` (start), `PATCH /api/time-entries/[id]` (stop)
+- `TimeTrackerContext` (`src/contexts/time-tracker-context.tsx`) provides global state; hook: `useTimeTracker()`
+- Real-time elapsed time updated every 1 second for all active entries
+- `FloatingTimer` component shows active timers as UI overlay
+- API: `POST /api/time-entries` (start), `PATCH /api/time-entries/[id]` (stop)
 
 ### Business Hours & SLA Tracking
 
 **Business Hours** (`src/lib/business-hours.ts`):
-- Monday-Friday, 9 AM - 6 PM (9 hours/day)
+- Monday–Friday, 9 AM–6 PM (9 hours/day)
 - All SLA calculations use business hours, not calendar time
-- Functions: `calculateBusinessHours`, `checkSLAStatus`, `addBusinessHours`
+- Key functions: `calculateBusinessHours`, `checkSLAStatus`, `addBusinessHours`, `isBusinessHours`
 
 **SLA Metrics** (tracked on Issue model):
-- `reportedAt` - When issue was reported (editable, defaults to createdAt)
-- `firstResponseAt` - Auto-set when moved to IN_PROGRESS status
-- `resolvedAt` - Auto-set when moved to DONE status
-- `resolutionTimeMinutes` - Business hours from reportedAt to resolvedAt
-- `reopenCount` - Tracks how many times issue reopened after DONE
+- `reportedAt` — Editable; defaults to `createdAt`
+- `firstResponseAt` — Auto-set when issue moves to IN_PROGRESS
+- `resolvedAt` — Auto-set when issue moves to DONE
+- `resolutionTimeMinutes` — Business hours from `reportedAt` to `resolvedAt`
+- `reopenCount` — Increments each time issue moves from DONE back to non-DONE
 
-**SLA Configuration** (per project):
-- Configure target times per issue type and priority combination
-- `firstResponseTimeHours` - Hours until first response
-- `resolutionTimeHours` - Hours until resolution
-- Status colors: green (on-time), yellow (at-risk ≥80%), red (overdue ≥100%)
+**SLA Config** (per project): `firstResponseTimeHours` and `resolutionTimeHours` per issue type/priority combination. Status colors: green (on-time), yellow (at-risk ≥80%), red (overdue ≥100%).
 
 ### Prisma Configuration
 
 - Custom output path: `src/generated/prisma` (configured in `prisma/schema.prisma`)
-- Import from: `@/generated/prisma` or `../src/generated/prisma`
-- SQLite database with comprehensive indexes for performance
+- Import from: `@/generated/prisma`
+- `eslint.config.mjs` must ignore `src/generated/**` to avoid linting generated code
 
 ### UI Components
 
 - **shadcn/ui** components in `src/components/ui/`
-- Radix UI primitives with Tailwind CSS styling
-- `@dnd-kit` for drag-and-drop functionality (issue reordering, milestone reordering)
-- Lucide React for icons
-- React Hook Form + Zod for form validation
+- `@dnd-kit` for drag-and-drop reordering (issues, milestones, projects)
+- React Hook Form + Zod for all forms
+- Toast component requires `cva` variants for `variant="destructive"` to work
+
+### Layout Hierarchy
+
+```
+app/layout.tsx (Root: Toaster, global styles)
+└── (main)/layout.tsx (Protected pages)
+    └── TimeTrackerProvider
+        ├── Sidebar
+        ├── Header
+        ├── {page content}
+        └── FloatingTimer (active timer overlay)
+```
 
 ## Important Patterns
 
@@ -168,60 +151,50 @@ npm run db:seed
 import { withAuth, withCors } from "@/lib/api-auth";
 
 export const GET = withAuth(async (req, userId) => {
-  // userId is authenticated user from session or API key
   const response = NextResponse.json({ data });
   return withCors(response);
 });
 ```
 
-### API Authentication
+### Issue Status Side Effects
 
-The API supports two authentication methods:
+When updating issue status via `PATCH /api/issues/[id]`:
+- Moving to IN_PROGRESS → set `firstResponseAt` if not already set
+- Moving to DONE → set `resolvedAt`, calculate `resolutionTimeMinutes`
+- Moving from DONE → increment `reopenCount`, clear `resolvedAt`
 
-1. **API Key (Bearer Token)** - For external integrations
-   ```
-   Authorization: Bearer <api-key>
-   ```
-   Configure in `.env`:
-   ```env
-   API_KEY="your-generated-key"
-   API_KEY_USER_ID="user-id-for-api-requests"
-   ```
+### TypeScript / ESLint Gotchas
 
-2. **Session Cookie** - For browser-based requests
-   ```
-   Cookie: next-auth.session-token=<token>
-   ```
-
-The `withAuth` wrapper automatically handles both methods. API key is validated using SHA-256 hash comparison.
-
-### Issue Status Changes
-
-When updating issue status:
-- Moving to IN_PROGRESS: Set `firstResponseAt` if not already set
-- Moving to DONE: Set `resolvedAt` and calculate `resolutionTimeMinutes`
-- Moving from DONE to non-DONE: Increment `reopenCount`, clear `resolvedAt`
-
-### Layout Hierarchy
-
-```
-app/layout.tsx (Root: Toaster, global styles)
-└── (main)/layout.tsx (Protected pages)
-    └── TimeTrackerProvider (global time tracking state)
-        ├── Sidebar
-        ├── Header
-        ├── {page content}
-        └── FloatingTimer (active timer overlay)
-```
-
-### Client Components
-
-Most UI components are client components (`"use client"`) due to interactive forms, time tracker context consumption, and real-time state management.
+- Prisma `Date` objects must be serialized (`.toISOString()`) before passing to Client Components — use `Date | string` or `string` in client-facing interfaces
+- `any` → `Record<string, unknown>` for dynamic objects
+- API response casting: `response.json()` → `as unknown as Type` in callers
+- Unused catch params: `catch {` not `catch (error)`
+- HTML entities in JSX: `&apos;`, `&ldquo;`, `&rdquo;`
+- Empty interfaces → type aliases: `type X = React.HTMLAttributes<...>`
+- Most UI components are Client Components (`"use client"`) due to interactive forms and time tracker context
 
 ## Path Aliases
 
-Use `@/` prefix for imports from `src/` directory:
+Use `@/` prefix for imports from `src/`:
 ```typescript
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import type { Issue } from "@/generated/prisma";
 ```
+
+## External Integration
+
+- `scripts/API-KEY-AUTH.md` — API key auth details
+- `scripts/BULK-CREATE-API.md` — Bulk issue creation (1–100 issues per request)
+- `POST /api/issues` and `POST /api/issues/bulk` support both Bearer token and session cookie auth
+
+## Deployment
+
+Production server at `45.90.123.190` (`projects.wbdigitalsolutions.com`), port 3002, deployed via Docker + Ansible.
+
+```bash
+# Quick redeploy (git pull + docker rebuild)
+TMPFILE=$(mktemp) && printf '%s' 'wb2026@' > "$TMPFILE" && cd deploy/ansible && ansible-playbook playbooks/quick-deploy.yml --vault-password-file "$TMPFILE" -v; rm -f "$TMPFILE"
+```
+
+The Docker build uses pnpm (via corepack, Node 24) for the deps/build stages. The Prisma CLI for runtime migrations comes from a dedicated `prisma-cli` stage that npm-installs `prisma` (flat layout, version read from package.json) into `/app/prisma-cli/node_modules` — kept separate from the standalone build's `node_modules` to avoid symlink collisions. The entrypoint invokes it via `node prisma-cli/node_modules/prisma/build/index.js migrate deploy` (no `npx`/`pnpm` in the runner).
