@@ -1,22 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withCors } from "@/lib/api-auth";
-import { auth } from "@/lib/auth";
+import { withAuth, withCors } from "@/lib/api-auth";
 
 // GET /api/issues/[id]/time - Get total time tracked for an issue
-export async function GET(
+export const GET = withAuth<{ params: Promise<{ id: string }> }>(async (
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+  userId: string,
+  ctx
+) => {
   try {
-    const { id } = await context.params;
+    const { id } = await ctx.params;
 
     // Get all time entries for this issue
     const timeEntries = await prisma.timeEntry.findMany({
@@ -61,7 +54,7 @@ export async function GET(
     );
     return withCors(response);
   }
-}
+});
 
 // OPTIONS handler for CORS
 export async function OPTIONS() {
