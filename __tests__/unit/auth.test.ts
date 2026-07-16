@@ -42,7 +42,7 @@ describe('withAuth wrapper', () => {
 
       await wrappedHandler(request);
 
-      expect(handler).toHaveBeenCalledWith(request, 'test-user-id');
+      expect(handler).toHaveBeenCalledWith(request, 'test-user-id', undefined);
     });
 
     test('rejeita API key inválida', async () => {
@@ -80,7 +80,7 @@ describe('withAuth wrapper', () => {
 
       await wrappedHandler(request);
 
-      expect(handler).toHaveBeenCalledWith(request, 'test-user-id');
+      expect(handler).toHaveBeenCalledWith(request, 'test-user-id', undefined);
     });
 
     test('usa userId correto do env', async () => {
@@ -97,7 +97,7 @@ describe('withAuth wrapper', () => {
 
       await wrappedHandler(request);
 
-      expect(handler).toHaveBeenCalledWith(request, 'custom-user-id');
+      expect(handler).toHaveBeenCalledWith(request, 'custom-user-id', undefined);
     });
 
     test('rejeita se API_KEY não está configurada no env', async () => {
@@ -154,6 +154,85 @@ describe('withAuth wrapper', () => {
     });
   });
 
+  describe('Route Context Forwarding', () => {
+    test('repassa contexto de rota dinâmica ao handler (via API key)', async () => {
+      const handler = vi.fn().mockResolvedValue(NextResponse.json({ success: true }));
+      const wrappedHandler = withAuth(handler);
+
+      const request = new NextRequest('http://localhost:3000/api/issues/abc', {
+        headers: { 'Authorization': 'Bearer test-api-key' },
+      });
+      const ctx = { params: Promise.resolve({ id: 'abc' }) };
+
+      await wrappedHandler(request, ctx);
+
+      expect(handler).toHaveBeenCalledWith(request, 'test-user-id', ctx);
+    });
+
+    test('repassa contexto de rota dinâmica ao handler (via sessão)', async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: 'session-user-id', email: 'user@example.com' },
+        expires: new Date().toISOString(),
+      });
+
+      const handler = vi.fn().mockResolvedValue(NextResponse.json({ success: true }));
+      const wrappedHandler = withAuth(handler);
+
+      const request = new NextRequest('http://localhost:3000/api/issues/abc');
+      const ctx = { params: Promise.resolve({ id: 'abc' }) };
+
+      await wrappedHandler(request, ctx);
+
+      expect(handler).toHaveBeenCalledWith(request, 'session-user-id', ctx);
+    });
+
+    test('handlers sem contexto (rotas estáticas) continuam funcionando', async () => {
+      const handler = vi.fn().mockResolvedValue(NextResponse.json({ success: true }));
+      const wrappedHandler = withAuth(handler);
+
+      const request = new NextRequest('http://localhost:3000/api/issues', {
+        headers: { 'Authorization': 'Bearer test-api-key' },
+      });
+
+      const response = await wrappedHandler(request);
+
+      expect(response.status).toBe(200);
+      expect(handler).toHaveBeenCalledWith(request, 'test-user-id', undefined);
+    });
+  });
+
+  describe('Timing-Safe Comparison', () => {
+    test('usa crypto.timingSafeEqual para comparar hashes da API key', async () => {
+      const timingSafeSpy = vi.spyOn(crypto, 'timingSafeEqual');
+
+      const handler = vi.fn().mockResolvedValue(NextResponse.json({ success: true }));
+      const wrappedHandler = withAuth(handler);
+
+      const request = new NextRequest('http://localhost:3000/api/test', {
+        headers: { 'Authorization': 'Bearer test-api-key' },
+      });
+
+      await wrappedHandler(request);
+
+      expect(timingSafeSpy).toHaveBeenCalled();
+      expect(handler).toHaveBeenCalled();
+    });
+
+    test('rejeita sem exceção quando a key tem tamanho muito diferente', async () => {
+      const handler = vi.fn();
+      const wrappedHandler = withAuth(handler);
+
+      const request = new NextRequest('http://localhost:3000/api/test', {
+        headers: { 'Authorization': `Bearer ${'x'.repeat(500)}` },
+      });
+
+      const response = await wrappedHandler(request);
+
+      expect(response.status).toBe(401);
+      expect(handler).not.toHaveBeenCalled();
+    });
+  });
+
   describe('Session Authentication', () => {
     test('aceita sessão válida', async () => {
       mockAuth.mockResolvedValue({
@@ -168,7 +247,7 @@ describe('withAuth wrapper', () => {
 
       await wrappedHandler(request);
 
-      expect(handler).toHaveBeenCalledWith(request, 'session-user-id');
+      expect(handler).toHaveBeenCalledWith(request, 'session-user-id', undefined);
     });
 
     test('rejeita sessão inválida/expirada', async () => {
@@ -218,7 +297,7 @@ describe('withAuth wrapper', () => {
 
       await wrappedHandler(request);
 
-      expect(handler).toHaveBeenCalledWith(request, userId);
+      expect(handler).toHaveBeenCalledWith(request, userId, undefined);
     });
   });
 
@@ -260,7 +339,7 @@ describe('withAuth wrapper', () => {
       await wrappedHandler(request);
 
       expect(mockAuth).toHaveBeenCalled();
-      expect(handler).toHaveBeenCalledWith(request, 'session-user-id');
+      expect(handler).toHaveBeenCalledWith(request, 'session-user-id', undefined);
     });
 
     test('retorna 401 se ambos falharem', async () => {

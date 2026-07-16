@@ -8,27 +8,29 @@ import crypto from "crypto";
  * Supports two authentication methods:
  * 1. API Key: Authorization: Bearer <api-key>
  * 2. Session Cookie: Cookie: next-auth.session-token=<token>
+ *
+ * The route context (2nd argument the App Router passes to dynamic route
+ * handlers, e.g. `{ params: Promise<{ id: string }> }`) is forwarded to the
+ * handler untouched, so static and dynamic routes share the same wrapper.
  */
-export function withAuth(
-  handler: (req: NextRequest, userId: string) => Promise<NextResponse>
+export function withAuth<C = unknown>(
+  handler: (req: NextRequest, userId: string, ctx: C) => Promise<NextResponse>
 ) {
-  return async (req: NextRequest) => {
+  return async (req: NextRequest, ctx: C) => {
     // Try API Key authentication first
     const authHeader = req.headers.get("authorization");
     if (authHeader?.startsWith("Bearer ")) {
       const apiKey = authHeader.substring(7);
-
-      // Hash the API key to compare with stored hash
-      const hashedKey = crypto.createHash("sha256").update(apiKey).digest("hex");
-
-      // Check if API key matches environment variable
       const validApiKey = process.env.API_KEY;
+
+      // SHA-256 both sides (fixed-length buffers) and compare in constant
+      // time — string equality would leak match length via timing.
       if (validApiKey) {
-        const validHashedKey = crypto.createHash("sha256").update(validApiKey).digest("hex");
-        if (hashedKey === validHashedKey) {
-          // Use default user ID from environment or first user
+        const hashedKey = crypto.createHash("sha256").update(apiKey).digest();
+        const validHashedKey = crypto.createHash("sha256").update(validApiKey).digest();
+        if (crypto.timingSafeEqual(hashedKey, validHashedKey)) {
           const userId = process.env.API_KEY_USER_ID || "cmge96f1y0000wa7olxm69prv";
-          return handler(req, userId);
+          return handler(req, userId, ctx);
         }
       }
 
@@ -48,7 +50,7 @@ export function withAuth(
       );
     }
 
-    return handler(req, session.user.id);
+    return handler(req, session.user.id, ctx);
   };
 }
 
