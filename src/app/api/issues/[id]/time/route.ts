@@ -11,6 +11,36 @@ export const GET = withAuth<{ params: Promise<{ id: string }> }>(async (
   try {
     const { id } = await ctx.params;
 
+    const issue = await prisma.issue.findUnique({
+      where: { id },
+      select: { workspaceId: true },
+    });
+
+    if (!issue) {
+      const response = NextResponse.json(
+        { error: "Issue not found" },
+        { status: 404 }
+      );
+      return withCors(response);
+    }
+
+    const workspaceMember = await prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId,
+          workspaceId: issue.workspaceId,
+        },
+      },
+    });
+
+    if (!workspaceMember) {
+      const response = NextResponse.json(
+        { error: "Access denied" },
+        { status: 403 }
+      );
+      return withCors(response);
+    }
+
     // Get all time entries for this issue
     const timeEntries = await prisma.timeEntry.findMany({
       where: {

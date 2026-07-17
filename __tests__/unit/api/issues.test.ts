@@ -469,6 +469,12 @@ describe('POST /api/issues/reorder', () => {
 
 describe('GET /api/issues/[id]/time', () => {
   function mockHappyPath() {
+    vi.mocked(prisma.issue.findUnique).mockResolvedValue(baseIssue as never);
+    vi.mocked(prisma.workspaceMember.findUnique).mockResolvedValue({
+      userId: API_USER_ID,
+      workspaceId: 'ws-1',
+      role: 'MEMBER',
+    } as never);
     vi.mocked(prisma.timeEntry.findMany).mockResolvedValue([
       {
         duration: 60,
@@ -511,5 +517,31 @@ describe('GET /api/issues/[id]/time', () => {
     const response = await getIssueTime(req, ctxFor('issue-1'));
 
     expect(response.status).toBe(200);
+  });
+
+  test('issue inexistente → 404', async () => {
+    mockHappyPath();
+    vi.mocked(prisma.issue.findUnique).mockResolvedValue(null as never);
+
+    const req = new NextRequest('http://localhost:3000/api/issues/nope/time', {
+      headers: bearerHeaders(),
+    });
+    const response = await getIssueTime(req, ctxFor('nope'));
+
+    expect(response.status).toBe(404);
+    expect(prisma.timeEntry.findMany).not.toHaveBeenCalled();
+  });
+
+  test('não-membro do workspace → 403 (sem vazar dados de tempo)', async () => {
+    mockHappyPath();
+    vi.mocked(prisma.workspaceMember.findUnique).mockResolvedValue(null as never);
+
+    const req = new NextRequest('http://localhost:3000/api/issues/issue-1/time', {
+      headers: bearerHeaders(),
+    });
+    const response = await getIssueTime(req, ctxFor('issue-1'));
+
+    expect(response.status).toBe(403);
+    expect(prisma.timeEntry.findMany).not.toHaveBeenCalled();
   });
 });

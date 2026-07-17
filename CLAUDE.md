@@ -93,7 +93,7 @@ pnpm db:seed
 2. **Project**: Types (DEVELOPMENT, MAINTENANCE), statuses (PLANNED, IN_PROGRESS, COMPLETED, CANCELED). Contains milestones, features (categorization with colors), and SLA configs
 3. **Issue**: Types (FEATURE, MAINTENANCE, BUG, IMPROVEMENT), priorities (URGENT, HIGH, MEDIUM, LOW, NO_PRIORITY). Linked to status, assignee, labels, milestone, feature. Tracks comments, time entries, and SLA metrics
 
-**Ordering**: Issues, milestones, and projects each have an `order` field. Reorder via `PUT /api/issues/reorder`, `PUT /api/milestones/reorder`, `PUT /api/projects/reorder`.
+**Ordering**: Issues, milestones, and projects each have an `order` field. Reorder via `POST /api/issues/reorder`, `POST /api/milestones/reorder`, `POST /api/projects/reorder`.
 
 ### Time Tracking System
 

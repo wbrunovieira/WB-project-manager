@@ -201,6 +201,51 @@ describe('withAuth wrapper', () => {
     });
   });
 
+  describe('CORS nos 401 do wrapper', () => {
+    test('401 de sessão ausente inclui headers CORS', async () => {
+      mockAuth.mockResolvedValue(null);
+
+      const wrappedHandler = withAuth(vi.fn());
+      const request = new NextRequest('http://localhost:3000/api/test');
+
+      const response = await wrappedHandler(request);
+
+      expect(response.status).toBe(401);
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBeTruthy();
+      expect(response.headers.get('Access-Control-Allow-Credentials')).toBe('true');
+    });
+
+    test('401 de API key inválida inclui headers CORS', async () => {
+      const wrappedHandler = withAuth(vi.fn());
+      const request = new NextRequest('http://localhost:3000/api/test', {
+        headers: { 'Authorization': 'Bearer wrong-key' },
+      });
+
+      const response = await wrappedHandler(request);
+
+      expect(response.status).toBe(401);
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBeTruthy();
+    });
+  });
+
+  describe('API_KEY_USER_ID fail-closed', () => {
+    test('key válida sem API_KEY_USER_ID configurado → 401, sem fallback hardcoded', async () => {
+      delete process.env.API_KEY_USER_ID;
+
+      const handler = vi.fn();
+      const wrappedHandler = withAuth(handler);
+
+      const request = new NextRequest('http://localhost:3000/api/test', {
+        headers: { 'Authorization': 'Bearer test-api-key' },
+      });
+
+      const response = await wrappedHandler(request);
+
+      expect(response.status).toBe(401);
+      expect(handler).not.toHaveBeenCalled();
+    });
+  });
+
   describe('Timing-Safe Comparison', () => {
     test('usa crypto.timingSafeEqual para comparar hashes da API key', async () => {
       const timingSafeSpy = vi.spyOn(crypto, 'timingSafeEqual');

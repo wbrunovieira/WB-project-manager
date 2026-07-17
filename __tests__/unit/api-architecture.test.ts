@@ -16,13 +16,15 @@ import path from 'path';
 const API_DIR = path.join(process.cwd(), 'src', 'app', 'api');
 const ALLOWLIST = ['health', 'auth/'];
 
+const ROUTE_FILENAMES = ['route.ts', 'route.tsx', 'route.js', 'route.mjs'];
+
 function findRouteFiles(dir: string): string[] {
   const results: string[] = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       results.push(...findRouteFiles(fullPath));
-    } else if (entry.name === 'route.ts') {
+    } else if (ROUTE_FILENAMES.includes(entry.name)) {
       results.push(fullPath);
     }
   }
@@ -52,12 +54,37 @@ describe('arquitetura da API', () => {
     (_relPath, file) => {
       const content = fs.readFileSync(file, 'utf-8');
 
-      expect(content, `${_relPath} não pode chamar await auth() inline`).not.toMatch(
-        /await\s+auth\s*\(\s*\)/
-      );
-      expect(content, `${_relPath} deve usar o wrapper withAuth`).toMatch(
-        /withAuth/
-      );
+      // Qualquer import de auth de sessão é proibido em rota de negócio —
+      // cobre await auth(), auth() sem await e getServerSession, que uma
+      // checagem por substring da chamada deixaria passar.
+      expect(
+        content,
+        `${_relPath} não pode importar @/lib/auth (use withAuth de @/lib/api-auth)`
+      ).not.toMatch(/from\s+["']@\/lib\/auth["']/);
+      expect(
+        content,
+        `${_relPath} não pode usar getServerSession`
+      ).not.toMatch(/getServerSession/);
+
+      // Todo método de negócio exportado deve sair embrulhado em withAuth;
+      // OPTIONS (preflight CORS) é a única exceção.
+      const exportedMethods = [
+        ...content.matchAll(
+          /export\s+(?:const|async\s+function)\s+(GET|POST|PUT|PATCH|DELETE)\b/g
+        ),
+      ].map((m) => m[1]);
+      expect(
+        exportedMethods.length,
+        `${_relPath} não exporta nenhum método HTTP`
+      ).toBeGreaterThan(0);
+
+      for (const method of exportedMethods) {
+        expect(
+          content,
+          `${_relPath}: ${method} deve ser exportado como withAuth(...) — ` +
+            `"export const ${method} = withAuth"`
+        ).toMatch(new RegExp(`export\\s+const\\s+${method}\\s*=\\s*withAuth`));
+      }
     }
   );
 
