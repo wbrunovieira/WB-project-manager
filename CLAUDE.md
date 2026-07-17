@@ -19,6 +19,11 @@ Ao manter a doc da API: qualquer mudança em rotas sob `src/app/api` exige
 atualizar `openapi.yaml` e rodar `pnpm openapi:build` (a spec alimenta o Swagger
 UI em `/api/docs`); há teste que falha se a spec ficar dessincronizada.
 
+Skills relacionadas (`.claude/skills/`): **`track-work`** (rastrear trabalho como
+issues no board) e **`onboard-project-agent`** (gerar a mensagem de onboarding
+quando o Bruno mandar o link de um projeto em produção e pedir para ensinar o
+Claude daquele projeto a gerenciá-lo via API).
+
 ## Development Commands
 
 Package manager: **pnpm** (pinned via `packageManager` in package.json; build scripts approved in `pnpm-workspace.yaml` `allowBuilds`).
