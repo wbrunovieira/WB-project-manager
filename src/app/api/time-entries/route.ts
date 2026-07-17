@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withCors } from "@/lib/api-auth";
-import { auth } from "@/lib/auth";
+import { withAuth, withCors } from "@/lib/api-auth";
 
 // POST /api/time-entries - Start a new time entry
-export async function POST(req: NextRequest) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+export const POST = withAuth(async (req: NextRequest, userId: string) => {
   try {
     const body = await req.json();
     const { issueId, description } = body;
@@ -27,7 +19,7 @@ export async function POST(req: NextRequest) {
     // Check if there's already an active time entry for this specific issue
     const activeEntryForIssue = await prisma.timeEntry.findFirst({
       where: {
-        userId: session.user.id,
+        userId,
         issueId,
         endTime: null,
       },
@@ -45,7 +37,7 @@ export async function POST(req: NextRequest) {
     const timeEntry = await prisma.timeEntry.create({
       data: {
         issueId,
-        userId: session.user.id,
+        userId,
         startTime: new Date(),
         description,
       },
@@ -70,21 +62,14 @@ export async function POST(req: NextRequest) {
     );
     return withCors(response);
   }
-}
+});
 
 // GET /api/time-entries - Get all active time entries for current user
-export async function GET() {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+export const GET = withAuth(async (req: NextRequest, userId: string) => {
   try {
     const activeEntries = await prisma.timeEntry.findMany({
       where: {
-        userId: session.user.id,
+        userId,
         endTime: null,
       },
       include: {
@@ -111,7 +96,7 @@ export async function GET() {
     );
     return withCors(response);
   }
-}
+});
 
 // OPTIONS handler for CORS
 export async function OPTIONS() {

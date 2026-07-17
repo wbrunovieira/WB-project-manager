@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withCors } from "@/lib/api-auth";
-import { auth } from "@/lib/auth";
+import { withAuth, withCors } from "@/lib/api-auth";
 import { z } from "zod";
 
 const createLabelSchema = z.object({
@@ -11,14 +10,7 @@ const createLabelSchema = z.object({
 });
 
 // GET /api/labels - List all labels for a workspace
-export async function GET(req: NextRequest) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+export const GET = withAuth(async (req: NextRequest, userId: string) => {
   try {
     const { searchParams } = new URL(req.url);
     const workspaceId = searchParams.get("workspaceId");
@@ -35,7 +27,7 @@ export async function GET(req: NextRequest) {
     const membership = await prisma.workspaceMember.findUnique({
       where: {
         userId_workspaceId: {
-          userId: session.user.id,
+          userId,
           workspaceId,
         },
       },
@@ -64,17 +56,10 @@ export async function GET(req: NextRequest) {
     );
     return withCors(response);
   }
-}
+});
 
 // POST /api/labels - Create new label
-export async function POST(req: NextRequest) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+export const POST = withAuth(async (req: NextRequest, userId: string) => {
   try {
     const body = await req.json();
     const validated = createLabelSchema.safeParse(body);
@@ -93,7 +78,7 @@ export async function POST(req: NextRequest) {
     const membership = await prisma.workspaceMember.findUnique({
       where: {
         userId_workspaceId: {
-          userId: session.user.id,
+          userId,
           workspaceId,
         },
       },
@@ -124,7 +109,7 @@ export async function POST(req: NextRequest) {
     );
     return withCors(response);
   }
-}
+});
 
 // OPTIONS handler for CORS
 export async function OPTIONS() {

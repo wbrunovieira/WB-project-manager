@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withCors } from "@/lib/api-auth";
-import { auth } from "@/lib/auth";
+import { withAuth, withCors } from "@/lib/api-auth";
 import { z } from "zod";
 
 const createFeatureSchema = z.object({
@@ -12,14 +11,7 @@ const createFeatureSchema = z.object({
 });
 
 // GET /api/features - List all features for a project
-export async function GET(req: NextRequest) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+export const GET = withAuth(async (req: NextRequest, userId: string) => {
   try {
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get("projectId");
@@ -49,7 +41,7 @@ export async function GET(req: NextRequest) {
     const membership = await prisma.workspaceMember.findUnique({
       where: {
         userId_workspaceId: {
-          userId: session.user.id,
+          userId,
           workspaceId: project.workspaceId,
         },
       },
@@ -78,17 +70,10 @@ export async function GET(req: NextRequest) {
     );
     return withCors(response);
   }
-}
+});
 
 // POST /api/features - Create new feature
-export async function POST(req: NextRequest) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+export const POST = withAuth(async (req: NextRequest, userId: string) => {
   try {
     const body = await req.json();
     const validated = createFeatureSchema.safeParse(body);
@@ -120,7 +105,7 @@ export async function POST(req: NextRequest) {
     const membership = await prisma.workspaceMember.findUnique({
       where: {
         userId_workspaceId: {
-          userId: session.user.id,
+          userId,
           workspaceId: project.workspaceId,
         },
       },
@@ -151,7 +136,7 @@ export async function POST(req: NextRequest) {
     );
     return withCors(response);
   }
-}
+});
 
 // OPTIONS handler for CORS
 export async function OPTIONS() {

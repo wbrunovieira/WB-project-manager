@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withCors } from "@/lib/api-auth";
-import { auth } from "@/lib/auth";
+import { withAuth, withCors } from "@/lib/api-auth";
 
 // GET /api/time-tracking - Get time entries with optional filters
-export async function GET(req: NextRequest) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+export const GET = withAuth(async (req: NextRequest, userId: string) => {
   try {
     const { searchParams } = new URL(req.url);
     const milestoneId = searchParams.get("milestoneId");
@@ -38,7 +30,7 @@ export async function GET(req: NextRequest) {
     }
 
     const where: Record<string, unknown> = {
-      userId: session.user.id,
+      userId,
       ...(Object.keys(issueFilter).length > 0 ? { issue: issueFilter } : {}),
     };
 
@@ -116,7 +108,7 @@ export async function GET(req: NextRequest) {
     );
     return withCors(response);
   }
-}
+});
 
 // OPTIONS handler for CORS
 export async function OPTIONS() {

@@ -1,22 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withCors } from "@/lib/api-auth";
-import { auth } from "@/lib/auth";
+import { withAuth, withCors } from "@/lib/api-auth";
 
 // PATCH /api/time-entries/[id] - Stop/pause a time entry
-export async function PATCH(
+export const PATCH = withAuth<{ params: Promise<{ id: string }> }>(async (
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+  userId: string,
+  ctx
+) => {
   try {
-    const { id } = await context.params;
+    const { id } = await ctx.params;
     await req.json();
 
     const timeEntry = await prisma.timeEntry.findUnique({
@@ -31,7 +24,7 @@ export async function PATCH(
       return withCors(response);
     }
 
-    if (timeEntry.userId !== session.user.id) {
+    if (timeEntry.userId !== userId) {
       const response = NextResponse.json(
         { error: "Access denied" },
         { status: 403 }
@@ -80,22 +73,16 @@ export async function PATCH(
     );
     return withCors(response);
   }
-}
+});
 
 // DELETE /api/time-entries/[id] - Delete a time entry
-export async function DELETE(
+export const DELETE = withAuth<{ params: Promise<{ id: string }> }>(async (
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    return withCors(response);
-  }
-
+  userId: string,
+  ctx
+) => {
   try {
-    const { id } = await context.params;
+    const { id } = await ctx.params;
 
     const timeEntry = await prisma.timeEntry.findUnique({
       where: { id },
@@ -109,7 +96,7 @@ export async function DELETE(
       return withCors(response);
     }
 
-    if (timeEntry.userId !== session.user.id) {
+    if (timeEntry.userId !== userId) {
       const response = NextResponse.json(
         { error: "Access denied" },
         { status: 403 }
@@ -131,7 +118,7 @@ export async function DELETE(
     );
     return withCors(response);
   }
-}
+});
 
 // OPTIONS handler for CORS
 export async function OPTIONS() {
