@@ -43,6 +43,16 @@ pnpm lint             # eslint
 pnpm build            # build de produção
 ```
 
+## Documentação da API
+
+Toda a API é documentada em **OpenAPI 3.1** e navegável via **Swagger UI**:
+
+- **Swagger UI (interativo):** [`/api/docs`](https://projects.wbdigitalsolutions.com/api/docs) — clique em **Authorize** 🔓, cole sua API key e use o **Try it out** em qualquer endpoint.
+- **Spec (fonte da verdade):** [`openapi.yaml`](./openapi.yaml) na raiz. `/api/openapi` serve a versão JSON.
+- Todas as rotas de negócio aceitam **API key** (`Authorization: Bearer <key>`) ou cookie de sessão. Detalhes de auth em [`scripts/API-KEY-AUTH.md`](./scripts/API-KEY-AUTH.md).
+
+Ao alterar rotas em `src/app/api`, atualize `openapi.yaml` e rode `pnpm openapi:build` (há teste que falha se a spec ficar dessincronizada).
+
 ## CI/CD
 
 - **CI** (`.github/workflows/ci.yml`): a cada push/PR na `main` roda lint, testes unitários (Vitest) e build.
