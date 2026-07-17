@@ -52,3 +52,19 @@ jobs:
         run: pnpm exec vitest run
       - name: Build (next build)
         run: pnpm build
+
+  # ── E2E: servidor standalone real + SQLite real, sem mocks (pnpm test:e2e). ──
+  e2e:
+    name: E2E (servidor real)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # O globalSetup do e2e faz o próprio pnpm build e sobe o servidor
+      - name: E2E tests (Vitest)
+        run: pnpm test:e2e
