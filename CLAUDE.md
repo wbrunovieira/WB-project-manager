@@ -6,6 +6,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Next.js 15 project management app with issue tracking, time tracking, and SLA monitoring. Stack: TypeScript, Prisma 6 (SQLite), NextAuth v5 (beta), React 19, Tailwind CSS 4, shadcn/ui.
 
+## ⚠️ Sempre rastreie o trabalho como issues (skill `track-work`)
+
+Este projeto se auto-gerencia. **Toda melhoria, correção, feature ou débito
+técnico DEVE virar uma issue** no projeto "WB Projects" (`cmor7mjuc000dpa01z8izh57o`),
+via a própria API do app, com o status mantido em dia (Backlog/Todo → In Progress
+→ Done). Antes de planejar ou iniciar trabalho não-trivial, e sempre que
+descobrir um bug/melhoria, invoque a skill **`track-work`** (`.claude/skills/track-work/SKILL.md`)
+— ela tem o projectId, os status IDs, a localização da API key e os comandos.
+
+Ao manter a doc da API: qualquer mudança em rotas sob `src/app/api` exige
+atualizar `openapi.yaml` e rodar `pnpm openapi:build` (a spec alimenta o Swagger
+UI em `/api/docs`); há teste que falha se a spec ficar dessincronizada.
+
 ## Development Commands
 
 Package manager: **pnpm** (pinned via `packageManager` in package.json; build scripts approved in `pnpm-workspace.yaml` `allowBuilds`).
