@@ -12,9 +12,11 @@ import path from 'path';
  * Allowlist (rotas públicas por design):
  * - health: health check do deploy
  * - auth/: NextAuth, register, signout
+ * - docs: página Swagger UI (HTML público)
+ * - openapi: serve a spec OpenAPI (JSON público)
  */
 const API_DIR = path.join(process.cwd(), 'src', 'app', 'api');
-const ALLOWLIST = ['health', 'auth/'];
+const ALLOWLIST = ['health', 'auth/', 'docs', 'openapi'];
 
 const ROUTE_FILENAMES = ['route.ts', 'route.tsx', 'route.js', 'route.mjs'];
 

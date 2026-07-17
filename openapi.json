@@ -1,0 +1,2604 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "WB Project Manager API",
+    "version": "1.0.0",
+    "description": "API do WB Project Manager — issue tracking, projetos, milestones, workspaces,\nlabels, features e time tracking.\n\n## Autenticação\nTodos os endpoints de negócio aceitam **duas** formas de autenticação:\n\n- **API Key (Bearer):** header `Authorization: Bearer <API_KEY>`. É o método\n  para integrações externas / agentes. A key opera como o usuário de\n  `API_KEY_USER_ID`.\n- **Cookie de sessão** do NextAuth (usado pelo próprio front-end).\n\nEndpoints públicos (sem auth): `GET /api/health`, `POST /api/auth/register`.\nTodas as respostas `401` incluem headers CORS — não parseie o corpo do 401,\no contrato é o status code.\n\n## status (TYPE) vs statusId (cuid) — importante\nHá uma diferença crucial no tratamento de status:\n- **`GET /api/issues?status=IN_PROGRESS`** filtra pelo *tipo* do status\n  (`StatusType`: BACKLOG, TODO, IN_PROGRESS, DONE, CANCELED).\n- **`POST /api/issues` e `PATCH /api/issues/{id}`** usam **`statusId`** — o\n  cuid de um Status específico do workspace (ex.: `cmge9i3pv0009walqbwhmule6`).\n\nTrocar o `statusId` de uma issue via PATCH dispara automaticamente os side\neffects de SLA: `firstResponseAt` (ao entrar em IN_PROGRESS), `resolvedAt` +\n`resolutionTimeMinutes` (ao entrar em DONE) e `reopenCount` (ao reabrir).\n",
+    "contact": {
+      "name": "WB Digital Solutions",
+      "url": "https://projects.wbdigitalsolutions.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://projects.wbdigitalsolutions.com",
+      "description": "Produção"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Registro e sessão"
+    },
+    {
+      "name": "Health",
+      "description": "Health check público"
+    },
+    {
+      "name": "Issues",
+      "description": "Issues, bulk, reorder e time"
+    },
+    {
+      "name": "Projects",
+      "description": "Projetos e reorder"
+    },
+    {
+      "name": "Milestones",
+      "description": "Milestones e reorder"
+    },
+    {
+      "name": "Workspaces",
+      "description": "Workspaces e membros"
+    },
+    {
+      "name": "Labels",
+      "description": "Labels de workspace"
+    },
+    {
+      "name": "Features",
+      "description": "Features (categorização) de projeto"
+    },
+    {
+      "name": "Time Tracking",
+      "description": "Time entries e overview"
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health check",
+        "description": "Verifica conectividade com o banco. Público (sem auth).",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Saudável",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "healthy"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "unhealthy"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Registrar novo usuário",
+        "description": "Cria um usuário. Público (sem auth).",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "example": "Maria Silva"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "maria@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "senha123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuário criado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validação falhou ou e-mail já registrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/signout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Encerrar sessão",
+        "description": "Encerra a sessão do NextAuth (usa o cookie de sessão).",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Sessão encerrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Falha ao encerrar sessão",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/issues": {
+      "get": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "Listar issues",
+        "description": "Lista issues dos workspaces em que o usuário é membro. Todos os filtros\nsão opcionais. O filtro `status` casa pelo **tipo** do status, não pelo id.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/workspaceIdQuery"
+          },
+          {
+            "$ref": "#/components/parameters/projectIdQuery"
+          },
+          {
+            "name": "assigneeId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "Filtra pelo TYPE do status (não pelo statusId).",
+            "schema": {
+              "$ref": "#/components/schemas/StatusType"
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Priority"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de issues (ordenada por sortOrder asc)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Issue"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "Criar issue",
+        "description": "Cria uma issue. `identifier` é gerado automaticamente. `statusId` é o\ncuid de um Status do workspace (veja a nota status vs statusId).\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueCreate"
+              },
+              "example": {
+                "title": "Corrigir bug no login",
+                "description": "Usuário não consegue autenticar com e-mail maiúsculo",
+                "workspaceId": "cmge96f200001wa7ouziczg0w",
+                "statusId": "cmge9i3pv0009walqbwhmule6",
+                "priority": "HIGH",
+                "type": "BUG"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Issue criada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Issue"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/issues/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/idPath"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "Obter issue",
+        "responses": {
+          "200": {
+            "description": "Issue (com comments)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Issue"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "Atualizar issue (parcial)",
+        "description": "Atualização parcial. Os campos `description`, `projectId`, `milestoneId`,\n`featureId`, `assigneeId` e `reportedAt` aceitam `null` para limpar.\nTrocar `statusId` dispara os side effects de SLA.\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueUpdate"
+              },
+              "example": {
+                "statusId": "cmge9i3pw000bwalqn1glwrn4",
+                "priority": "MEDIUM"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Issue atualizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Issue"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "Deletar issue",
+        "responses": {
+          "200": {
+            "description": "Deletada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Issue deleted successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/issues/{id}/time": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/idPath"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "Resumo de tempo da issue",
+        "responses": {
+          "200": {
+            "description": "Totais de tempo da issue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalSeconds": {
+                      "type": "integer",
+                      "example": 5400
+                    },
+                    "activeEntries": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "completedEntries": {
+                      "type": "integer",
+                      "example": 3
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/issues/bulk": {
+      "post": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "Criar issues em lote (1–100)",
+        "description": "Cria de 1 a 100 issues no mesmo workspace. Sem `featureId`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "workspaceId",
+                  "issues"
+                ],
+                "properties": {
+                  "workspaceId": {
+                    "type": "string",
+                    "example": "cmge96f200001wa7ouziczg0w"
+                  },
+                  "issues": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "items": {
+                      "$ref": "#/components/schemas/BulkIssueItem"
+                    }
+                  }
+                }
+              },
+              "example": {
+                "workspaceId": "cmge96f200001wa7ouziczg0w",
+                "issues": [
+                  {
+                    "title": "Configurar CI",
+                    "statusId": "cmge9i3pv0007walqv7is970v",
+                    "type": "IMPROVEMENT",
+                    "priority": "MEDIUM"
+                  },
+                  {
+                    "title": "Escrever testes de smoke",
+                    "statusId": "cmge9i3pt0005walququqw1rx"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Issues criadas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "count": {
+                      "type": "integer",
+                      "example": 2
+                    },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Issue"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/issues/reorder": {
+      "post": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "Reordenar issues dentro de uma coluna de status",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "issueId",
+                  "statusType",
+                  "sortedIssueIds"
+                ],
+                "properties": {
+                  "issueId": {
+                    "type": "string",
+                    "description": "Issue que foi movida"
+                  },
+                  "statusType": {
+                    "$ref": "#/components/schemas/StatusType"
+                  },
+                  "sortedIssueIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Ids na nova ordem; sortOrder passa a ser o índice."
+                  }
+                }
+              },
+              "example": {
+                "issueId": "cmxyz123",
+                "statusType": "IN_PROGRESS",
+                "sortedIssueIds": [
+                  "cmxyz789",
+                  "cmxyz123",
+                  "cmxyz456"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/projects": {
+      "get": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Listar projetos",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/workspaceIdQuery"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/ProjectStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de projetos (ordenada por updatedAt desc)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Project"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Criar projeto",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectCreate"
+              },
+              "example": {
+                "name": "Portal do Cliente",
+                "description": "Novo portal self-service",
+                "workspaceId": "cmge96f200001wa7ouziczg0w",
+                "type": "DEVELOPMENT",
+                "status": "PLANNED"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Projeto criado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/idPath"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Obter projeto (com issues)",
+        "responses": {
+          "200": {
+            "description": "Projeto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Atualizar projeto (parcial)",
+        "description": "`startDate` e `targetDate` aceitam null.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectUpdate"
+              },
+              "example": {
+                "status": "IN_PROGRESS"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Projeto atualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Deletar projeto (requer OWNER ou ADMIN)",
+        "responses": {
+          "200": {
+            "description": "Deletado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Project deleted successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/projects/reorder": {
+      "post": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Reordenar projetos",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "projectId",
+                  "sortedProjectIds"
+                ],
+                "properties": {
+                  "projectId": {
+                    "type": "string"
+                  },
+                  "sortedProjectIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "example": {
+                "projectId": "cmproj123",
+                "sortedProjectIds": [
+                  "cmproj789",
+                  "cmproj123"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/milestones": {
+      "get": {
+        "tags": [
+          "Milestones"
+        ],
+        "summary": "Listar milestones de um projeto",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de milestones (ordenada por sortOrder asc)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Milestone"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Milestones"
+        ],
+        "summary": "Criar milestone",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MilestoneCreate"
+              },
+              "example": {
+                "name": "Sprint 1",
+                "description": "MVP do portal",
+                "projectId": "cmproj123",
+                "startDate": "2026-08-01T00:00:00.000Z",
+                "targetDate": "2026-08-15T00:00:00.000Z"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Milestone criada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Milestone"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/milestones/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/idPath"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Milestones"
+        ],
+        "summary": "Obter milestone (com issues)",
+        "responses": {
+          "200": {
+            "description": "Milestone",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Milestone"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Milestones"
+        ],
+        "summary": "Atualizar milestone (parcial)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MilestoneUpdate"
+              },
+              "example": {
+                "name": "Sprint 1 (revisada)",
+                "targetDate": "2026-08-20T00:00:00.000Z"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Milestone atualizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Milestone"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Milestones"
+        ],
+        "summary": "Deletar milestone",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/milestones/reorder": {
+      "post": {
+        "tags": [
+          "Milestones"
+        ],
+        "summary": "Reordenar milestones",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "milestoneId",
+                  "sortedMilestoneIds"
+                ],
+                "properties": {
+                  "milestoneId": {
+                    "type": "string"
+                  },
+                  "sortedMilestoneIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "example": {
+                "milestoneId": "cmmile123",
+                "sortedMilestoneIds": [
+                  "cmmile789",
+                  "cmmile123"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/workspaces": {
+      "get": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Listar workspaces do usuário",
+        "responses": {
+          "200": {
+            "description": "Lista de workspaces (com role e _count)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Workspace"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Criar workspace",
+        "description": "Cria workspace, adiciona o criador como OWNER e cria 5 statuses padrão.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceCreate"
+              },
+              "example": {
+                "name": "Minha Empresa",
+                "slug": "minha-empresa",
+                "icon": "🚀"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Workspace criado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Workspace"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/workspaces/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/idPath"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Obter workspace (com membros)",
+        "responses": {
+          "200": {
+            "description": "Workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Workspace"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Atualizar workspace (requer OWNER ou ADMIN)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceUpdate"
+              },
+              "example": {
+                "name": "Minha Empresa LTDA"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Workspace atualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Workspace"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Deletar workspace (requer OWNER)",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/labels": {
+      "get": {
+        "tags": [
+          "Labels"
+        ],
+        "summary": "Listar labels de um workspace",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/workspaceIdQueryRequired"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de labels (ordenada por name asc)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Label"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Labels"
+        ],
+        "summary": "Criar label",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "color",
+                  "workspaceId"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "example": "bug"
+                  },
+                  "color": {
+                    "type": "string",
+                    "pattern": "^#[0-9A-Fa-f]{6}$",
+                    "example": "#FF0000"
+                  },
+                  "workspaceId": {
+                    "type": "string",
+                    "example": "cmge96f200001wa7ouziczg0w"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Label criada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Label"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/features": {
+      "get": {
+        "tags": [
+          "Features"
+        ],
+        "summary": "Listar features de um projeto",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de features (ordenada por name asc)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Feature"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Features"
+        ],
+        "summary": "Criar feature",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "projectId"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "example": "Autenticação"
+                  },
+                  "color": {
+                    "type": "string",
+                    "pattern": "^#[0-9A-Fa-f]{6}$",
+                    "example": "#3B82F6"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "projectId": {
+                    "type": "string",
+                    "example": "cmproj123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Feature criada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Feature"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/time-entries": {
+      "get": {
+        "tags": [
+          "Time Tracking"
+        ],
+        "summary": "Listar timers ativos do usuário",
+        "responses": {
+          "200": {
+            "description": "Timers ativos (endTime null), ordenados por startTime desc",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Time Tracking"
+        ],
+        "summary": "Iniciar timer numa issue",
+        "description": "Retorna 200 (não 201). Rejeita se já houver timer ativo para a issue.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "issueId"
+                ],
+                "properties": {
+                  "issueId": {
+                    "type": "string",
+                    "example": "cmissue123"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Investigando o bug"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Timer iniciado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeEntry"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/time-entries/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/idPath"
+        }
+      ],
+      "patch": {
+        "tags": [
+          "Time Tracking"
+        ],
+        "summary": "Parar timer",
+        "description": "Seta endTime = agora e acumula duration. 400 se já parado.",
+        "responses": {
+          "200": {
+            "description": "Timer parado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeEntry"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Time Tracking"
+        ],
+        "summary": "Deletar time entry",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/time-tracking": {
+      "get": {
+        "tags": [
+          "Time Tracking"
+        ],
+        "summary": "Overview de tempo do usuário",
+        "description": "Agrega o tempo das entries do usuário. `projectId` é ignorado se\n`milestoneId` estiver presente.\n",
+        "parameters": [
+          {
+            "name": "milestoneId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "labelId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/projectIdQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Totais e agrupamento por issue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalSeconds": {
+                      "type": "integer",
+                      "example": 12600
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TimeEntry"
+                      }
+                    },
+                    "groupedByIssue": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "issue": {
+                            "$ref": "#/components/schemas/Issue"
+                          },
+                          "totalSeconds": {
+                            "type": "integer"
+                          },
+                          "entries": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/TimeEntry"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "API Key no header `Authorization: Bearer <API_KEY>`. A key opera como o\nusuário de `API_KEY_USER_ID`. O cookie de sessão do NextAuth também é\naceito nos mesmos endpoints (não modelável aqui como esquema Bearer).\n"
+      }
+    },
+    "parameters": {
+      "idPath": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "workspaceIdQuery": {
+        "name": "workspaceId",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "workspaceIdQueryRequired": {
+        "name": "workspaceId",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "projectIdQuery": {
+        "name": "projectId",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "responses": {
+      "Success": {
+        "description": "Operação concluída",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Sem API key válida nem sessão. O corpo pode variar — use o status.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Sem acesso ao recurso (membership/role insuficiente)",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Recurso não encontrado",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Requisição inválida",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "ValidationError": {
+        "description": "Validação falhou",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ValidationError"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Validation failed"
+          },
+          "details": {
+            "description": "Detalhes de validação do Zod (formato flatten)."
+          }
+        }
+      },
+      "Priority": {
+        "type": "string",
+        "enum": [
+          "URGENT",
+          "HIGH",
+          "MEDIUM",
+          "LOW",
+          "NO_PRIORITY"
+        ]
+      },
+      "IssueType": {
+        "type": "string",
+        "enum": [
+          "FEATURE",
+          "MAINTENANCE",
+          "BUG",
+          "IMPROVEMENT"
+        ]
+      },
+      "StatusType": {
+        "type": "string",
+        "enum": [
+          "BACKLOG",
+          "TODO",
+          "IN_PROGRESS",
+          "DONE",
+          "CANCELED"
+        ]
+      },
+      "ProjectStatus": {
+        "type": "string",
+        "enum": [
+          "PLANNED",
+          "IN_PROGRESS",
+          "COMPLETED",
+          "CANCELED"
+        ]
+      },
+      "ProjectType": {
+        "type": "string",
+        "enum": [
+          "DEVELOPMENT",
+          "MAINTENANCE"
+        ]
+      },
+      "Role": {
+        "type": "string",
+        "enum": [
+          "OWNER",
+          "ADMIN",
+          "MEMBER",
+          "GUEST"
+        ]
+      },
+      "UserLite": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "Status": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/StatusType"
+          },
+          "position": {
+            "type": "integer"
+          },
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "Issue": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "Sequencial por workspace (auto)",
+            "ex. \"42\"": null
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "type": {
+            "$ref": "#/components/schemas/IssueType"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/Priority"
+          },
+          "statusId": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "workspaceId": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "milestoneId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "featureId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "creatorId": {
+            "type": "string"
+          },
+          "assigneeId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "assignee": {
+            "$ref": "#/components/schemas/UserLite"
+          },
+          "creator": {
+            "$ref": "#/components/schemas/UserLite"
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "reportedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "firstResponseAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "resolvedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "resolutionTimeMinutes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "reopenCount": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "IssueCreate": {
+        "type": "object",
+        "required": [
+          "title",
+          "workspaceId",
+          "statusId"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          },
+          "statusId": {
+            "type": "string",
+            "description": "cuid do Status (não o TYPE)"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "milestoneId": {
+            "type": "string"
+          },
+          "featureId": {
+            "type": "string"
+          },
+          "assigneeId": {
+            "type": "string"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/Priority"
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IssueType"
+              }
+            ],
+            "default": "FEATURE"
+          },
+          "reportedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "labelIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "IssueUpdate": {
+        "type": "object",
+        "description": "Todos os campos opcionais. Campos nullable aceitam null para limpar.",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "statusId": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "milestoneId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "featureId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "assigneeId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "priority": {
+            "$ref": "#/components/schemas/Priority"
+          },
+          "labelIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reportedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "BulkIssueItem": {
+        "type": "object",
+        "required": [
+          "title",
+          "statusId"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          },
+          "statusId": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "milestoneId": {
+            "type": "string"
+          },
+          "assigneeId": {
+            "type": "string"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/Priority"
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IssueType"
+              }
+            ],
+            "default": "FEATURE"
+          },
+          "reportedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "labelIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Project": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/ProjectStatus"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ProjectType"
+          },
+          "startDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "targetDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "workspaceId": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ProjectCreate": {
+        "type": "object",
+        "required": [
+          "name",
+          "workspaceId"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ProjectType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ProjectStatus"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "targetDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ProjectUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ProjectStatus"
+          },
+          "startDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "targetDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "Milestone": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "startDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "targetDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MilestoneCreate": {
+        "type": "object",
+        "required": [
+          "name",
+          "projectId"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "targetDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MilestoneUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "targetDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Workspace": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "role": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Role"
+              }
+            ],
+            "description": "Papel do usuário atual (presente na listagem)"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "WorkspaceCreate": {
+        "type": "object",
+        "required": [
+          "name",
+          "slug"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "slug": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "icon": {
+            "type": "string"
+          }
+        }
+      },
+      "WorkspaceUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "slug": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "icon": {
+            "type": "string"
+          }
+        }
+      },
+      "Label": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string",
+            "example": "#FF0000"
+          },
+          "workspaceId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Feature": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "#3B82F6"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TimeEntry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "issueId": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endTime": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "duration": {
+            "type": "integer",
+            "description": "Segundos acumulados"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}
