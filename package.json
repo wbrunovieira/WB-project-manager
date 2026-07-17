@@ -14,7 +14,8 @@
     "test:coverage": "vitest --coverage",
     "test:unit": "vitest __tests__/unit",
     "test:integration": "vitest __tests__/integration",
-    "test:api": "vitest __tests__/api"
+    "test:api": "vitest __tests__/api",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

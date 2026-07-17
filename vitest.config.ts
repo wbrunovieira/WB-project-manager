@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig, configDefaults } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
@@ -8,6 +8,8 @@ export default defineConfig({
     globals: true,
     environment: 'happy-dom',
     setupFiles: ['./vitest.setup.ts'],
+    // E2E roda em config separada (vitest.e2e.config.ts) via `pnpm test:e2e`
+    exclude: [...configDefaults.exclude, '__tests__/e2e/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
