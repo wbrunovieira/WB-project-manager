@@ -1,0 +1,14 @@
+# Configuração do ggshield / GitGuardian.
+# Contexto: em jul/2026 dois incidentes foram abertos sobre este repo —
+# (1) a API key ANTIGA aparecendo nas linhas REMOVIDAS do commit de limpeza
+#     c9d1866 (key revogada na rotação de 2026-07-16; retorna 401 em produção);
+# (2) valores dummy dos testes e2e detectados como "Generic Password".
+# Nenhum segredo vivo esteve envolvido. Regras abaixo evitam novos falsos
+# positivos nos testes; segredos reais continuam proibidos em qualquer arquivo.
+version: 2
+
+secret:
+  ignored-paths:
+    # Testes usam exclusivamente credenciais dummy (servidor e2e local com
+    # banco descartável); qualquer valor real aqui quebraria o code review.
+    - '__tests__/**'

@@ -197,7 +197,7 @@ describe('fluxo de agente via API key (e2e)', () => {
   test('12. POST /api/generate-token não existe mais (404/405)', async () => {
     const res = await api('/api/generate-token', {
       method: 'POST',
-      body: JSON.stringify({ email: 'x@x.com', password: 'y' }),
+      body: JSON.stringify({ email: 'dummy@example.test', password: 'dummy-not-a-real-password' }),
     })
     expect([404, 405]).toContain(res.status)
   })
