@@ -1,198 +1,105 @@
-# 🔐 Autenticação API - Bearer Token
+# 🔐 Autenticação da API — Bearer Token (API Key)
 
-## ✅ Solução Implementada
+Toda a API aceita autenticação via **API Key** (header `Authorization: Bearer`)
+além do cookie de sessão do navegador. Isso vale para **todos os endpoints de
+negócio** — leitura, criação, atualização de status, delete, reorder, bulk —
+não só para criação de issues.
 
-A API agora suporta autenticação via **API Key** usando Bearer Token, facilitando integrações com aplicações externas.
-
----
-
-## 🔑 API Key
-
-```
-7ee69b9c6c4e74c7988b5ef7440dc3a78485b077c59eeb74f9e0485da6aa12f6
-```
+> ⚠️ **A API key NUNCA é commitada.** Ela vive no `.env` do servidor (gerada na
+> rotação de secrets) e na configuração dos agentes externos. Nos exemplos
+> abaixo, exporte `API_KEY` no seu shell antes de rodar.
 
 ---
 
-## 📝 Como Usar
-
-### Header de Autenticação
+## Como usar
 
 ```
-Authorization: Bearer 7ee69b9c6c4e74c7988b5ef7440dc3a78485b077c59eeb74f9e0485da6aa12f6
+Authorization: Bearer $API_KEY
 ```
-
-### Exemplo cURL
 
 ```bash
-curl -X POST http://localhost:3000/api/issues \
+export API_KEY="<a key fornecida fora do repo>"
+
+curl -X POST https://projects.wbdigitalsolutions.com/api/issues \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer 7ee69b9c6c4e74c7988b5ef7440dc3a78485b077c59eeb74f9e0485da6aa12f6" \
+  -H "Authorization: Bearer $API_KEY" \
   -d '{
     "title": "Sua Issue Aqui",
-    "description": "Descrição da issue",
-    "workspaceId": "cmge96f200001wa7ouziczg0w",
-    "projectId": "cmgfjhyh50005waqglsynsz1d",
-    "milestoneId": "cmggc1uqk0001wakb3no9xhb7",
-    "statusId": "cmge9i3pv0007walqv7is970v",
-    "assigneeId": "cmge96f1y0000wa7olxm69prv",
+    "workspaceId": "<workspace-id>",
+    "statusId": "<status-id>",
     "priority": "HIGH",
-    "type": "FEATURE",
-    "labelIds": ["cmgf23zl50009watfyq73olpr"]
+    "type": "FEATURE"
   }'
 ```
 
-### Exemplo JavaScript/TypeScript
-
-```typescript
-const API_KEY = "7ee69b9c6c4e74c7988b5ef7440dc3a78485b077c59eeb74f9e0485da6aa12f6";
-
-const response = await fetch('http://localhost:3000/api/issues', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${API_KEY}`
-  },
-  body: JSON.stringify({
-    title: "Sua Issue Aqui",
-    description: "Descrição da issue",
-    workspaceId: "cmge96f200001wa7ouziczg0w",
-    projectId: "cmgfjhyh50005waqglsynsz1d",
-    milestoneId: "cmggc1uqk0001wakb3no9xhb7",
-    statusId: "cmge9i3pv0007walqv7is970v",
-    assigneeId: "cmge96f1y0000wa7olxm69prv",
-    priority: "HIGH",
-    type: "FEATURE",
-    labelIds: ["cmgf23zl50009watfyq73olpr"]
-  })
-});
-
-const issue = await response.json();
-console.log('Issue criada:', issue);
-```
-
-### Exemplo Python
+### Python
 
 ```python
-import requests
-
-API_KEY = "7ee69b9c6c4e74c7988b5ef7440dc3a78485b077c59eeb74f9e0485da6aa12f6"
+import os, requests
 
 headers = {
-    'Content-Type': 'application/json',
-    'Authorization': f'Bearer {API_KEY}'
+    "Content-Type": "application/json",
+    "Authorization": f"Bearer {os.environ['API_KEY']}",
 }
-
-data = {
-    "title": "Sua Issue Aqui",
-    "description": "Descrição da issue",
-    "workspaceId": "cmge96f200001wa7ouziczg0w",
-    "projectId": "cmgfjhyh50005waqglsynsz1d",
-    "milestoneId": "cmggc1uqk0001wakb3no9xhb7",
-    "statusId": "cmge9i3pv0007walqv7is970v",
-    "assigneeId": "cmge96f1y0000wa7olxm69prv",
-    "priority": "HIGH",
-    "type": "FEATURE",
-    "labelIds": ["cmgf23zl50009watfyq73olpr"]
-}
-
-response = requests.post('http://localhost:3000/api/issues', headers=headers, json=data)
-issue = response.json()
-print('Issue criada:', issue)
+issues = requests.get(
+    "https://projects.wbdigitalsolutions.com/api/issues", headers=headers
+).json()
 ```
 
 ---
 
-## 🎯 Métodos de Autenticação Suportados
+## Endpoints (todos aceitam Bearer)
 
-A API agora aceita **duas formas** de autenticação:
+| Recurso | Endpoints |
+|---|---|
+| Issues | `GET/POST /api/issues`, `GET/PATCH/DELETE /api/issues/[id]`, `POST /api/issues/bulk`, `POST /api/issues/reorder`, `GET /api/issues/[id]/time` |
+| Projects | `GET/POST /api/projects`, `GET/PATCH/DELETE /api/projects/[id]`, `POST /api/projects/reorder` |
+| Workspaces | `GET/POST /api/workspaces`, `GET/PATCH/DELETE /api/workspaces/[id]` |
+| Milestones | `GET/POST /api/milestones`, `GET/PATCH/DELETE /api/milestones/[id]`, `POST /api/milestones/reorder` |
+| Labels / Features | `GET/POST /api/labels`, `GET/POST /api/features` |
+| Time tracking | `GET/POST /api/time-entries`, `PATCH/DELETE /api/time-entries/[id]`, `GET /api/time-tracking` |
 
-### 1. API Key (Recomendado para integrações)
-```
-Authorization: Bearer <api-key>
-```
+Públicos (sem auth): `GET /api/health` e `OPTIONS` (preflight CORS).
+`/api/auth/*` é do NextAuth.
 
-### 2. Session Cookie (Para navegador)
-```
-Cookie: next-auth.session-token=<token>
-```
+Mudar status de issue via `PATCH /api/issues/[id]` dispara os side effects de
+SLA automaticamente (`firstResponseAt`, `resolvedAt`/`resolutionTimeMinutes`,
+`reopenCount`).
 
 ---
 
-## 🔧 Configuração (para outros ambientes)
+## Comportamento de autenticação
 
-### Variáveis de Ambiente (.env)
+1. Se o header `Authorization: Bearer ...` está presente, **só** a API key é
+   avaliada (não há fallback para sessão). Key errada → `401 {"error":"Invalid API key"}`.
+2. Sem o header, vale o cookie de sessão do NextAuth. Sem sessão →
+   `401 {"error":"Unauthorized - Please provide valid session cookie or API key in Authorization header"}`.
+3. Todas as respostas 401 incluem headers CORS.
+4. **Não parseie o corpo do 401** — o contrato é o status code; a mensagem pode
+   mudar.
+5. A key opera como o usuário de `API_KEY_USER_ID` — as checagens de membership
+   de workspace valem para esse usuário. **`API_KEY_USER_ID` é obrigatório**:
+   sem ele configurado, a key é rejeitada (fail-closed).
+
+---
+
+## Configuração (.env do servidor)
 
 ```env
-# API Key para autenticação externa
-API_KEY="7ee69b9c6c4e74c7988b5ef7440dc3a78485b077c59eeb74f9e0485da6aa12f6"
-API_KEY_USER_ID="cmge96f1y0000wa7olxm69prv"
+API_KEY="<hex de 64 chars — gere com o comando abaixo>"
+API_KEY_USER_ID="<id do usuário que a key representa>"
 ```
 
-### Gerar Nova API Key
+Gerar nova key:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
----
+A validação usa hash SHA-256 com comparação em tempo constante. A trava de
+arquitetura (`__tests__/unit/api-architecture.test.ts`) garante que toda rota
+nova use o wrapper `withAuth` — auth inline de sessão quebra o CI.
 
-## 📋 IDs de Referência
-
-### Workspace
-- ID: `cmge96f200001wa7ouziczg0w`
-- Nome: WB Digital Solutions
-
-### Projeto
-- ID: `cmgfjhyh50005waqglsynsz1d`
-- Nome: Features Zoom link unico...
-- URL: http://localhost:3000/projects/cmgfjhyh50005waqglsynsz1d
-
-### Milestones
-- Sprint 1: `cmggc1uqk0001wakb3no9xhb7`
-- Sprint 2: `cmggc2ctf0003wakbo6jvl6lm`
-
-### Statuses
-- Backlog: `cmge9i3pt0005walququqw1rx`
-- Todo: `cmge9i3pv0007walqv7is970v`
-- In Progress: `cmge9i3pv0009walqbwhmule6`
-- Done: `cmge9i3pw000bwalqn1glwrn4`
-- Canceled: `cmge9i3pw000dwalqi5qgpguo`
-
-### Labels
-- Backend: `cmgf23zl50009watfyq73olpr`
-- Frontend: `cmgf21xvb0003watfaqi1ynw7`
-- bug: `cmgfcyxlz0003waknba486r40`
-- geral: `cmggcqqz30005wakbtez2z061`
-
-### Usuário
-- Bruno Vieira: `cmge96f1y0000wa7olxm69prv`
-
----
-
-## ✅ Teste Rápido
-
-```bash
-# Criar issue de teste
-curl -X POST http://localhost:3000/api/issues \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer 7ee69b9c6c4e74c7988b5ef7440dc3a78485b077c59eeb74f9e0485da6aa12f6" \
-  -d '{"title":"Test","workspaceId":"cmge96f200001wa7ouziczg0w","statusId":"cmge9i3pv0007walqv7is970v"}'
-```
-
----
-
-## 🔒 Segurança
-
-- A API Key é armazenada como hash SHA-256 em memória
-- Nunca exponha a API Key em repositórios públicos
-- Use HTTPS em produção
-- Considere rotacionar a chave periodicamente
-
----
-
-## 📚 Referências
-
-- Código implementado: `src/lib/api-auth.ts`
-- Documentação completa: `scripts/API-INTEGRATION.md`
-- CLAUDE.md: Guia do projeto
+> Nota histórica: o endpoint `/api/generate-token` e o fluxo de token de sessão
+> de 30 dias foram **removidos** — com a API key valendo para toda a API, não
+> há mais razão para gerar cookies de sessão fora do navegador.

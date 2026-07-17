@@ -9,7 +9,7 @@ POST http://localhost:3000/api/issues/bulk
 ## 🔑 Autenticação
 
 ```
-Authorization: Bearer 7ee69b9c6c4e74c7988b5ef7440dc3a78485b077c59eeb74f9e0485da6aa12f6
+Authorization: Bearer $API_KEY
 ```
 
 ## ⚡ Exemplo Rápido (cURL)
@@ -17,14 +17,14 @@ Authorization: Bearer 7ee69b9c6c4e74c7988b5ef7440dc3a78485b077c59eeb74f9e0485da6
 ```bash
 curl -X POST http://localhost:3000/api/issues/bulk \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer 7ee69b9c6c4e74c7988b5ef7440dc3a78485b077c59eeb74f9e0485da6aa12f6" \
+  -H "Authorization: Bearer $API_KEY" \
   -d @scripts/bulk-issues-example.json
 ```
 
 ## 💡 Exemplo JavaScript
 
 ```javascript
-const API_KEY = "7ee69b9c6c4e74c7988b5ef7440dc3a78485b077c59eeb74f9e0485da6aa12f6";
+const API_KEY = "$API_KEY";
 
 const response = await fetch('http://localhost:3000/api/issues/bulk', {
   method: 'POST',

@@ -35,8 +35,9 @@ pnpm dev                      # http://localhost:3000
 ### Testes e qualidade
 
 ```bash
-pnpm test -- --run    # todos os testes (uma vez)
+pnpm test -- --run    # todos os testes unit (uma vez)
 pnpm test:unit        # só unit tests
+pnpm test:e2e         # e2e: servidor standalone real + SQLite real, sem mocks
 pnpm test:coverage    # com cobertura
 pnpm lint             # eslint
 pnpm build            # build de produção

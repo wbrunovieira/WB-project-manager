@@ -33,9 +33,15 @@ pnpm test:coverage                                 # Run with coverage report
 pnpm test:ui                                       # Visual test UI in browser
 ```
 
+```bash
+pnpm test:e2e                                      # E2E: real standalone server + real SQLite (no mocks)
+```
+
 **Test structure:**
 - `__tests__/unit/` — unit tests for `src/lib/` (business-hours, auth/api-auth, validation, reorder)
-- `__tests__/integration/` and `__tests__/api/` — planned, not yet implemented
+- `__tests__/unit/api/` — unit tests for every API route (Bearer + session paths, SLA side effects)
+- `__tests__/unit/api-architecture.test.ts` — architecture lock: every business route must export its HTTP methods wrapped in `withAuth`; importing `@/lib/auth` in a route fails the suite
+- `__tests__/e2e/` — separate config (`vitest.e2e.config.ts`); globalSetup builds the app, runs `prisma migrate deploy` on a temp SQLite db, seeds it, and boots `.next/standalone/server.js` on port 3100
 
 **Test setup** (`vitest.setup.ts`):
 - Auto-mocks `@/lib/auth` (NextAuth) and `@/lib/prisma` (Prisma client with all models)
@@ -147,14 +153,31 @@ app/layout.tsx (Root: Toaster, global styles)
 
 ### API Route Pattern
 
+Every business route MUST export its HTTP methods wrapped in `withAuth` (accepts
+API key Bearer AND session cookie; 401s carry CORS headers). Inline session auth
+(`await auth()` / importing `@/lib/auth`) in a route fails the architecture test.
+
 ```typescript
 import { withAuth, withCors } from "@/lib/api-auth";
 
+// Static route
 export const GET = withAuth(async (req, userId) => {
   const response = NextResponse.json({ data });
   return withCors(response);
 });
+
+// Dynamic route — type the ctx generic; params come from ctx
+export const PATCH = withAuth<{ params: Promise<{ id: string }> }>(
+  async (req, userId, ctx) => {
+    const { id } = await ctx.params;
+    // check workspace membership with userId before touching data
+    return withCors(NextResponse.json({ id }));
+  }
+);
 ```
+
+API key requests act as the user in `API_KEY_USER_ID` (required env — the key is
+rejected without it). Public by design: `GET /api/health`, `OPTIONS`, `/api/auth/*`.
 
 ### Issue Status Side Effects
 
@@ -184,9 +207,10 @@ import type { Issue } from "@/generated/prisma";
 
 ## External Integration
 
-- `scripts/API-KEY-AUTH.md` — API key auth details
+- `scripts/API-KEY-AUTH.md` — API key auth details (endpoints, behavior, config)
 - `scripts/BULK-CREATE-API.md` — Bulk issue creation (1–100 issues per request)
-- `POST /api/issues` and `POST /api/issues/bulk` support both Bearer token and session cookie auth
+- ALL business API routes accept both Bearer token (API key) and session cookie auth
+- Never commit API keys or tokens in docs/scripts — use `$API_KEY` from the environment
 
 ## Deployment
 

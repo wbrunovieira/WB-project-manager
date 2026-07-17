@@ -5,7 +5,7 @@ echo ""
 
 curl -X POST 'http://localhost:3000/api/issues' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer 7ee69b9c6c4e74c7988b5ef7440dc3a78485b077c59eeb74f9e0485da6aa12f6' \
+  -H 'Authorization: Bearer $API_KEY' \
   -d '{
     "title": "Fase 1: Value Objects - Sistema de Tokens Únicos Zoom",
     "description": "## 🎯 Objetivo\n\nImplementar os Value Objects fundamentais para o sistema de tokens únicos de entrada em sessões Zoom.",
