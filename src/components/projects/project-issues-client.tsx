@@ -6,6 +6,7 @@ import { TimerButton } from "@/components/time-tracker/timer-button";
 import { IssueTimeDisplay } from "@/components/time-tracker/issue-time-display";
 import { SLAIndicator } from "@/components/issues/sla-indicator";
 import { useTimeTracker } from "@/contexts/time-tracker-context";
+import { issueMatchesQuery } from "@/lib/issue-search";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { CreateIssueModal } from "@/components/issues/create-issue-modal";
@@ -1035,19 +1036,12 @@ export function ProjectIssuesClient({
 
     // Apply search filter
     if (searchQuery.trim()) {
-      const searchLower = searchQuery.toLowerCase().trim();
       const searchFiltered: Record<string, Issue[]> = {};
 
       for (const [statusType, issues] of Object.entries(filtered)) {
-        searchFiltered[statusType] = issues.filter((issue: Issue) => {
-          const titleMatch = issue.title?.toLowerCase().includes(searchLower);
-          const descriptionMatch = issue.description?.toLowerCase().includes(searchLower);
-          const identifierMatch = issue.identifier?.toString().includes(searchLower);
-          const assigneeMatch = issue.assignee?.name?.toLowerCase().includes(searchLower);
-          const assigneeEmailMatch = issue.assignee?.email?.toLowerCase().includes(searchLower);
-
-          return titleMatch || descriptionMatch || identifierMatch || assigneeMatch || assigneeEmailMatch;
-        });
+        searchFiltered[statusType] = issues.filter((issue: Issue) =>
+          issueMatchesQuery(issue, searchQuery)
+        );
       }
       filtered = searchFiltered;
     }
