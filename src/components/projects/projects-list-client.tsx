@@ -206,6 +206,16 @@ function SortableProjectCard({ project, onEdit, onDelete }: SortableProjectCardP
 
 export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClientProps) {
   const [workspaces, setWorkspaces] = useState(workspacesWithProjects);
+  // The server prop is the source of truth; local state exists only to hold the optimistic
+  // order while dragging. Re-sync whenever a new RSC payload arrives (router.refresh() after
+  // create/edit/delete), otherwise the list keeps the snapshot taken on mount and a new
+  // project only shows up after a full page reload.
+  const [syncedProjects, setSyncedProjects] = useState(workspacesWithProjects);
+  if (syncedProjects !== workspacesWithProjects) {
+    setSyncedProjects(workspacesWithProjects);
+    setWorkspaces(workspacesWithProjects);
+  }
+
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
 
