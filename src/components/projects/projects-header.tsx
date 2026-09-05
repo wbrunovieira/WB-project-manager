@@ -7,28 +7,24 @@ import { CreateProjectModal } from "./create-project-modal";
 
 interface ProjectsHeaderProps {
   workspaces: Array<{ id: string; name: string }>;
-  projectCount: number;
 }
 
-export function ProjectsHeader({ workspaces, projectCount }: ProjectsHeaderProps) {
+export function ProjectsHeader({ workspaces }: ProjectsHeaderProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   return (
     <>
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-100">Projects</h1>
-          <p className="mt-2 text-gray-400">
-            {projectCount} project{projectCount !== 1 ? "s" : ""}
-          </p>
-        </div>
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">
+          Projects
+        </h1>
 
         <Button
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-[#FFB947] hover:bg-[#FFB947]/90 text-gray-900 font-semibold"
+          className="h-9 bg-accent font-medium text-accent-ink hover:bg-accent-hover"
         >
-          <Plus className="mr-2 h-4 w-4" />
-          New Project
+          <Plus className="mr-1.5 h-4 w-4" />
+          New project
         </Button>
       </div>
 

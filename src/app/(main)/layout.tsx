@@ -10,7 +10,7 @@ export default function MainLayout({
 }) {
   return (
     <TimeTrackerProvider>
-      <div className="flex h-screen overflow-hidden bg-white">
+      <div className="flex h-screen overflow-hidden bg-canvas">
         <Sidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header />

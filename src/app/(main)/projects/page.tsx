@@ -61,15 +61,10 @@ export default async function ProjectsPage() {
     name: wm.workspace.name,
   }));
 
-  const totalProjects = workspacesWithProjects.reduce(
-    (sum, ws) => sum + ws.projects.length,
-    0
-  );
-
   return (
-    <div className="min-h-screen bg-[#350459]">
-      <div className="p-8">
-        <ProjectsHeader workspaces={workspaces} projectCount={totalProjects} />
+    <div className="min-h-screen bg-canvas">
+      <div className="mx-auto max-w-7xl px-6 py-8">
+        <ProjectsHeader workspaces={workspaces} />
         <ProjectsListClient workspacesWithProjects={workspacesWithProjects} />
       </div>
     </div>

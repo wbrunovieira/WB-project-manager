@@ -3,8 +3,6 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  CalendarDays,
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Edit,
@@ -24,21 +22,21 @@ import {
 } from "@dnd-kit/core";
 import {
   arrayMove,
+  rectSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
-  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DateDisplay } from "@/components/ui/date-display";
 import {
   clampPage,
   pageCount,
   pageSlice,
   projectMatchesQuery,
 } from "@/lib/project-list";
+import { ProjectTargetDate } from "./project-target-date";
 import { EditProjectModal } from "./edit-project-modal";
 import { DeleteProjectDialog } from "./delete-project-dialog";
 
@@ -112,122 +110,132 @@ function SortableProjectCard({
       ? Math.round((completedIssues / totalIssues) * 100)
       : 0;
 
+  const done = totalIssues > 0 && completedIssues === totalIssues;
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="group relative rounded-lg border border-[#792990]/40 bg-gradient-to-br from-[#792990]/15 via-[#792990]/10 to-[#792990]/5 p-6 transition-all hover:border-[#792990]/60 hover:from-[#792990]/20 hover:via-[#792990]/15 hover:to-[#792990]/10 hover:shadow-lg hover:shadow-[#792990]/10"
+      className="group relative flex flex-col rounded-xl border border-line bg-surface-raised p-4 transition-colors hover:border-line-strong hover:bg-surface-hover"
     >
-      {/* Drag Handle */}
-      {draggable && (
-        <div
-          {...attributes}
-          {...listeners}
-          className="absolute left-2 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity z-10"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <GripVertical className="h-5 w-5 text-gray-400 hover:text-[#FFB947]" />
-        </div>
-      )}
-
-      <Link href={`/projects/${project.id}`} className="block pl-6">
-        <div className="mb-4">
-          <div className="flex items-start justify-between">
-            <div className="flex-1 pr-20">
-              <h3 className="text-lg font-semibold text-gray-100 group-hover:text-[#FFB947] transition-colors">
-                {project.name}
-              </h3>
-              {project.description && (
-                <p className="mt-1 text-sm text-gray-400">
-                  {project.description}
-                </p>
-              )}
-            </div>
-            <span
-              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium mt-6 border ${
-                project.status === "IN_PROGRESS"
-                  ? "bg-[#792990]/20 text-[#FFB947] border-[#792990]/40"
-                  : project.status === "COMPLETED"
-                  ? "bg-green-500/10 text-green-400 border-green-500/20"
-                  : project.status === "PLANNED"
-                  ? "bg-gray-500/10 text-gray-400 border-gray-500/20"
-                  : "bg-red-500/10 text-red-400 border-red-500/20"
-              }`}
-            >
-              {project.status.replace("_", " ")}
-            </span>
+      {/* Barra de ações — some até o hover/foco para não competir com o conteúdo */}
+      <div className="absolute right-2 top-2 z-10 flex items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+        {draggable && (
+          <div
+            {...attributes}
+            {...listeners}
+            aria-label={`Reorder ${project.name}`}
+            className="cursor-grab rounded-md p-1.5 text-ink-muted hover:bg-brand/40 hover:text-ink active:cursor-grabbing"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="h-4 w-4" />
           </div>
-        </div>
-
-        <div className="space-y-3">
-          {/* Progress Bar */}
-          <div>
-            <div className="mb-1 flex items-center justify-between text-xs">
-              <span className="text-gray-400">
-                {completedIssues} of {totalIssues} completed
-              </span>
-              <span className="font-medium text-gray-300">
-                {progress}%
-              </span>
-            </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-[#792990]/20">
-              <div
-                className="h-full bg-[#792990] transition-all"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Dates */}
-          <div className="flex items-center gap-4 text-xs text-gray-400">
-            {project.startDate && (
-              <div className="flex items-center gap-1">
-                <CalendarDays className="h-3.5 w-3.5" />
-                <span>
-                  Start: <DateDisplay date={project.startDate} />
-                </span>
-              </div>
-            )}
-            {project.targetDate && (
-              <div className="flex items-center gap-1">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                <span>
-                  Target: <DateDisplay date={project.targetDate} />
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      </Link>
-
-      {/* Action Buttons */}
-      <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        )}
         <Button
           variant="ghost"
           size="icon"
+          aria-label={`Edit ${project.name}`}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             onEdit(project);
           }}
-          className="h-8 w-8 bg-[#350459]/90 hover:bg-[#792990]/50 text-gray-300 hover:text-gray-100 border border-[#792990]/30"
+          className="h-7 w-7 text-ink-muted hover:bg-brand/40 hover:text-ink"
         >
-          <Edit className="h-4 w-4" />
+          <Edit className="h-3.5 w-3.5" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
+          aria-label={`Delete ${project.name}`}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             onDelete(project);
           }}
-          className="h-8 w-8 bg-[#350459]/90 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-[#792990]/30 hover:border-red-500/30"
+          className="h-7 w-7 text-ink-muted hover:bg-danger/20 hover:text-danger"
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </div>
+
+      <Link
+        href={`/projects/${project.id}`}
+        className="flex flex-1 flex-col gap-3 rounded-lg"
+      >
+        <div className="flex items-start gap-2 pr-16">
+          <h3 className="line-clamp-2 flex-1 font-semibold leading-snug text-ink transition-colors group-hover:text-accent">
+            {project.name}
+          </h3>
+          <StatusBadge status={project.status} />
+        </div>
+
+        {project.description && (
+          <p className="line-clamp-2 -mt-1 text-sm text-ink-muted">
+            {project.description}
+          </p>
+        )}
+
+        {/* Progresso: o número é o protagonista e usa numerais tabulares, então
+            os percentuais se alinham em coluna e o grid inteiro fica comparável
+            de relance. A barra é só apoio. */}
+        <div className="mt-auto pt-1">
+          <div className="flex items-baseline justify-between gap-2">
+            <span
+              className={`tabular text-2xl font-semibold leading-none ${
+                done ? "text-ok" : "text-ink"
+              }`}
+            >
+              {progress}
+              <span className="text-base text-ink-muted">%</span>
+            </span>
+            <span className="tabular text-xs text-ink-muted">
+              {completedIssues}/{totalIssues} issues
+            </span>
+          </div>
+          <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-brand-dim">
+            <div
+              className={`h-full rounded-full transition-[width] ${
+                done ? "bg-ok" : "bg-brand-strong"
+              }`}
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        <ProjectTargetDate
+          startDate={project.startDate}
+          targetDate={project.targetDate}
+          status={project.status}
+        />
+      </Link>
     </div>
+  );
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  IN_PROGRESS: "In progress",
+  COMPLETED: "Completed",
+  PLANNED: "Planned",
+  CANCELED: "Canceled",
+};
+
+function StatusBadge({ status }: { status: string }) {
+  const tone =
+    status === "IN_PROGRESS"
+      ? "border-accent/30 bg-accent/10 text-accent"
+      : status === "COMPLETED"
+      ? "border-ok/30 bg-ok/10 text-ok"
+      : status === "PLANNED"
+      ? "border-line-strong bg-brand/20 text-ink-soft"
+      : "border-danger/30 bg-danger/10 text-danger";
+
+  return (
+    <span
+      className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium leading-tight ${tone}`}
+    >
+      {STATUS_LABELS[status] ?? status}
+    </span>
   );
 }
 
@@ -347,8 +355,8 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
 
   if (totalProjects === 0) {
     return (
-      <div className="rounded-lg border border-[#792990]/20 bg-[#792990]/5 p-12 text-center">
-        <p className="text-gray-300">No projects yet</p>
+      <div className="rounded-xl border border-line bg-surface-raised p-12 text-center">
+        <p className="text-ink-soft">No projects yet. Create your first one to get started.</p>
       </div>
     );
   }
@@ -356,29 +364,29 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <div className="relative min-w-[240px] flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <div className="relative min-w-[240px] max-w-md flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
           <Input
             type="search"
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Search projects by name..."
             aria-label="Search projects by name"
-            className="border-[#792990]/30 bg-[#792990]/10 pl-9 pr-9 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
+            className="h-9 rounded-lg border-line bg-surface-raised pl-9 pr-9 text-ink placeholder:text-ink-muted focus:border-accent focus:ring-0"
           />
           {isSearching && (
             <button
               type="button"
               onClick={() => handleSearchChange("")}
               aria-label="Clear search"
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-gray-400 transition-colors hover:bg-[#792990]/30 hover:text-gray-100"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-ink-muted transition-colors hover:bg-brand/40 hover:text-ink"
             >
               <X className="h-4 w-4" />
             </button>
           )}
         </div>
 
-        <p className="text-sm text-gray-400" aria-live="polite">
+        <p className="tabular text-sm text-ink-muted" aria-live="polite">
           {isSearching
             ? `${matches.length} of ${totalProjects} project${
                 totalProjects !== 1 ? "s" : ""
@@ -388,14 +396,14 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
       </div>
 
       {matches.length === 0 ? (
-        <div className="rounded-lg border border-[#792990]/20 bg-[#792990]/5 p-12 text-center">
-          <p className="text-gray-300">
+        <div className="rounded-xl border border-line bg-surface-raised p-12 text-center">
+          <p className="text-ink-soft">
             No projects match &ldquo;{search.trim()}&rdquo;
           </p>
           <Button
             variant="outline"
             onClick={() => handleSearchChange("")}
-            className="mt-4 border-[#792990]/30 bg-[#792990]/10 text-gray-300 hover:bg-[#792990]/20"
+            className="mt-4 border-line bg-surface-hover text-ink-soft hover:bg-brand/40 hover:text-ink"
           >
             Show all projects
           </Button>
@@ -404,16 +412,17 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
         <div className="space-y-8">
           {visibleGroups.map(({ workspace, projects }) => (
             <div key={workspace.id}>
-              <div className="mb-4 flex items-center gap-3">
-                <div className="h-px flex-1 bg-gradient-to-r from-[#792990] to-transparent"></div>
-                <span className="text-2xl">{workspace.icon || "🏢"}</span>
-                <h2 className="text-xl font-semibold text-gray-100">
+              {/* Cabeçalho de seção alinhado à esquerda: o nome do workspace é a
+                  âncora da varredura, não um ornamento centralizado. */}
+              <div className="mb-3 flex items-center gap-2">
+                <span className="text-base">{workspace.icon || "🏢"}</span>
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-soft">
                   {workspace.name}
                 </h2>
-                <span className="px-2 py-0.5 rounded bg-[#792990]/20 text-gray-400 text-xs font-medium">
+                <span className="tabular rounded bg-brand/25 px-1.5 py-0.5 text-[11px] font-medium text-ink-muted">
                   {projects.length}
                 </span>
-                <div className="h-px flex-1 bg-gradient-to-l from-[#792990] to-transparent"></div>
+                <div className="ml-1 h-px flex-1 bg-line" />
               </div>
 
               <DndContext
@@ -423,9 +432,9 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
               >
                 <SortableContext
                   items={projects.map((p) => p.id)}
-                  strategy={verticalListSortingStrategy}
+                  strategy={rectSortingStrategy}
                 >
-                  <div className="grid gap-4">
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                     {projects.map((project) => (
                       <SortableProjectCard
                         key={project.id}
@@ -452,13 +461,13 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
             variant="outline"
             onClick={() => setPage(currentPage - 1)}
             disabled={currentPage === 1}
-            className="border-[#792990]/30 bg-[#792990]/10 text-gray-300 hover:bg-[#792990]/20 disabled:opacity-40"
+            className="h-9 border-line bg-surface-raised text-ink-soft hover:bg-surface-hover hover:text-ink disabled:opacity-40"
           >
             <ChevronLeft className="mr-1 h-4 w-4" />
             Previous
           </Button>
 
-          <span className="text-sm text-gray-400" aria-live="polite">
+          <span className="tabular text-sm text-ink-muted" aria-live="polite">
             Page {currentPage} of {totalPages}
           </span>
 
@@ -466,7 +475,7 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
             variant="outline"
             onClick={() => setPage(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="border-[#792990]/30 bg-[#792990]/10 text-gray-300 hover:bg-[#792990]/20 disabled:opacity-40"
+            className="h-9 border-line bg-surface-raised text-ink-soft hover:bg-surface-hover hover:text-ink disabled:opacity-40"
           >
             Next
             <ChevronRight className="ml-1 h-4 w-4" />
