@@ -10,7 +10,7 @@ export default async function TimeTrackingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#350459]">
+    <div className="min-h-screen bg-surface">
       <div className="flex-1 space-y-6 p-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-100">Time Tracking</h1>

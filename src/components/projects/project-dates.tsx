@@ -17,7 +17,7 @@ export function ProjectDates({ startDate, targetDate }: ProjectDatesProps) {
     <div className="mt-4 flex items-center gap-6 text-sm text-gray-300">
       {startDate && (
         <div className="flex items-center gap-2">
-          <CalendarDays className="h-4 w-4 text-[#FFB947]" />
+          <CalendarDays className="h-4 w-4 text-accent" />
           <span>
             Start: <DateDisplay date={startDate} />
           </span>
@@ -25,7 +25,7 @@ export function ProjectDates({ startDate, targetDate }: ProjectDatesProps) {
       )}
       {targetDate && (
         <div className="flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4 text-[#FFB947]" />
+          <CheckCircle2 className="h-4 w-4 text-accent" />
           <span>
             Target: <DateDisplay date={targetDate} />
           </span>

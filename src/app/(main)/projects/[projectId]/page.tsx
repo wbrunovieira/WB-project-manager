@@ -178,7 +178,7 @@ export default async function ProjectDetailPage({
   });
 
   return (
-    <div className="min-h-screen bg-[#350459] p-8">
+    <div className="min-h-screen bg-surface p-8">
       {/* Header */}
       <div className="mb-12">
         <ProjectDetailHeader
@@ -200,9 +200,9 @@ export default async function ProjectDetailPage({
             </span>
             <span className="font-medium text-gray-100">{progress}%</span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-[#792990]/20">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-brand/20">
             <div
-              className="h-full bg-[#792990] transition-all"
+              className="h-full bg-brand transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -218,7 +218,7 @@ export default async function ProjectDetailPage({
         <div className="mt-8 space-y-6">
           {/* Features Statistics */}
           {featureStats.size > 0 && (
-            <div className="rounded-lg border border-[#792990]/30 bg-gradient-to-r from-[#792990]/5 to-transparent p-6">
+            <div className="rounded-lg border border-brand/30 bg-gradient-to-r from-brand/5 to-transparent p-6">
               <h3 className="text-lg font-semibold text-gray-100 mb-4">Issues por Feature</h3>
               <div className="space-y-4">
                 {Array.from(featureStats.entries()).map(([featureId, feature]) => (
@@ -226,7 +226,7 @@ export default async function ProjectDetailPage({
                     <div className="flex items-center gap-3">
                       <div
                         className="h-3 w-1 rounded"
-                        style={{ backgroundColor: feature.color || "#792990" }}
+                        style={{ backgroundColor: feature.color || "var(--color-brand)" }}
                       />
                       <span className="font-medium text-gray-200">{feature.name}</span>
                       <span className="text-sm text-gray-400">
@@ -262,7 +262,7 @@ export default async function ProjectDetailPage({
 
           {/* Labels Statistics */}
           {labelStats.size > 0 && (
-            <div className="rounded-lg border border-[#792990]/30 bg-gradient-to-r from-[#792990]/5 to-transparent p-6">
+            <div className="rounded-lg border border-brand/30 bg-gradient-to-r from-brand/5 to-transparent p-6">
               <h3 className="text-lg font-semibold text-gray-100 mb-4">Issues por Label (Geral)</h3>
               <div className="flex flex-wrap gap-2">
                 {Array.from(labelStats.entries()).map(([labelId, label]) => (

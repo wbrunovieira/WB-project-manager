@@ -39,7 +39,7 @@ export function WorkspacesClient({ workspaces }: WorkspacesClientProps) {
         </div>
         <Button
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-[#FFB947] hover:bg-[#FFB947]/90 text-gray-900 font-semibold"
+          className="bg-accent hover:bg-accent/90 text-gray-900 font-semibold"
         >
           <Plus className="mr-2 h-4 w-4" />
           New Workspace
@@ -50,11 +50,11 @@ export function WorkspacesClient({ workspaces }: WorkspacesClientProps) {
         {workspaces.map((workspace) => (
           <div
             key={workspace.id}
-            className="group relative overflow-hidden rounded-lg border border-[#792990]/20 bg-gradient-to-br from-[#792990]/5 to-transparent p-6 transition-all hover:border-[#792990]/40 hover:from-[#792990]/10 hover:to-[#792990]/5"
+            className="group relative overflow-hidden rounded-lg border border-brand/20 bg-gradient-to-br from-brand/5 to-transparent p-6 transition-all hover:border-brand/40 hover:from-brand/10 hover:to-brand/5"
           >
             <div className="mb-4 flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-[#792990] to-[#4a0672] text-2xl ring-2 ring-[#792990]/30">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-brand to-surface-elevated text-2xl ring-2 ring-brand/30">
                   {workspace.icon || "🏢"}
                 </div>
                 <div>
@@ -68,7 +68,7 @@ export function WorkspacesClient({ workspaces }: WorkspacesClientProps) {
                   variant="ghost"
                   size="icon"
                   onClick={() => setEditingWorkspace(workspace)}
-                  className="h-8 w-8 bg-[#350459]/90 hover:bg-[#792990]/50 text-gray-300 hover:text-gray-100 border border-[#792990]/30"
+                  className="h-8 w-8 bg-surface/90 hover:bg-brand/50 text-gray-300 hover:text-gray-100 border border-brand/30"
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
@@ -77,7 +77,7 @@ export function WorkspacesClient({ workspaces }: WorkspacesClientProps) {
                     variant="ghost"
                     size="icon"
                     onClick={() => setDeletingWorkspace(workspace)}
-                    className="h-8 w-8 bg-[#350459]/90 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-[#792990]/30 hover:border-red-500/30"
+                    className="h-8 w-8 bg-surface/90 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-brand/30 hover:border-red-500/30"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -97,7 +97,7 @@ export function WorkspacesClient({ workspaces }: WorkspacesClientProps) {
             </div>
 
             <div className="mt-4">
-              <span className="inline-flex items-center rounded-full bg-[#FFB947]/20 px-2 py-1 text-xs font-medium text-[#FFB947] border border-[#FFB947]/30">
+              <span className="inline-flex items-center rounded-full bg-accent/20 px-2 py-1 text-xs font-medium text-accent border border-accent/30">
                 {workspace.role}
               </span>
             </div>
@@ -105,12 +105,12 @@ export function WorkspacesClient({ workspaces }: WorkspacesClientProps) {
         ))}
 
         {workspaces.length === 0 && (
-          <div className="col-span-full rounded-lg border border-[#792990]/20 bg-[#792990]/5 p-12 text-center">
+          <div className="col-span-full rounded-lg border border-brand/20 bg-brand/5 p-12 text-center">
             <p className="text-gray-300">No workspaces found</p>
             <Button
               onClick={() => setIsCreateModalOpen(true)}
               variant="outline"
-              className="mt-4 bg-[#FFB947] hover:bg-[#FFB947]/90 text-gray-900 font-semibold border-none"
+              className="mt-4 bg-accent hover:bg-accent/90 text-gray-900 font-semibold border-none"
             >
               <Plus className="mr-2 h-4 w-4" />
               Create First Workspace

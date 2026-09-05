@@ -46,12 +46,12 @@ export function ProjectDetailHeader({ project }: ProjectDetailHeaderProps) {
           <span
             className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
               project.status === "IN_PROGRESS"
-                ? "bg-[#792990]/20 text-[#FFB947] border border-[#792990]/40"
+                ? "bg-brand/20 text-accent border border-brand/40"
                 : project.status === "COMPLETED"
-                ? "bg-[#792990]/20 text-green-400 border border-[#792990]/40"
+                ? "bg-brand/20 text-green-400 border border-brand/40"
                 : project.status === "PLANNED"
-                ? "bg-[#792990]/20 text-gray-300 border border-[#792990]/40"
-                : "bg-[#792990]/20 text-red-400 border border-[#792990]/40"
+                ? "bg-brand/20 text-gray-300 border border-brand/40"
+                : "bg-brand/20 text-red-400 border border-brand/40"
             }`}
           >
             {project.status.replace("_", " ")}
@@ -61,7 +61,7 @@ export function ProjectDetailHeader({ project }: ProjectDetailHeaderProps) {
             variant="outline"
             size="icon"
             onClick={() => setIsEditModalOpen(true)}
-            className="border-[#792990]/40 bg-[#792990]/5 text-gray-100 hover:bg-[#792990]/10 hover:border-[#792990]/60"
+            className="border-brand/40 bg-brand/5 text-gray-100 hover:bg-brand/10 hover:border-brand/60"
           >
             <Edit className="h-4 w-4" />
           </Button>
@@ -70,7 +70,7 @@ export function ProjectDetailHeader({ project }: ProjectDetailHeaderProps) {
             variant="outline"
             size="icon"
             onClick={() => setIsDeleteDialogOpen(true)}
-            className="border-[#792990]/40 bg-[#792990]/5 text-red-400 hover:bg-[#792990]/10 hover:border-[#792990]/60 hover:text-red-300"
+            className="border-brand/40 bg-brand/5 text-red-400 hover:bg-brand/10 hover:border-brand/60 hover:text-red-300"
           >
             <Trash2 className="h-4 w-4" />
           </Button>

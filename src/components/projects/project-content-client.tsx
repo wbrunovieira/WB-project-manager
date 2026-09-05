@@ -161,7 +161,7 @@ export function ProjectContentClient({
 
       {/* Divider */}
       <div className="mb-12">
-        <div className="h-px bg-gradient-to-r from-transparent via-[#792990]/30 to-transparent" />
+        <div className="h-px bg-gradient-to-r from-transparent via-brand/30 to-transparent" />
       </div>
 
       {/* Issues Section */}

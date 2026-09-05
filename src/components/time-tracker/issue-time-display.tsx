@@ -61,7 +61,7 @@ export function IssueTimeDisplay({ issueId }: IssueTimeDisplayProps) {
   }
 
   return (
-    <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#792990]/20 border border-[#792990]/30">
+    <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-brand/20 border border-brand/30">
       <Clock className="h-3.5 w-3.5 text-gray-400" />
       <span className="font-medium text-xs text-gray-300">{formatTime(timeData.totalSeconds)}</span>
       {timeData.activeEntries > 0 && (

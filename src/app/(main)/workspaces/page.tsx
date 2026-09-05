@@ -40,7 +40,7 @@ export default async function WorkspacesPage() {
   }));
 
   return (
-    <div className="min-h-screen bg-[#350459]">
+    <div className="min-h-screen bg-surface">
       <div className="p-8">
         <WorkspacesClient workspaces={workspaces} />
       </div>

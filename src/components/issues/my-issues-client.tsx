@@ -122,7 +122,7 @@ function SortableIssueRow({
   };
 
   return (
-    <tr ref={setNodeRef} style={style} className="group hover:bg-gradient-to-r hover:from-[#792990]/10 hover:to-transparent transition-all">
+    <tr ref={setNodeRef} style={style} className="group hover:bg-gradient-to-r hover:from-brand/10 hover:to-transparent transition-all">
       <td className="px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 flex-1">
@@ -133,7 +133,7 @@ function SortableIssueRow({
               <span className="text-sm font-mono text-gray-400 shrink-0">
                 #{issue.identifier}
               </span>
-              <span className="text-sm font-medium text-gray-100 hover:text-[#FFB947] transition-colors truncate">
+              <span className="text-sm font-medium text-gray-100 hover:text-accent transition-colors truncate">
                 {issue.title}
               </span>
               <div className="ml-2 shrink-0">
@@ -154,18 +154,18 @@ function SortableIssueRow({
       <td className="px-6 py-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="group flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-[#792990]/20 border border-[#792990]/20 hover:border-[#792990]/40">
+            <button className="group flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-brand/20 border border-brand/20 hover:border-brand/40">
               {getStatusIcon(issue.status.type)}
               <span className="text-gray-200">{issue.status.name}</span>
               <ChevronDown className="h-3.5 w-3.5 text-gray-400 transition-transform group-hover:text-gray-300" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48 bg-[#350459] border-[#792990]/40">
+          <DropdownMenuContent align="start" className="w-48 bg-surface border-brand/40">
             {statuses.map((status) => (
               <DropdownMenuItem
                 key={status.id}
                 onClick={() => onStatusChange(issue.id, status.id)}
-                className="flex items-center gap-2 cursor-pointer text-gray-200 hover:bg-[#792990]/30 focus:bg-[#792990]/30"
+                className="flex items-center gap-2 cursor-pointer text-gray-200 hover:bg-brand/30 focus:bg-brand/30"
               >
                 {getStatusIcon(status.type)}
                 <span>{status.name}</span>
@@ -193,7 +193,7 @@ function SortableIssueRow({
       <td className="px-6 py-4">
         {issue.assignee ? (
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#792990] to-[#350459] text-xs font-semibold text-white shadow-sm">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-brand to-surface text-xs font-semibold text-white shadow-sm">
               {issue.assignee.name
                 ?.split(" ")
                 .map((n) => n[0])
@@ -212,12 +212,12 @@ function SortableIssueRow({
         <div className="flex gap-1.5 flex-wrap">
           {issue.feature && (
             <div
-              className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium bg-[#792990]/10 border-l-2 shadow-sm"
+              className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium bg-brand/10 border-l-2 shadow-sm"
               style={{
-                borderLeftColor: issue.feature.color || "#792990",
+                borderLeftColor: issue.feature.color || "var(--color-brand)",
               }}
             >
-              <Target className="h-3 w-3" style={{ color: issue.feature.color || "#792990" }} />
+              <Target className="h-3 w-3" style={{ color: issue.feature.color || "var(--color-brand)" }} />
               <span className="text-gray-200">{issue.feature.name}</span>
             </div>
           )}
@@ -242,7 +242,7 @@ function SortableIssueRow({
       </td>
       <td className="px-6 py-4">
         {issue.milestone ? (
-          <span className="inline-flex items-center rounded-full bg-[#792990]/20 px-2.5 py-1 text-xs font-medium text-purple-300 border border-[#792990]/40 shadow-sm">
+          <span className="inline-flex items-center rounded-full bg-brand/20 px-2.5 py-1 text-xs font-medium text-purple-300 border border-brand/40 shadow-sm">
             {issue.milestone.name}
           </span>
         ) : (
@@ -253,7 +253,7 @@ function SortableIssueRow({
         {issue.project ? (
           <Link
             href={`/projects/${issue.project.id}`}
-            className="inline-flex items-center text-sm font-medium text-gray-200 hover:text-[#FFB947] transition-colors"
+            className="inline-flex items-center text-sm font-medium text-gray-200 hover:text-accent transition-colors"
           >
             {issue.project.name}
           </Link>
@@ -448,7 +448,7 @@ export function MyIssuesClient({
             {issues.length} issue{issues.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <Button onClick={() => setIsCreateModalOpen(true)} className="bg-[#FFB947] text-gray-900 hover:bg-[#FFB947]/90 font-semibold">
+        <Button onClick={() => setIsCreateModalOpen(true)} className="bg-accent text-gray-900 hover:bg-accent/90 font-semibold">
           <Plus className="mr-2 h-4 w-4" />
           New Issue
         </Button>
@@ -461,7 +461,7 @@ export function MyIssuesClient({
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="rounded-md border border-[#792990]/40 bg-[#350459] px-3 py-2 text-sm text-gray-200 focus:border-[#792990] focus:outline-none focus:ring-2 focus:ring-[#792990]/50"
+            className="rounded-md border border-brand/40 bg-surface px-3 py-2 text-sm text-gray-200 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/50"
           >
             <option value="all">All Types</option>
             <option value="FEATURE">Feature</option>
@@ -471,14 +471,14 @@ export function MyIssuesClient({
           </select>
         </div>
 
-        <div className="h-6 w-px bg-[#792990]/30"></div>
+        <div className="h-6 w-px bg-brand/30"></div>
 
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium text-gray-300">Group by:</label>
           <select
             value={groupBy}
             onChange={(e) => setGroupBy(e.target.value as GroupBy)}
-            className="rounded-md border border-[#792990]/40 bg-[#350459] px-3 py-2 text-sm text-gray-200 focus:border-[#792990] focus:outline-none focus:ring-2 focus:ring-[#792990]/50"
+            className="rounded-md border border-brand/40 bg-surface px-3 py-2 text-sm text-gray-200 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/50"
           >
             <option value="none">None</option>
             <option value="project">Project</option>
@@ -495,7 +495,7 @@ export function MyIssuesClient({
             <select
               value={subGroupBy}
               onChange={(e) => setSubGroupBy(e.target.value as GroupBy)}
-              className="rounded-md border border-[#792990]/40 bg-[#350459] px-3 py-2 text-sm text-gray-200 focus:border-[#792990] focus:outline-none focus:ring-2 focus:ring-[#792990]/50"
+              className="rounded-md border border-brand/40 bg-surface px-3 py-2 text-sm text-gray-200 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/50"
             >
               <option value="none">None</option>
               {groupBy !== "project" && <option value="project">Project</option>}
@@ -509,12 +509,12 @@ export function MyIssuesClient({
       </div>
 
       {issues.length === 0 ? (
-        <div className="rounded-lg border border-[#792990]/40 bg-gradient-to-br from-[#792990]/5 to-transparent p-12 text-center">
+        <div className="rounded-lg border border-brand/40 bg-gradient-to-br from-brand/5 to-transparent p-12 text-center">
           <p className="text-gray-300">No issues yet</p>
           <Button
             onClick={() => setIsCreateModalOpen(true)}
             variant="outline"
-            className="mt-4 border-[#792990]/40 text-gray-200 hover:bg-[#792990]/20 hover:border-[#792990]/60"
+            className="mt-4 border-brand/40 text-gray-200 hover:bg-brand/20 hover:border-brand/60"
           >
             <Plus className="mr-2 h-4 w-4" />
             Create First Issue
@@ -522,9 +522,9 @@ export function MyIssuesClient({
         </div>
       ) : groupBy === "none" ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <div className="overflow-hidden rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent">
-            <table className="min-w-full divide-y divide-[#792990]/20">
-              <thead className="bg-[#792990]/10">
+          <div className="overflow-hidden rounded-lg border border-brand/20 bg-gradient-to-r from-brand/5 to-transparent">
+            <table className="min-w-full divide-y divide-brand/20">
+              <thead className="bg-brand/10">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                     Issue
@@ -550,7 +550,7 @@ export function MyIssuesClient({
                 </tr>
               </thead>
               <SortableContext items={issues.map(i => i.id)} strategy={verticalListSortingStrategy}>
-                <tbody className="divide-y divide-[#792990]/20 bg-transparent">
+                <tbody className="divide-y divide-brand/20 bg-transparent">
                   {issues.map((issue) => (
                     <SortableIssueRow
                       key={issue.id}
@@ -573,14 +573,14 @@ export function MyIssuesClient({
         <div className="space-y-6">
           {Object.entries(groupedIssues as Record<string, Issue[]>).map(([groupKey, groupIssues]) => (
             <DndContext key={groupKey} sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <div className="overflow-hidden rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent">
-                <div className="bg-[#792990]/10 px-6 py-3 border-b border-[#792990]/20">
+              <div className="overflow-hidden rounded-lg border border-brand/20 bg-gradient-to-r from-brand/5 to-transparent">
+                <div className="bg-brand/10 px-6 py-3 border-b border-brand/20">
                   <h3 className="font-semibold text-gray-100">
                     {groupKey} ({groupIssues.length})
                   </h3>
                 </div>
-                <table className="min-w-full divide-y divide-[#792990]/20">
-                  <thead className="bg-[#792990]/10">
+                <table className="min-w-full divide-y divide-brand/20">
+                  <thead className="bg-brand/10">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                         Issue
@@ -606,7 +606,7 @@ export function MyIssuesClient({
                     </tr>
                   </thead>
                   <SortableContext items={groupIssues.map(i => i.id)} strategy={verticalListSortingStrategy}>
-                    <tbody className="divide-y divide-[#792990]/20 bg-transparent">
+                    <tbody className="divide-y divide-brand/20 bg-transparent">
                       {groupIssues.map((issue) => (
                         <SortableIssueRow
                           key={issue.id}
@@ -631,21 +631,21 @@ export function MyIssuesClient({
         <div className="space-y-6">
           {Object.entries(groupedIssues as Record<string, Record<string, Issue[]>>).map(
             ([groupKey, subGroups]) => (
-              <div key={groupKey} className="rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent">
-                <div className="bg-[#792990]/20 px-6 py-3 border-b border-[#792990]/30">
+              <div key={groupKey} className="rounded-lg border border-brand/20 bg-gradient-to-r from-brand/5 to-transparent">
+                <div className="bg-brand/20 px-6 py-3 border-b border-brand/30">
                   <h2 className="text-lg font-semibold text-gray-100">{groupKey}</h2>
                 </div>
                 <div className="space-y-4 p-4">
                   {Object.entries(subGroups).map(([subKey, subIssues]) => (
                     <DndContext key={subKey} sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                      <div className="overflow-hidden rounded-lg border border-[#792990]/20">
-                        <div className="bg-[#792990]/10 px-6 py-2 border-b border-[#792990]/20">
+                      <div className="overflow-hidden rounded-lg border border-brand/20">
+                        <div className="bg-brand/10 px-6 py-2 border-b border-brand/20">
                           <h3 className="font-medium text-gray-200">
                             {subKey} ({subIssues.length})
                           </h3>
                         </div>
-                        <table className="min-w-full divide-y divide-[#792990]/20">
-                          <thead className="bg-[#792990]/10">
+                        <table className="min-w-full divide-y divide-brand/20">
+                          <thead className="bg-brand/10">
                             <tr>
                               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                                 Issue
@@ -671,7 +671,7 @@ export function MyIssuesClient({
                             </tr>
                           </thead>
                           <SortableContext items={subIssues.map(i => i.id)} strategy={verticalListSortingStrategy}>
-                            <tbody className="divide-y divide-[#792990]/20 bg-transparent">
+                            <tbody className="divide-y divide-brand/20 bg-transparent">
                               {subIssues.map((issue) => (
                                 <SortableIssueRow
                                   key={issue.id}

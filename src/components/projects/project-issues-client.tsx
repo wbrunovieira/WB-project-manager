@@ -192,15 +192,15 @@ function SortableIssueCard({
 
   const getCardStyles = () => {
     if (isInProgress) {
-      return "border-[#FFB947]/70 bg-gradient-to-r from-[#FFB947]/20 via-[#FFB947]/15 to-[#FFB947]/10 shadow-lg shadow-[#FFB947]/20 hover:border-[#FFB947] hover:from-[#FFB947]/25 hover:via-[#FFB947]/20 hover:to-[#FFB947]/15 hover:shadow-xl hover:shadow-[#FFB947]/30";
+      return "border-accent/70 bg-gradient-to-r from-accent/20 via-accent/15 to-accent/10 shadow-lg shadow-accent/20 hover:border-accent hover:from-accent/25 hover:via-accent/20 hover:to-accent/15 hover:shadow-xl hover:shadow-accent/30";
     }
     if (isDone) {
-      return "border-[#10b981]/30 bg-gradient-to-r from-[#10b981]/10 via-[#10b981]/5 to-transparent hover:border-[#10b981]/50 hover:from-[#10b981]/15 hover:via-[#10b981]/10";
+      return "border-ok/30 bg-gradient-to-r from-ok/10 via-ok/5 to-transparent hover:border-ok/50 hover:from-ok/15 hover:via-ok/10";
     }
     if (isCanceled) {
-      return "border-[#ef4444]/30 bg-gradient-to-r from-[#ef4444]/10 via-[#ef4444]/5 to-transparent opacity-75 hover:border-[#ef4444]/50";
+      return "border-danger/30 bg-gradient-to-r from-danger/10 via-danger/5 to-transparent opacity-75 hover:border-danger/50";
     }
-    return "border-[#792990]/40 bg-gradient-to-r from-[#792990]/15 via-[#792990]/10 to-[#792990]/5 hover:border-[#FFB947]/70 hover:from-[#792990]/25 hover:via-[#792990]/20 hover:to-[#792990]/10 hover:shadow-lg hover:shadow-[#792990]/10";
+    return "border-brand/40 bg-gradient-to-r from-brand/15 via-brand/10 to-brand/5 hover:border-accent/70 hover:from-brand/25 hover:via-brand/20 hover:to-brand/10 hover:shadow-lg hover:shadow-brand/10";
   };
 
   const completionFade = getCompletionFade();
@@ -220,14 +220,14 @@ function SortableIssueCard({
           {...listeners}
           className="cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
         >
-          <GripVertical className="h-5 w-5 text-gray-400 hover:text-[#FFB947]" />
+          <GripVertical className="h-5 w-5 text-gray-400 hover:text-accent" />
         </div>
 
         <div className="flex flex-1 flex-col gap-1.5">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="flex items-center gap-2 shrink-0 text-gray-400 hover:text-[#FFB947] transition-colors"
+              className="flex items-center gap-2 shrink-0 text-gray-400 hover:text-accent transition-colors"
               title={isExpanded ? "Collapse" : "Expand"}
             >
               {isExpanded ? (
@@ -238,21 +238,21 @@ function SortableIssueCard({
             </button>
             {isInProgress && (
               <div className="relative">
-                <div className="absolute inset-0 animate-ping rounded-full bg-[#FFB947] opacity-30"></div>
-                <div className="relative h-2 w-2 rounded-full bg-[#FFB947]"></div>
+                <div className="absolute inset-0 animate-ping rounded-full bg-accent opacity-30"></div>
+                <div className="relative h-2 w-2 rounded-full bg-accent"></div>
               </div>
             )}
             {isDone && (
-              <CheckCircle2 className="h-4 w-4 text-[#10b981] shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-ok shrink-0" />
             )}
             {isCanceled && (
-              <XCircle className="h-4 w-4 text-[#ef4444] shrink-0" />
+              <XCircle className="h-4 w-4 text-danger shrink-0" />
             )}
-            <span className="text-sm font-mono font-semibold text-[#FFB947] shrink-0">
+            <span className="text-sm font-mono font-semibold text-accent shrink-0">
               #{issue.identifier}
             </span>
             <span className={`text-base font-semibold ${
-              isInProgress ? "text-[#FFB947]" :
+              isInProgress ? "text-accent" :
               isDone ? "text-gray-300" :
               isCanceled ? "text-gray-400 line-through" :
               "text-gray-100"
@@ -269,15 +269,15 @@ function SortableIssueCard({
                   className={`group/feature inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium transition-all ${
                     isTimerActive
                       ? "cursor-not-allowed opacity-50"
-                      : "hover:bg-[#792990]/20"
-                  } ${issue.feature ? "bg-[#792990]/10 border-l-2 shadow-sm" : "border border-dashed border-[#792990]/40"}`}
+                      : "hover:bg-brand/20"
+                  } ${issue.feature ? "bg-brand/10 border-l-2 shadow-sm" : "border border-dashed border-brand/40"}`}
                   style={{
-                    borderLeftColor: issue.feature?.color || "#792990",
+                    borderLeftColor: issue.feature?.color || "var(--color-brand)",
                   }}
                   disabled={isTimerActive}
                   title={isTimerActive ? "Stop timer to change feature" : "Change feature"}
                 >
-                  <Target className="h-3 w-3" style={{ color: issue.feature?.color || "#792990" }} />
+                  <Target className="h-3 w-3" style={{ color: issue.feature?.color || "var(--color-brand)" }} />
                   <span className="text-gray-200">
                     {issue.feature?.name || "Add feature"}
                   </span>
@@ -303,7 +303,7 @@ function SortableIssueCard({
                     >
                       <div
                         className="h-3 w-1 rounded"
-                        style={{ backgroundColor: feature.color || "#792990" }}
+                        style={{ backgroundColor: feature.color || "var(--color-brand)" }}
                       />
                       <span>{feature.name}</span>
                     </DropdownMenuItem>
@@ -311,7 +311,7 @@ function SortableIssueCard({
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => onRequestCreateFeature(issue.id)}
-                    className="flex items-center gap-2 cursor-pointer text-[#FFB947]"
+                    className="flex items-center gap-2 cursor-pointer text-accent"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     <span>Create new feature</span>
@@ -325,7 +325,7 @@ function SortableIssueCard({
         <div className="flex items-center gap-2">
           {/* Resolution Time Badge for Done issues */}
           {isDone && issue.resolutionTimeMinutes && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-[#10b981]/20 px-2 py-1 text-xs font-medium text-[#10b981] border border-[#10b981]/30">
+            <span className="inline-flex items-center gap-1 rounded-md bg-ok/20 px-2 py-1 text-xs font-medium text-ok border border-ok/30">
               <Clock className="h-3 w-3" />
               Resolved in {Math.floor(issue.resolutionTimeMinutes / 60)}h {issue.resolutionTimeMinutes % 60}m
             </span>
@@ -394,7 +394,7 @@ function SortableIssueCard({
               className={`group/btn flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
                 isTimerActive
                   ? "cursor-not-allowed opacity-50"
-                  : "hover:bg-[#792990]/20"
+                  : "hover:bg-brand/20"
               }`}
               disabled={isTimerActive}
               title={isTimerActive ? "Stop timer to change status" : "Change status"}
@@ -446,12 +446,12 @@ function SortableIssueCard({
               className={`group/btn flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
                 isTimerActive
                   ? "cursor-not-allowed opacity-50"
-                  : "hover:bg-[#792990]/20"
+                  : "hover:bg-brand/20"
               }`}
               disabled={isTimerActive}
               title={isTimerActive ? "Stop timer to change milestone" : "Change milestone"}
             >
-              <Target className="h-3.5 w-3.5 text-[#FFB947]" />
+              <Target className="h-3.5 w-3.5 text-accent" />
               <span className="text-gray-300">
                 {issue.milestone?.name || "No milestone"}
               </span>
@@ -530,7 +530,7 @@ function SortableIssueCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-gray-400 hover:text-gray-100 hover:bg-[#792990]/20"
+                className="h-8 w-8 text-gray-400 hover:text-gray-100 hover:bg-brand/20"
                 title="More actions"
               >
                 <MoreVertical className="h-4 w-4" />
@@ -579,12 +579,12 @@ function SortableIssueCard({
 
       {/* Expanded Details */}
       {isExpanded && (
-        <div className="border-t border-[#792990]/30 bg-[#792990]/5 p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:divide-x lg:divide-[#792990]/30">
+        <div className="border-t border-brand/30 bg-brand/5 p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:divide-x lg:divide-brand/30">
             {/* Left Column - Description */}
             <div className="space-y-3 lg:pr-8">
               <h4 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 text-[#FFB947]" />
+                <AlertCircle className="h-4 w-4 text-accent" />
                 Description
                 {issue.description && (
                   <button
@@ -604,7 +604,7 @@ function SortableIssueCard({
                         });
                       }
                     }}
-                    className="ml-auto text-gray-400 hover:text-[#FFB947] transition-colors"
+                    className="ml-auto text-gray-400 hover:text-accent transition-colors"
                     title="Copy description"
                   >
                     <ClipboardCopy className="h-4 w-4" />
@@ -741,12 +741,12 @@ function SortableIssueCard({
                 <div className="space-y-2 pl-6">
                   <p className="text-xs font-medium text-gray-400">Feature</p>
                   <div
-                    className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium bg-[#792990]/10 border-l-4 shadow-sm"
+                    className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium bg-brand/10 border-l-4 shadow-sm"
                     style={{
-                      borderLeftColor: issue.feature.color || "#792990",
+                      borderLeftColor: issue.feature.color || "var(--color-brand)",
                     }}
                   >
-                    <Target className="h-4 w-4" style={{ color: issue.feature.color || "#792990" }} />
+                    <Target className="h-4 w-4" style={{ color: issue.feature.color || "var(--color-brand)" }} />
                     <div>
                       <p className="text-gray-200 font-medium">{issue.feature.name}</p>
                       {issue.feature.description && (
@@ -1365,7 +1365,7 @@ export function ProjectIssuesClient({
       <div className="mb-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-100">Issues</h2>
-          <Button onClick={() => setIsCreateModalOpen(true)} className="bg-[#FFB947] text-gray-900 hover:bg-[#FFB947]/90">
+          <Button onClick={() => setIsCreateModalOpen(true)} className="bg-accent text-gray-900 hover:bg-accent/90">
             <Plus className="mr-2 h-4 w-4" />
             New Issue
           </Button>
@@ -1380,7 +1380,7 @@ export function ProjectIssuesClient({
               placeholder="Search issues by title, description, assignee..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-md border border-[#792990]/40 bg-[#350459] pl-10 pr-10 py-2 text-sm text-gray-200 placeholder:text-gray-500 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]/50"
+              className="w-full rounded-md border border-brand/40 bg-surface pl-10 pr-10 py-2 text-sm text-gray-200 placeholder:text-gray-500 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/50"
             />
             {searchQuery && (
               <button
@@ -1399,7 +1399,7 @@ export function ProjectIssuesClient({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-md border border-[#792990]/40 bg-[#350459] px-3 py-2 text-sm text-gray-200 focus:border-[#792990] focus:outline-none focus:ring-2 focus:ring-[#792990]/50"
+              className="rounded-md border border-brand/40 bg-surface px-3 py-2 text-sm text-gray-200 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/50"
             >
               <option value="all">All Statuses</option>
               <option value="BACKLOG">Backlog</option>
@@ -1416,7 +1416,7 @@ export function ProjectIssuesClient({
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="rounded-md border border-[#792990]/40 bg-[#350459] px-3 py-2 text-sm text-gray-200 focus:border-[#792990] focus:outline-none focus:ring-2 focus:ring-[#792990]/50"
+              className="rounded-md border border-brand/40 bg-surface px-3 py-2 text-sm text-gray-200 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/50"
             >
               <option value="all">All Types</option>
               <option value="FEATURE">Feature</option>
@@ -1434,17 +1434,17 @@ export function ProjectIssuesClient({
               {Object.values(filteredIssuesByStatus).flat().length} result{Object.values(filteredIssuesByStatus).flat().length !== 1 ? 's' : ''}
             </span>
             {searchQuery && (
-              <span className="inline-flex items-center gap-1 rounded-md bg-[#792990]/20 px-2 py-0.5 text-[#FFB947]">
+              <span className="inline-flex items-center gap-1 rounded-md bg-brand/20 px-2 py-0.5 text-accent">
                 searching: &ldquo;{searchQuery}&rdquo;
               </span>
             )}
             {statusFilter !== "all" && (
-              <span className="inline-flex items-center gap-1 rounded-md bg-[#792990]/20 px-2 py-0.5 text-[#FFB947]">
+              <span className="inline-flex items-center gap-1 rounded-md bg-brand/20 px-2 py-0.5 text-accent">
                 status: {statuses.find(s => s.type === statusFilter)?.name || statusFilter}
               </span>
             )}
             {typeFilter !== "all" && (
-              <span className="inline-flex items-center gap-1 rounded-md bg-[#792990]/20 px-2 py-0.5 text-[#FFB947]">
+              <span className="inline-flex items-center gap-1 rounded-md bg-brand/20 px-2 py-0.5 text-accent">
                 type: {typeFilter}
               </span>
             )}
@@ -1455,7 +1455,7 @@ export function ProjectIssuesClient({
                   setStatusFilter("all");
                   setTypeFilter("all");
                 }}
-                className="text-[#FFB947] hover:text-[#FFB947]/80 transition-colors underline"
+                className="text-accent hover:text-accent/80 transition-colors underline"
               >
                 Clear all filters
               </button>
@@ -1476,12 +1476,12 @@ export function ProjectIssuesClient({
             <div key={statusType}>
               <button
                 onClick={() => toggleGroupCollapse(statusType)}
-                className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-400 uppercase tracking-wide hover:text-[#FFB947] transition-colors group"
+                className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-400 uppercase tracking-wide hover:text-accent transition-colors group"
               >
                 {isCollapsed ? (
-                  <ChevronDown className="h-4 w-4 transition-transform group-hover:text-[#FFB947]" />
+                  <ChevronDown className="h-4 w-4 transition-transform group-hover:text-accent" />
                 ) : (
-                  <ChevronUp className="h-4 w-4 transition-transform group-hover:text-[#FFB947]" />
+                  <ChevronUp className="h-4 w-4 transition-transform group-hover:text-accent" />
                 )}
                 {statusName} ({issues.length})
               </button>
@@ -1527,7 +1527,7 @@ export function ProjectIssuesClient({
                       {issues.map((issue) => (
                         <div
                           key={issue.id}
-                          className="group flex items-center gap-4 rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent p-4"
+                          className="group flex items-center gap-4 rounded-lg border border-brand/20 bg-gradient-to-r from-brand/5 to-transparent p-4"
                         >
                           <div className="flex flex-1 items-center gap-3">
                             <span className="text-sm font-mono text-gray-400">
@@ -1548,12 +1548,12 @@ export function ProjectIssuesClient({
         })}
 
         {totalIssues === 0 && (
-          <div className="rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent p-12 text-center">
+          <div className="rounded-lg border border-brand/20 bg-gradient-to-r from-brand/5 to-transparent p-12 text-center">
             <p className="text-gray-300">No issues in this project yet</p>
             <Button
               onClick={() => setIsCreateModalOpen(true)}
               variant="outline"
-              className="mt-4 border-[#792990]/40 bg-[#792990]/5 text-gray-100 hover:bg-[#792990]/10 hover:border-[#792990]/60"
+              className="mt-4 border-brand/40 bg-brand/5 text-gray-100 hover:bg-brand/10 hover:border-brand/60"
             >
               <Plus className="mr-2 h-4 w-4" />
               Create First Issue
@@ -1621,7 +1621,7 @@ export function ProjectIssuesClient({
           onClick={() => setIsCreatingFeature(false)}
         >
           <div
-            className="bg-[#1a0b2e] border border-[#792990]/40 rounded-lg p-6 w-96 shadow-xl"
+            className="bg-canvas-deep border border-brand/40 rounded-lg p-6 w-96 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-gray-100 mb-4">Create New Feature</h3>
@@ -1635,7 +1635,7 @@ export function ProjectIssuesClient({
                   value={newFeatureName}
                   onChange={(e) => setNewFeatureName(e.target.value)}
                   placeholder="Enter feature name"
-                  className="w-full rounded border border-[#792990]/40 bg-[#350459] px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:border-[#792990] focus:outline-none focus:ring-1 focus:ring-[#792990]"
+                  className="w-full rounded border border-brand/40 bg-surface px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && newFeatureName.trim()) {
@@ -1653,10 +1653,10 @@ export function ProjectIssuesClient({
                     type="color"
                     value={newFeatureColor}
                     onChange={(e) => setNewFeatureColor(e.target.value)}
-                    className="h-10 w-20 rounded border border-[#792990]/40 bg-[#350459] cursor-pointer"
+                    className="h-10 w-20 rounded border border-brand/40 bg-surface cursor-pointer"
                   />
                   <div
-                    className="flex-1 h-10 rounded border border-[#792990]/40"
+                    className="flex-1 h-10 rounded border border-brand/40"
                     style={{ backgroundColor: newFeatureColor }}
                   />
                 </div>
@@ -1669,14 +1669,14 @@ export function ProjectIssuesClient({
                     setNewFeatureColor("#3b82f6");
                     setPendingIssueId(null);
                   }}
-                  className="rounded border border-[#792990]/40 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-[#792990]/10 transition-colors"
+                  className="rounded border border-brand/40 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-brand/10 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleCreateFeature}
                   disabled={!newFeatureName.trim()}
-                  className="rounded bg-[#792990] px-4 py-2 text-sm font-medium text-white hover:bg-[#792990]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="rounded bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Create & Assign
                 </button>

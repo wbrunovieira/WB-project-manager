@@ -200,7 +200,7 @@ export function MaintenanceDashboardClient({
           <select
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value as "week" | "month" | "quarter" | "all")}
-            className="rounded-md border border-[#792990]/40 bg-[#350459] px-3 py-2 text-sm text-gray-200 focus:border-[#792990] focus:outline-none focus:ring-2 focus:ring-[#792990]/50"
+            className="rounded-md border border-brand/40 bg-surface px-3 py-2 text-sm text-gray-200 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/50"
           >
             <option value="week">Last 7 Days</option>
             <option value="month">Last 30 Days</option>
@@ -214,7 +214,7 @@ export function MaintenanceDashboardClient({
           <select
             value={selectedProject}
             onChange={(e) => setSelectedProject(e.target.value)}
-            className="rounded-md border border-[#792990]/40 bg-[#350459] px-3 py-2 text-sm text-gray-200 focus:border-[#792990] focus:outline-none focus:ring-2 focus:ring-[#792990]/50"
+            className="rounded-md border border-brand/40 bg-surface px-3 py-2 text-sm text-gray-200 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/50"
           >
             <option value="all">All Projects</option>
             {maintenanceProjects.map((project) => (
@@ -229,14 +229,14 @@ export function MaintenanceDashboardClient({
       {/* Metrics Cards */}
       <div className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Issues */}
-        <div className="rounded-lg border border-[#792990]/20 bg-gradient-to-br from-[#792990]/10 to-transparent p-6">
+        <div className="rounded-lg border border-brand/20 bg-gradient-to-br from-brand/10 to-transparent p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-400">Total Issues</p>
               <p className="mt-2 text-3xl font-bold text-gray-100">{metrics.total}</p>
             </div>
-            <div className="rounded-full bg-[#FFB947]/20 p-3">
-              <BarChart3 className="h-6 w-6 text-[#FFB947]" />
+            <div className="rounded-full bg-accent/20 p-3">
+              <BarChart3 className="h-6 w-6 text-accent" />
             </div>
           </div>
           <div className="mt-4 flex items-center gap-2 text-sm">
@@ -247,7 +247,7 @@ export function MaintenanceDashboardClient({
         </div>
 
         {/* Avg Resolution Time */}
-        <div className="rounded-lg border border-[#792990]/20 bg-gradient-to-br from-[#792990]/10 to-transparent p-6">
+        <div className="rounded-lg border border-brand/20 bg-gradient-to-br from-brand/10 to-transparent p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-400">Avg Resolution Time</p>
@@ -263,7 +263,7 @@ export function MaintenanceDashboardClient({
         </div>
 
         {/* Avg First Response Time */}
-        <div className="rounded-lg border border-[#792990]/20 bg-gradient-to-br from-[#792990]/10 to-transparent p-6">
+        <div className="rounded-lg border border-brand/20 bg-gradient-to-br from-brand/10 to-transparent p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-400">Avg First Response</p>
@@ -279,7 +279,7 @@ export function MaintenanceDashboardClient({
         </div>
 
         {/* Resolution Rate */}
-        <div className="rounded-lg border border-[#792990]/20 bg-gradient-to-br from-[#792990]/10 to-transparent p-6">
+        <div className="rounded-lg border border-brand/20 bg-gradient-to-br from-brand/10 to-transparent p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-400">Resolution Rate</p>
@@ -308,7 +308,7 @@ export function MaintenanceDashboardClient({
       {/* Issue Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* By Type */}
-        <div className="rounded-lg border border-[#792990]/20 bg-gradient-to-br from-[#792990]/5 to-transparent p-6">
+        <div className="rounded-lg border border-brand/20 bg-gradient-to-br from-brand/5 to-transparent p-6">
           <h3 className="text-lg font-semibold text-gray-100 mb-4">Issues by Type</h3>
           <div className="space-y-3">
             {Object.entries(issuesByType).map(([type, typeIssues]) => {
@@ -319,7 +319,7 @@ export function MaintenanceDashboardClient({
                     <span className="text-sm font-medium text-gray-300">{type}</span>
                     <span className="text-sm text-gray-400">{typeIssues.length}</span>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-[#792990]/20">
+                  <div className="h-2 w-full rounded-full bg-brand/20">
                     <div
                       className={`h-full rounded-full ${
                         type === "BUG" ? "bg-red-500" : "bg-blue-500"
@@ -334,7 +334,7 @@ export function MaintenanceDashboardClient({
         </div>
 
         {/* By Priority */}
-        <div className="rounded-lg border border-[#792990]/20 bg-gradient-to-br from-[#792990]/5 to-transparent p-6">
+        <div className="rounded-lg border border-brand/20 bg-gradient-to-br from-brand/5 to-transparent p-6">
           <h3 className="text-lg font-semibold text-gray-100 mb-4">Issues by Priority</h3>
           <div className="space-y-3">
             {Object.entries(issuesByPriority)
@@ -349,7 +349,7 @@ export function MaintenanceDashboardClient({
                       </span>
                       <span className="text-sm text-gray-400">{count}</span>
                     </div>
-                    <div className="h-2 w-full rounded-full bg-[#792990]/20">
+                    <div className="h-2 w-full rounded-full bg-brand/20">
                       <div
                         className={`h-full rounded-full ${
                           priority === "URGENT"
@@ -373,7 +373,7 @@ export function MaintenanceDashboardClient({
       </div>
 
       {/* Recent Issues */}
-      <div className="rounded-lg border border-[#792990]/20 bg-gradient-to-br from-[#792990]/5 to-transparent p-6">
+      <div className="rounded-lg border border-brand/20 bg-gradient-to-br from-brand/5 to-transparent p-6">
         <h3 className="text-lg font-semibold text-gray-100 mb-4">Recent Issues</h3>
         <div className="space-y-2">
           {filteredIssues.slice(0, 10).map((issue) => {
@@ -387,7 +387,7 @@ export function MaintenanceDashboardClient({
               <Link
                 key={issue.id}
                 href={`/issues/${issue.id}`}
-                className="flex items-center justify-between rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent p-4 transition-all hover:border-[#792990]/40 hover:from-[#792990]/10"
+                className="flex items-center justify-between rounded-lg border border-brand/20 bg-gradient-to-r from-brand/5 to-transparent p-4 transition-all hover:border-brand/40 hover:from-brand/10"
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <span className="text-sm font-mono text-gray-400">#{issue.identifier}</span>
@@ -417,7 +417,7 @@ export function MaintenanceDashboardClient({
                     <span className="text-sm text-gray-400">{issue.status.name}</span>
                   )}
                   {issue.assignee && (
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#792990] to-[#4a0672] text-xs font-semibold text-gray-200">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-brand to-surface-elevated text-xs font-semibold text-gray-200">
                       {issue.assignee.name
                         ?.split(" ")
                         .map((n) => n[0])

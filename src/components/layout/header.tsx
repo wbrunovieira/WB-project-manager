@@ -13,9 +13,9 @@ export async function Header() {
     .toUpperCase() || "U";
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-[#792990]/20 bg-[#350459] px-6">
+    <header className="flex h-16 items-center justify-between border-b border-brand/20 bg-surface px-6">
       <div className="flex items-center gap-4">
-        <div className="h-8 w-px bg-[#792990]/30"></div>
+        <div className="h-8 w-px bg-brand/30"></div>
       </div>
 
       <div className="flex items-center gap-4">

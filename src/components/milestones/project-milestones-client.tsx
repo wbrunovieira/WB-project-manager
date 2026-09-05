@@ -110,8 +110,8 @@ function SortableMilestoneCard({
       onClick={onClick}
       className={`group relative rounded-xl border-2 p-6 transition-all cursor-pointer ${
         isSelected
-          ? "border-[#FFB947] bg-gradient-to-br from-[#792990]/30 via-[#792990]/20 to-[#350459]/30 shadow-lg shadow-[#792990]/20 scale-[1.02]"
-          : "border-[#792990]/30 bg-gradient-to-br from-[#792990]/10 via-[#792990]/5 to-transparent hover:border-[#FFB947]/60 hover:from-[#792990]/20 hover:via-[#792990]/10 hover:shadow-lg hover:shadow-[#792990]/10 hover:scale-[1.01]"
+          ? "border-accent bg-gradient-to-br from-brand/30 via-brand/20 to-surface/30 shadow-lg shadow-brand/20 scale-[1.02]"
+          : "border-brand/30 bg-gradient-to-br from-brand/10 via-brand/5 to-transparent hover:border-accent/60 hover:from-brand/20 hover:via-brand/10 hover:shadow-lg hover:shadow-brand/10 hover:scale-[1.01]"
       }`}
     >
       <div className="mb-4">
@@ -123,7 +123,7 @@ function SortableMilestoneCard({
               className="cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity mt-1"
               onClick={(e) => e.stopPropagation()}
             >
-              <GripVertical className="h-4 w-4 text-gray-400 hover:text-[#FFB947]" />
+              <GripVertical className="h-4 w-4 text-gray-400 hover:text-accent" />
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-gray-100">
@@ -145,7 +145,7 @@ function SortableMilestoneCard({
                 e.stopPropagation();
                 onEdit(milestone);
               }}
-              className="h-8 w-8 text-gray-300 hover:text-gray-100 hover:bg-[#792990]/20"
+              className="h-8 w-8 text-gray-300 hover:text-gray-100 hover:bg-brand/20"
             >
               <Edit className="h-4 w-4" />
             </Button>
@@ -156,7 +156,7 @@ function SortableMilestoneCard({
                 e.stopPropagation();
                 onDelete(milestone);
               }}
-              className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-[#792990]/20"
+              className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-brand/20"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -172,9 +172,9 @@ function SortableMilestoneCard({
           </span>
           <span className="font-medium text-gray-100">{progress}%</span>
         </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-[#792990]/20">
+        <div className="h-2 w-full overflow-hidden rounded-full bg-brand/20">
           <div
-            className="h-full bg-[#792990] transition-all"
+            className="h-full bg-brand transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -184,7 +184,7 @@ function SortableMilestoneCard({
       <div className="flex items-center gap-4 text-xs text-gray-300">
         {milestone.startDate && (
           <div className="flex items-center gap-1">
-            <CalendarDays className="h-3.5 w-3.5 text-[#FFB947]" />
+            <CalendarDays className="h-3.5 w-3.5 text-accent" />
             <span>
               <DateDisplay date={milestone.startDate} />
             </span>
@@ -192,7 +192,7 @@ function SortableMilestoneCard({
         )}
         {milestone.targetDate && (
           <div className="flex items-center gap-1">
-            <CheckCircle2 className="h-3.5 w-3.5 text-[#FFB947]" />
+            <CheckCircle2 className="h-3.5 w-3.5 text-accent" />
             <span>
               <DateDisplay date={milestone.targetDate} />
             </span>
@@ -202,14 +202,14 @@ function SortableMilestoneCard({
 
       {/* Features */}
       {uniqueFeatures.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-[#792990]/20">
+        <div className="mt-3 pt-3 border-t border-brand/20">
           <div className="flex items-center gap-2 flex-wrap">
             <Target className="h-3.5 w-3.5 text-gray-400" />
             {uniqueFeatures.map((feature) => (
               <div
                 key={feature.id}
-                className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium bg-[#792990]/10 border-l-2"
-                style={{ borderLeftColor: feature.color || "#792990" }}
+                className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium bg-brand/10 border-l-2"
+                style={{ borderLeftColor: feature.color || "var(--color-brand)" }}
               >
                 <span className="text-gray-200">{feature.name}</span>
               </div>
@@ -320,12 +320,12 @@ export function ProjectMilestonesClient({
                 onClick={() => setSelectedMilestoneId(null)}
                 variant="outline"
                 size="sm"
-                className="border-[#792990]/40 bg-[#792990]/5 text-gray-100 hover:bg-[#792990]/10 hover:border-[#792990]/60"
+                className="border-brand/40 bg-brand/5 text-gray-100 hover:bg-brand/10 hover:border-brand/60"
               >
                 Show All
               </Button>
             )}
-            <Button onClick={() => setIsCreateModalOpen(true)} size="sm" className="bg-[#FFB947] text-gray-900 hover:bg-[#FFB947]/90">
+            <Button onClick={() => setIsCreateModalOpen(true)} size="sm" className="bg-accent text-gray-900 hover:bg-accent/90">
               <Plus className="mr-2 h-4 w-4" />
               New Milestone
             </Button>
@@ -334,13 +334,13 @@ export function ProjectMilestonesClient({
       </div>
 
       {milestones.length === 0 ? (
-        <div className="rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent p-12 text-center">
+        <div className="rounded-lg border border-brand/20 bg-gradient-to-r from-brand/5 to-transparent p-12 text-center">
           <Target className="mx-auto h-12 w-12 text-gray-400" />
           <p className="mt-4 text-gray-300">No milestones yet</p>
           <Button
             onClick={() => setIsCreateModalOpen(true)}
             variant="outline"
-            className="mt-4 border-[#792990]/40 bg-[#792990]/5 text-gray-100 hover:bg-[#792990]/10 hover:border-[#792990]/60"
+            className="mt-4 border-brand/40 bg-brand/5 text-gray-100 hover:bg-brand/10 hover:border-brand/60"
           >
             <Plus className="mr-2 h-4 w-4" />
             Create First Milestone

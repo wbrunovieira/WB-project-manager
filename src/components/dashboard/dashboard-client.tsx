@@ -112,7 +112,7 @@ export function DashboardClient({ issues }: DashboardClientProps) {
   const groupedIssues = groupIssues();
 
   return (
-    <div className="min-h-screen bg-[#350459]">
+    <div className="min-h-screen bg-surface">
       <div className="p-8">
         {/* Group By Selector */}
         <div className="mb-6 flex items-center gap-3">
@@ -121,28 +121,28 @@ export function DashboardClient({ issues }: DashboardClientProps) {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="w-48 justify-between bg-[#792990]/10 border-[#792990]/30 text-gray-200 hover:bg-[#792990]/20 hover:border-[#792990]/50"
+                className="w-48 justify-between bg-brand/10 border-brand/30 text-gray-200 hover:bg-brand/20 hover:border-brand/50"
               >
                 {groupBy === "project" ? "Project" : groupBy === "status" ? "Status" : "Label"}
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-48 bg-[#4a0672] border-[#792990]/50 text-gray-200">
+            <DropdownMenuContent className="w-48 bg-surface-elevated border-brand/50 text-gray-200">
               <DropdownMenuItem
                 onClick={() => setGroupBy("project")}
-                className="hover:bg-[#792990]/50 focus:bg-[#792990]/50 cursor-pointer"
+                className="hover:bg-brand/50 focus:bg-brand/50 cursor-pointer"
               >
                 Project
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setGroupBy("status")}
-                className="hover:bg-[#792990]/50 focus:bg-[#792990]/50 cursor-pointer"
+                className="hover:bg-brand/50 focus:bg-brand/50 cursor-pointer"
               >
                 Status
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setGroupBy("label")}
-                className="hover:bg-[#792990]/50 focus:bg-[#792990]/50 cursor-pointer"
+                className="hover:bg-brand/50 focus:bg-brand/50 cursor-pointer"
               >
                 Label
               </DropdownMenuItem>
@@ -158,24 +158,24 @@ export function DashboardClient({ issues }: DashboardClientProps) {
             return (
               <div key={key}>
                 <div className="mb-3 flex items-center gap-3">
-                  <div className="h-px flex-1 bg-gradient-to-r from-[#792990] to-transparent"></div>
+                  <div className="h-px flex-1 bg-gradient-to-r from-brand to-transparent"></div>
                   <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
                     {displayName}
                   </h3>
-                  <span className="px-2 py-0.5 rounded bg-[#792990]/20 text-gray-400 text-xs font-medium">
+                  <span className="px-2 py-0.5 rounded bg-brand/20 text-gray-400 text-xs font-medium">
                     {groupIssues.length}
                   </span>
-                  <div className="h-px flex-1 bg-gradient-to-l from-[#792990] to-transparent"></div>
+                  <div className="h-px flex-1 bg-gradient-to-l from-brand to-transparent"></div>
                 </div>
 
                 <div className="space-y-2">
                   {groupIssues.map((issue) => (
                     <div
                       key={issue.id}
-                      className="group flex items-center gap-4 rounded-lg border border-[#792990]/20 bg-gradient-to-r from-[#792990]/5 to-transparent p-4 transition-all hover:border-[#792990]/40 hover:bg-gradient-to-r hover:from-[#792990]/10 hover:to-[#792990]/5"
+                      className="group flex items-center gap-4 rounded-lg border border-brand/20 bg-gradient-to-r from-brand/5 to-transparent p-4 transition-all hover:border-brand/40 hover:bg-gradient-to-r hover:from-brand/10 hover:to-brand/5"
                     >
                     <div className="flex flex-1 items-center gap-3 min-w-0">
-                      <span className="px-2 py-1 rounded bg-[#792990]/30 text-gray-300 text-xs font-medium font-mono">
+                      <span className="px-2 py-1 rounded bg-brand/30 text-gray-300 text-xs font-medium font-mono">
                         #{issue.identifier}
                       </span>
                       <span className="text-sm font-medium text-gray-100 truncate">
@@ -204,7 +204,7 @@ export function DashboardClient({ issues }: DashboardClientProps) {
 
                       {/* Status Badge */}
                       {groupBy !== "status" && (
-                        <div className="flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium bg-[#792990]/10 border border-[#792990]/20">
+                        <div className="flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium bg-brand/10 border border-brand/20">
                           {getStatusIcon(issue.status.type)}
                           <span className="text-gray-300">{issue.status.name}</span>
                         </div>
@@ -245,7 +245,7 @@ export function DashboardClient({ issues }: DashboardClientProps) {
 
                       {/* Assignee */}
                       {issue.assignee && (
-                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#792990] to-[#4a0672] text-xs font-semibold text-gray-200 ring-2 ring-[#792990]/30">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-brand to-surface-elevated text-xs font-semibold text-gray-200 ring-2 ring-brand/30">
                           {issue.assignee.name
                             ?.split(" ")
                             .map((n: string) => n[0])
@@ -262,8 +262,8 @@ export function DashboardClient({ issues }: DashboardClientProps) {
         })}
 
           {issues.length === 0 && (
-            <div className="rounded-lg border border-[#792990]/20 bg-[#792990]/5 p-12 text-center">
-              <div className="mx-auto w-16 h-16 rounded-full bg-[#792990]/20 flex items-center justify-center mb-4">
+            <div className="rounded-lg border border-brand/20 bg-brand/5 p-12 text-center">
+              <div className="mx-auto w-16 h-16 rounded-full bg-brand/20 flex items-center justify-center mb-4">
                 <Circle className="h-8 w-8 text-gray-400" />
               </div>
               <p className="text-gray-300 text-base">No issues found</p>

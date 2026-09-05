@@ -121,7 +121,7 @@ export function CreateWorkspaceModal({
                 register("name").onChange(e);
                 handleNameChange(e);
               }}
-              className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
+              className="bg-brand/10 border-brand/30 text-gray-100 placeholder:text-gray-400 focus:border-accent focus:ring-accent"
             />
             {errors.name && (
               <p className="text-sm text-red-600">{errors.name.message}</p>
@@ -134,7 +134,7 @@ export function CreateWorkspaceModal({
               id="slug"
               placeholder="acme-inc"
               {...register("slug")}
-              className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
+              className="bg-brand/10 border-brand/30 text-gray-100 placeholder:text-gray-400 focus:border-accent focus:ring-accent"
             />
             {errors.slug && (
               <p className="text-sm text-red-600">{errors.slug.message}</p>
@@ -151,7 +151,7 @@ export function CreateWorkspaceModal({
               placeholder="🚀"
               maxLength={2}
               {...register("icon")}
-              className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
+              className="bg-brand/10 border-brand/30 text-gray-100 placeholder:text-gray-400 focus:border-accent focus:ring-accent"
             />
             <p className="text-xs text-gray-400">Choose an emoji for your workspace.</p>
           </div>
@@ -162,11 +162,11 @@ export function CreateWorkspaceModal({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="bg-[#792990]/10 hover:bg-[#792990]/20 text-gray-300 border-[#792990]/30"
+              className="bg-brand/10 hover:bg-brand/20 text-gray-300 border-brand/30"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading} className="bg-[#FFB947] hover:bg-[#FFB947]/90 text-gray-900">
+            <Button type="submit" disabled={isLoading} className="bg-accent hover:bg-accent/90 text-gray-900">
               {isLoading ? "Creating..." : "Create Workspace"}
             </Button>
           </DialogFooter>

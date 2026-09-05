@@ -67,7 +67,7 @@ export function FeatureSelector({
 
   if (isCreating) {
     return (
-      <div className="rounded-lg border border-[#792990]/30 bg-[#792990]/10 p-3 space-y-3">
+      <div className="rounded-lg border border-brand/30 bg-brand/10 p-3 space-y-3">
         <div className="space-y-2">
           <Input
             type="text"
@@ -85,7 +85,7 @@ export function FeatureSelector({
             }}
             autoFocus
             disabled={isSubmitting}
-            className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
+            className="bg-brand/10 border-brand/30 text-gray-100 placeholder:text-gray-400 focus:border-accent focus:ring-accent"
           />
 
           <div>
@@ -99,7 +99,7 @@ export function FeatureSelector({
                   className="h-6 w-6 rounded-full border-2 transition-all hover:scale-110"
                   style={{
                     backgroundColor: color,
-                    borderColor: newFeatureColor === color ? "#FFB947" : color,
+                    borderColor: newFeatureColor === color ? "var(--color-accent)" : color,
                   }}
                 />
               ))}
@@ -113,7 +113,7 @@ export function FeatureSelector({
             size="sm"
             onClick={handleCreateFeature}
             disabled={!newFeatureName.trim() || isSubmitting}
-            className="bg-[#FFB947] text-gray-900 hover:bg-[#FFB947]/90"
+            className="bg-accent text-gray-900 hover:bg-accent/90"
           >
             {isSubmitting ? "Creating..." : "Create"}
           </Button>
@@ -127,7 +127,7 @@ export function FeatureSelector({
               setNewFeatureColor(PRESET_COLORS[0]);
             }}
             disabled={isSubmitting}
-            className="border-[#792990]/40 text-gray-300 hover:bg-[#792990]/10"
+            className="border-brand/40 text-gray-300 hover:bg-brand/10"
           >
             <X className="h-3 w-3" />
           </Button>
@@ -141,7 +141,7 @@ export function FeatureSelector({
       <select
         value={selectedFeatureId || ""}
         onChange={(e) => onFeatureChange(e.target.value || null)}
-        className="flex-1 h-10 rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
+        className="flex-1 h-10 rounded-md border border-brand/30 bg-brand/10 px-3 py-2 text-sm text-gray-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
       >
         <option value="">No feature</option>
         {availableFeatures.map((feature) => (
@@ -157,7 +157,7 @@ export function FeatureSelector({
           size="sm"
           variant="outline"
           onClick={() => setIsCreating(true)}
-          className="border-[#792990]/40 text-gray-300 hover:bg-[#792990]/10 hover:border-[#792990]/60 shrink-0"
+          className="border-brand/40 text-gray-300 hover:bg-brand/10 hover:border-brand/60 shrink-0"
         >
           <Plus className="h-4 w-4" />
         </Button>

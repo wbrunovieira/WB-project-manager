@@ -75,8 +75,8 @@ export function TimerButton({
       onClick={handleClick}
       className={
         isThisIssueActive
-          ? "bg-[#FFB947] hover:bg-[#FFB947]/90 text-[#350459] font-semibold"
-          : "hover:bg-[#792990]/20 text-gray-300"
+          ? "bg-accent hover:bg-accent/90 text-surface font-semibold"
+          : "hover:bg-brand/20 text-gray-300"
       }
       title={
         isThisIssueActive

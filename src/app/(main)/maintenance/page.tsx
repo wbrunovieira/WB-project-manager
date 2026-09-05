@@ -64,7 +64,7 @@ export default async function MaintenanceDashboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#350459]">
+    <div className="min-h-screen bg-surface">
       <MaintenanceDashboardClient
         issues={issues}
         maintenanceProjects={maintenanceProjects}

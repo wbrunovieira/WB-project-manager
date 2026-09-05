@@ -121,7 +121,7 @@ export default async function MyIssuesPage() {
   }));
 
   return (
-    <div className="min-h-screen bg-[#350459]">
+    <div className="min-h-screen bg-surface">
       <MyIssuesClient
         issues={serializedIssues}
         statuses={statuses}

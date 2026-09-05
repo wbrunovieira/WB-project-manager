@@ -113,7 +113,7 @@ export function CreateProjectModal({
             <select
               id="workspaceId"
               {...register("workspaceId")}
-              className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
+              className="flex h-10 w-full rounded-md border border-brand/30 bg-brand/10 px-3 py-2 text-sm text-gray-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
             >
               {workspaces.map((workspace) => (
                 <option key={workspace.id} value={workspace.id}>
@@ -132,7 +132,7 @@ export function CreateProjectModal({
               id="name"
               placeholder="Product Launch Q1"
               {...register("name")}
-              className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
+              className="bg-brand/10 border-brand/30 text-gray-100 placeholder:text-gray-400 focus:border-accent focus:ring-accent"
             />
             {errors.name && (
               <p className="text-sm text-red-600">{errors.name.message}</p>
@@ -145,7 +145,7 @@ export function CreateProjectModal({
               id="description"
               placeholder="Launch our new product features"
               {...register("description")}
-              className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
+              className="bg-brand/10 border-brand/30 text-gray-100 placeholder:text-gray-400 focus:border-accent focus:ring-accent"
             />
           </div>
 
@@ -155,7 +155,7 @@ export function CreateProjectModal({
               <select
                 id="type"
                 {...register("type")}
-                className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
+                className="flex h-10 w-full rounded-md border border-brand/30 bg-brand/10 px-3 py-2 text-sm text-gray-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
               >
                 <option value="DEVELOPMENT">Development</option>
                 <option value="MAINTENANCE">Maintenance</option>
@@ -173,7 +173,7 @@ export function CreateProjectModal({
               <select
                 id="status"
                 {...register("status")}
-                className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
+                className="flex h-10 w-full rounded-md border border-brand/30 bg-brand/10 px-3 py-2 text-sm text-gray-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
               >
                 <option value="PLANNED">Planned</option>
                 <option value="IN_PROGRESS">In Progress</option>
@@ -190,7 +190,7 @@ export function CreateProjectModal({
                 id="startDate"
                 type="date"
                 {...register("startDate")}
-                className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
+                className="bg-brand/10 border-brand/30 text-gray-100 placeholder:text-gray-400 focus:border-accent focus:ring-accent"
               />
             </div>
 
@@ -200,7 +200,7 @@ export function CreateProjectModal({
                 id="targetDate"
                 type="date"
                 {...register("targetDate")}
-                className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
+                className="bg-brand/10 border-brand/30 text-gray-100 placeholder:text-gray-400 focus:border-accent focus:ring-accent"
               />
             </div>
           </div>
@@ -211,11 +211,11 @@ export function CreateProjectModal({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="bg-[#792990]/10 hover:bg-[#792990]/20 text-gray-300 border-[#792990]/30"
+              className="bg-brand/10 hover:bg-brand/20 text-gray-300 border-brand/30"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading} className="bg-[#FFB947] hover:bg-[#FFB947]/90 text-gray-900">
+            <Button type="submit" disabled={isLoading} className="bg-accent hover:bg-accent/90 text-gray-900">
               {isLoading ? "Creating..." : "Create Project"}
             </Button>
           </DialogFooter>

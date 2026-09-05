@@ -53,14 +53,14 @@ export default async function DashboardPage() {
   return (
     <>
       {/* Welcome Section */}
-      <div className="border-b border-[#792990]/20 bg-gradient-to-r from-[#350459] to-[#4a0672] px-8 py-8">
+      <div className="border-b border-brand/20 bg-gradient-to-r from-surface to-surface-elevated px-8 py-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-100 mb-2">
               Welcome back, {session.user.name?.split(" ")[0]}!
             </h1>
             <p className="text-gray-400 flex items-center gap-2">
-              <span className="inline-flex items-center justify-center rounded-full bg-[#FFB947]/20 px-3 py-1 text-sm font-semibold text-[#FFB947]">
+              <span className="inline-flex items-center justify-center rounded-full bg-accent/20 px-3 py-1 text-sm font-semibold text-accent">
                 {issues.length}
               </span>
               <span>
@@ -69,7 +69,7 @@ export default async function DashboardPage() {
             </p>
           </div>
           <div className="hidden md:flex items-center gap-3">
-            <div className="h-16 w-px bg-[#792990]/30"></div>
+            <div className="h-16 w-px bg-brand/30"></div>
             <div className="text-right">
               <div className="text-xs text-gray-400 uppercase tracking-wide">Active Workspaces</div>
               <div className="text-2xl font-bold text-gray-100">{workspaceMemberships.length}</div>

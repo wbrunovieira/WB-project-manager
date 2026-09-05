@@ -13,8 +13,10 @@
      Antes eram roxo translúcido sobre roxo (#792990/10), o que deixava borda e
      contraste imprevisíveis conforme o que estava atrás. Agora são sólidos. */
   --color-canvas: #2a0446;
+  --color-canvas-deep: #1a0b2e;
   --color-surface: #350459;
   --color-surface-raised: #421068;
+  --color-surface-elevated: #4a0672; /* dropdowns, fim de gradiente */
   --color-surface-hover: #4d1878;
 
   /* Marca */

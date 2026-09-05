@@ -294,7 +294,7 @@ export function CreateIssueModal({
               placeholder="Fix login bug"
               {...register("title")}
               autoFocus
-              className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
+              className="bg-brand/10 border-brand/30 text-gray-100 placeholder:text-gray-400 focus:border-accent focus:ring-accent"
             />
             {errors.title && (
               <p className="text-sm text-red-600">{errors.title.message}</p>
@@ -307,7 +307,7 @@ export function CreateIssueModal({
               id="description"
               placeholder="Describe the issue in detail..."
               {...register("description")}
-              className="flex min-h-[120px] w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
+              className="flex min-h-[120px] w-full rounded-md border border-brand/30 bg-brand/10 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-400 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
 
@@ -317,7 +317,7 @@ export function CreateIssueModal({
               <select
                 id="statusId"
                 {...register("statusId")}
-                className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
+                className="flex h-10 w-full rounded-md border border-brand/30 bg-brand/10 px-3 py-2 text-sm text-gray-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
               >
                 {statuses.map((status) => (
                   <option key={status.id} value={status.id}>
@@ -335,7 +335,7 @@ export function CreateIssueModal({
               <select
                 id="type"
                 {...register("type")}
-                className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
+                className="flex h-10 w-full rounded-md border border-brand/30 bg-brand/10 px-3 py-2 text-sm text-gray-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
               >
                 <option value="FEATURE">Feature</option>
                 <option value="BUG">Bug</option>
@@ -354,7 +354,7 @@ export function CreateIssueModal({
               <select
                 id="priority"
                 {...register("priority")}
-                className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
+                className="flex h-10 w-full rounded-md border border-brand/30 bg-brand/10 px-3 py-2 text-sm text-gray-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
               >
                 <option value="NO_PRIORITY">No Priority</option>
                 <option value="LOW">Low</option>
@@ -369,7 +369,7 @@ export function CreateIssueModal({
               <select
                 id="assigneeId"
                 {...register("assigneeId")}
-                className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
+                className="flex h-10 w-full rounded-md border border-brand/30 bg-brand/10 px-3 py-2 text-sm text-gray-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
               >
                 <option value="">Unassigned</option>
                 {users.map((user) => (
@@ -388,7 +388,7 @@ export function CreateIssueModal({
                 <select
                   id="projectId"
                   {...register("projectId")}
-                  className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
+                  className="flex h-10 w-full rounded-md border border-brand/30 bg-brand/10 px-3 py-2 text-sm text-gray-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
                 >
                   <option value="">No project</option>
                   {projects.map((project) => (
@@ -406,7 +406,7 @@ export function CreateIssueModal({
                 <select
                   id="milestoneId"
                   {...register("milestoneId")}
-                  className="flex h-10 w-full rounded-md border border-[#792990]/30 bg-[#792990]/10 px-3 py-2 text-sm text-gray-100 focus:border-[#FFB947] focus:outline-none focus:ring-2 focus:ring-[#FFB947]"
+                  className="flex h-10 w-full rounded-md border border-brand/30 bg-brand/10 px-3 py-2 text-sm text-gray-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
                 >
                   <option value="">No milestone</option>
                   {milestones.map((milestone) => (
@@ -443,7 +443,7 @@ export function CreateIssueModal({
               id="reportedAt"
               type="datetime-local"
               {...register("reportedAt")}
-              className="bg-[#792990]/10 border-[#792990]/30 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
+              className="bg-brand/10 border-brand/30 text-gray-100 placeholder:text-gray-400 focus:border-accent focus:ring-accent"
             />
             <p className="text-xs text-gray-400">
               Set this if the issue was reported before creating it in the system
@@ -467,7 +467,7 @@ export function CreateIssueModal({
                 type="checkbox"
                 checked={createAnother}
                 onChange={(e) => setCreateAnother(e.target.checked)}
-                className="h-4 w-4 rounded border-[#792990]/30 accent-[#FFB947] focus:ring-[#FFB947]"
+                className="h-4 w-4 rounded border-brand/30 accent-accent focus:ring-accent"
               />
               <label
                 htmlFor="createAnother"
@@ -482,11 +482,11 @@ export function CreateIssueModal({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 disabled={isLoading}
-                className="bg-[#792990]/10 hover:bg-[#792990]/20 text-gray-300 border-[#792990]/30"
+                className="bg-brand/10 hover:bg-brand/20 text-gray-300 border-brand/30"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading} className="bg-[#FFB947] hover:bg-[#FFB947]/90 text-gray-900">
+              <Button type="submit" disabled={isLoading} className="bg-accent hover:bg-accent/90 text-gray-900">
                 {isLoading ? "Creating..." : "Create Issue"}
               </Button>
             </div>
