@@ -1,8 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, CheckCircle2, Edit, GripVertical, Trash2 } from "lucide-react";
+import {
+  CalendarDays,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Edit,
+  GripVertical,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -21,7 +31,14 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { DateDisplay } from "@/components/ui/date-display";
+import {
+  clampPage,
+  pageCount,
+  pageSlice,
+  projectMatchesQuery,
+} from "@/lib/project-list";
 import { EditProjectModal } from "./edit-project-modal";
 import { DeleteProjectDialog } from "./delete-project-dialog";
 
@@ -60,9 +77,17 @@ interface SortableProjectCardProps {
   project: Project;
   onEdit: (project: Project) => void;
   onDelete: (project: Project) => void;
+  /** Off while a search filter is active — the visible cards are no longer a
+   *  contiguous slice of the workspace order, so a drop has no sane meaning. */
+  draggable: boolean;
 }
 
-function SortableProjectCard({ project, onEdit, onDelete }: SortableProjectCardProps) {
+function SortableProjectCard({
+  project,
+  onEdit,
+  onDelete,
+  draggable,
+}: SortableProjectCardProps) {
   const {
     attributes,
     listeners,
@@ -70,7 +95,7 @@ function SortableProjectCard({ project, onEdit, onDelete }: SortableProjectCardP
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: project.id });
+  } = useSortable({ id: project.id, disabled: !draggable });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -94,14 +119,16 @@ function SortableProjectCard({ project, onEdit, onDelete }: SortableProjectCardP
       className="group relative rounded-lg border border-[#792990]/40 bg-gradient-to-br from-[#792990]/15 via-[#792990]/10 to-[#792990]/5 p-6 transition-all hover:border-[#792990]/60 hover:from-[#792990]/20 hover:via-[#792990]/15 hover:to-[#792990]/10 hover:shadow-lg hover:shadow-[#792990]/10"
     >
       {/* Drag Handle */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="absolute left-2 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity z-10"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <GripVertical className="h-5 w-5 text-gray-400 hover:text-[#FFB947]" />
-      </div>
+      {draggable && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute left-2 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <GripVertical className="h-5 w-5 text-gray-400 hover:text-[#FFB947]" />
+        </div>
+      )}
 
       <Link href={`/projects/${project.id}`} className="block pl-6">
         <div className="mb-4">
@@ -218,6 +245,8 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
 
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -231,6 +260,46 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
     0
   );
 
+  const isSearching = search.trim() !== "";
+
+  // Filter, then flatten to one ordered list so pages have a stable size no matter
+  // how the projects split across workspaces. Flattening keeps workspaces contiguous,
+  // so each page still renders as whole workspace sections.
+  const matches = useMemo(
+    () =>
+      workspaces.flatMap((workspace) =>
+        workspace.projects
+          .filter((project) => projectMatchesQuery(project, search))
+          .map((project) => ({ workspace, project }))
+      ),
+    [workspaces, search]
+  );
+
+  const totalPages = pageCount(matches.length);
+  // Derived, not stored: a filter that shrinks the list must not strand the user
+  // on a page that no longer exists.
+  const currentPage = clampPage(page, totalPages);
+  const visible = pageSlice(matches, currentPage);
+
+  // Regroup the current page back into workspace sections, preserving order.
+  const visibleGroups: Array<{
+    workspace: WorkspaceWithProjects;
+    projects: Project[];
+  }> = [];
+  for (const { workspace, project } of visible) {
+    const last = visibleGroups[visibleGroups.length - 1];
+    if (last && last.workspace.id === workspace.id) {
+      last.projects.push(project);
+    } else {
+      visibleGroups.push({ workspace, projects: [project] });
+    }
+  }
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
+
   const createHandleDragEnd = (workspaceId: string) => {
     return async (event: DragEndEvent) => {
       const { active, over } = event;
@@ -242,6 +311,11 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
       const wsIndex = workspaces.findIndex((ws) => ws.id === workspaceId);
       if (wsIndex === -1) return;
 
+      // Move within the workspace's FULL project list, not the visible page.
+      // The page is a contiguous slice of that list, so moving within it is the
+      // same operation — and /api/projects/reorder writes sortOrder = index over
+      // whatever array it gets, so sending only the visible slice would reset the
+      // order of every project on the other pages.
       const projects = workspaces[wsIndex].projects;
       const oldIndex = projects.findIndex((p) => p.id === active.id);
       const newIndex = projects.findIndex((p) => p.id === over.id);
@@ -281,11 +355,54 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
 
   return (
     <>
-      <div className="space-y-8">
-        {workspaces.map((workspace) => {
-          if (workspace.projects.length === 0) return null;
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <div className="relative min-w-[240px] flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Input
+            type="search"
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Search projects by name..."
+            aria-label="Search projects by name"
+            className="border-[#792990]/30 bg-[#792990]/10 pl-9 pr-9 text-gray-100 placeholder:text-gray-400 focus:border-[#FFB947] focus:ring-[#FFB947]"
+          />
+          {isSearching && (
+            <button
+              type="button"
+              onClick={() => handleSearchChange("")}
+              aria-label="Clear search"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-gray-400 transition-colors hover:bg-[#792990]/30 hover:text-gray-100"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
 
-          return (
+        <p className="text-sm text-gray-400" aria-live="polite">
+          {isSearching
+            ? `${matches.length} of ${totalProjects} project${
+                totalProjects !== 1 ? "s" : ""
+              }`
+            : `${totalProjects} project${totalProjects !== 1 ? "s" : ""}`}
+        </p>
+      </div>
+
+      {matches.length === 0 ? (
+        <div className="rounded-lg border border-[#792990]/20 bg-[#792990]/5 p-12 text-center">
+          <p className="text-gray-300">
+            No projects match &ldquo;{search.trim()}&rdquo;
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => handleSearchChange("")}
+            className="mt-4 border-[#792990]/30 bg-[#792990]/10 text-gray-300 hover:bg-[#792990]/20"
+          >
+            Show all projects
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {visibleGroups.map(({ workspace, projects }) => (
             <div key={workspace.id}>
               <div className="mb-4 flex items-center gap-3">
                 <div className="h-px flex-1 bg-gradient-to-r from-[#792990] to-transparent"></div>
@@ -294,7 +411,7 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
                   {workspace.name}
                 </h2>
                 <span className="px-2 py-0.5 rounded bg-[#792990]/20 text-gray-400 text-xs font-medium">
-                  {workspace.projects.length}
+                  {projects.length}
                 </span>
                 <div className="h-px flex-1 bg-gradient-to-l from-[#792990] to-transparent"></div>
               </div>
@@ -305,25 +422,57 @@ export function ProjectsListClient({ workspacesWithProjects }: ProjectsListClien
                 onDragEnd={createHandleDragEnd(workspace.id)}
               >
                 <SortableContext
-                  items={workspace.projects.map((p) => p.id)}
+                  items={projects.map((p) => p.id)}
                   strategy={verticalListSortingStrategy}
                 >
                   <div className="grid gap-4">
-                    {workspace.projects.map((project) => (
+                    {projects.map((project) => (
                       <SortableProjectCard
                         key={project.id}
                         project={project}
                         onEdit={setEditingProject}
                         onDelete={setDeletingProject}
+                        draggable={!isSearching}
                       />
                     ))}
                   </div>
                 </SortableContext>
               </DndContext>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <nav
+          aria-label="Projects pagination"
+          className="mt-8 flex items-center justify-center gap-4"
+        >
+          <Button
+            variant="outline"
+            onClick={() => setPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="border-[#792990]/30 bg-[#792990]/10 text-gray-300 hover:bg-[#792990]/20 disabled:opacity-40"
+          >
+            <ChevronLeft className="mr-1 h-4 w-4" />
+            Previous
+          </Button>
+
+          <span className="text-sm text-gray-400" aria-live="polite">
+            Page {currentPage} of {totalPages}
+          </span>
+
+          <Button
+            variant="outline"
+            onClick={() => setPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="border-[#792990]/30 bg-[#792990]/10 text-gray-300 hover:bg-[#792990]/20 disabled:opacity-40"
+          >
+            Next
+            <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
+        </nav>
+      )}
 
       {editingProject && (
         <EditProjectModal
