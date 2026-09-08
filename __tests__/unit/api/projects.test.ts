@@ -107,7 +107,7 @@ describe('POST /api/projects', () => {
       id: 'member-1',
     } as never);
     vi.mocked(prisma.project.aggregate).mockResolvedValue({
-      _max: { sortOrder: 2 },
+      _min: { sortOrder: 2 },
     } as never);
     vi.mocked(prisma.project.create).mockResolvedValue(baseProject as never);
   }
@@ -125,7 +125,60 @@ describe('POST /api/projects', () => {
     });
     expect(prisma.project.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ sortOrder: 3 }),
+        data: expect.objectContaining({ sortOrder: 1 }),
+      })
+    );
+  });
+
+  test('projeto novo entra no topo: sortOrder abaixo do mínimo atual', async () => {
+    mockHappyPath(); // _min.sortOrder = 2
+
+    await createProject(projectRequest());
+
+    // min - 1 = 1, e não max + 1: quem acabou de ser criado aparece primeiro
+    expect(prisma.project.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ sortOrder: 1 }),
+      })
+    );
+    expect(prisma.project.aggregate).toHaveBeenCalledWith(
+      expect.objectContaining({ _min: { sortOrder: true } })
+    );
+  });
+
+  test('workspace vazio → primeiro projeto recebe sortOrder 0', async () => {
+    vi.mocked(prisma.workspaceMember.findUnique).mockResolvedValue({
+      id: 'member-1',
+    } as never);
+    vi.mocked(prisma.project.aggregate).mockResolvedValue({
+      _min: { sortOrder: null },
+    } as never);
+    vi.mocked(prisma.project.create).mockResolvedValue(baseProject as never);
+
+    await createProject(projectRequest());
+
+    expect(prisma.project.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ sortOrder: 0 }),
+      })
+    );
+  });
+
+  test('sortOrder negativo é aceito — a ordem é relativa', async () => {
+    vi.mocked(prisma.workspaceMember.findUnique).mockResolvedValue({
+      id: 'member-1',
+    } as never);
+    vi.mocked(prisma.project.aggregate).mockResolvedValue({
+      _min: { sortOrder: 0 },
+    } as never);
+    vi.mocked(prisma.project.create).mockResolvedValue(baseProject as never);
+
+    await createProject(projectRequest());
+
+    // O reorder normaliza para 0..n no primeiro drag, então -1 não acumula.
+    expect(prisma.project.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ sortOrder: -1 }),
       })
     );
   });

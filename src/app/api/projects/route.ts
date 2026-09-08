@@ -109,12 +109,20 @@ export const POST = withAuth(async (req: NextRequest, userId: string) => {
       return withCors(response);
     }
 
-    // Auto-assign next sortOrder within the workspace
-    const maxSort = await prisma.project.aggregate({
+    // A new project goes to the TOP of its workspace: you just created it, so it
+    // is what you want to see — and with pagination it would otherwise be born on
+    // the last page, out of sight.
+    //
+    // One write instead of reindexing every sibling: order is relative, so going
+    // below the current minimum is enough, negative values included. The first
+    // drag normalizes the workspace back to 0..n, since /api/projects/reorder
+    // rewrites sortOrder from the array index.
+    const minSort = await prisma.project.aggregate({
       where: { workspaceId },
-      _max: { sortOrder: true },
+      _min: { sortOrder: true },
     });
-    const nextSortOrder = (maxSort._max.sortOrder ?? -1) + 1;
+    const nextSortOrder =
+      minSort._min.sortOrder === null ? 0 : minSort._min.sortOrder - 1;
 
     const project = await prisma.project.create({
       data: {
