@@ -1,26 +1,33 @@
 ---
-# Deploy incremental: puxa o código, reconstrói a imagem e recria o container.
+# Deploy: puxa a imagem pronta do GHCR e recria o container.
 #
-# Regra de ouro deste playbook: um passo que falhou tem de FALHAR. A versão
-# anterior mandava a saída para `| tail -20`, e num pipe o código de saída é o
-# do último comando — o do `tail`, sempre 0. Build quebrado virava tarefa verde.
-# Por isso aqui nenhum comando que importa passa por pipe: a saída vai para
-# arquivo e o código é conferido à mão.
+# O servidor NÃO compila mais nada. Construir aqui levava ~25min e derrubava o
+# próprio deploy — o load average chegava a 22, a sessão SSH caía no meio
+# ("Shared connection closed") e o BuildKit morria. A imagem agora vem pronta
+# do CI, que já a validou; aqui é só `pull` + `up`.
+#
+# Regra de ouro: um passo que falhou tem de FALHAR. Nada que importe passa por
+# pipe — num pipe o código de saída é o do último comando (o `tail`, sempre 0),
+# e um erro viraria tarefa verde.
 - name: Quick Deploy WB Project Manager
   hosts: production
   gather_facts: false
 
   vars:
-    # O cache do Docker é por camada e já invalida sozinho quando o código muda;
-    # `--pull` cuida da imagem base ficar velha. Build do zero custa vários
-    # minutos a mais — ligue só ao desconfiar do cache:
-    #   ansible-playbook ... -e docker_no_cache=true
-    docker_no_cache: false
-    build_timeout: 1800
+    # Referência completa da imagem, com a tag imutável do commit. O CD passa
+    # via -e image_ref=...; o default serve para um deploy manual.
+    image_ref: "ghcr.io/wbrunovieira/wb-project-manager:latest"
+    # Credenciais efêmeras do job do CI. Sem elas o pull é anônimo, que só
+    # funciona se o pacote no GHCR for público.
+    ghcr_user: ""
+    ghcr_token: ""
+    pull_timeout: 600
     up_timeout: 300
 
   tasks:
     - name: Atualizar o código
+      # Ainda necessário: o compose, o schema do Prisma e o .env do servidor
+      # vivem no repositório. O build é que saiu daqui.
       raw: |
         set -e
         cd {{ app_dir }}
@@ -28,71 +35,35 @@
         git reset --hard origin/{{ git_branch }}
         echo "commit: $(git rev-parse --short HEAD) $(git log -1 --pretty=%s)"
 
-    # O build roda DESTACADO e é acompanhado por polling, em vez de prender uma
-    # conexão SSH por vários minutos. Um build fica minutos em silêncio no canal,
-    # e canal silencioso cai: já aconteceu de o Ansible morrer com "Shared
-    # connection closed" aos 4min enquanto o build seguia vivo no servidor —
-    # deploy vermelho, build órfão terminando sozinho. Aqui, cada checagem é um
-    # comando SSH curto, então queda de conexão não derruba mais o deploy.
-    - name: Iniciar o build em segundo plano
+    - name: Autenticar no GHCR
+      # Token efêmero do job, entregue por stdin para não aparecer em `ps` nem
+      # no log. Nenhuma credencial de longa duração fica no servidor — o
+      # logout no fim encerra a sessão.
+      when: ghcr_token | length > 0
+      no_log: true
       raw: |
         set -e
-        cd {{ app_dir }}
-        # Encerra o build de uma tentativa anterior: depois do `git reset --hard`
-        # ele está compilando código velho e só disputa CPU com o novo.
-        #
-        # Pelo PID gravado, nunca por `pkill -f <padrão>`: o padrão casaria com a
-        # linha de comando desta própria sessão SSH (o script inteiro vai nela),
-        # e a task se mataria — o deploy morria em meio segundo com
-        # "Shared connection closed". O sinal vai para o grupo, com `setsid`
-        # abaixo garantindo que o build tenha um grupo só dele.
-        if [ -f /tmp/wbpm-build.pid ]; then
-          OLD=$(cat /tmp/wbpm-build.pid)
-          if [ -n "$OLD" ] && kill -0 "$OLD" 2>/dev/null; then
-            echo "encerrando build anterior (pgid $OLD)"
-            kill -TERM -"$OLD" 2>/dev/null || kill -TERM "$OLD" 2>/dev/null || true
-            sleep 3
-          fi
-        fi
-        rm -f /tmp/wbpm-build.log /tmp/wbpm-build.status /tmp/wbpm-build.pid
-        setsid bash -c 'cd {{ app_dir }} && timeout {{ build_timeout }} docker compose -f {{ compose_file }} build --pull {{ '--no-cache' if docker_no_cache | bool else '' }} > /tmp/wbpm-build.log 2>&1; echo $? > /tmp/wbpm-build.status' < /dev/null > /dev/null 2>&1 &
-        echo $! > /tmp/wbpm-build.pid
-        echo "build iniciado em segundo plano (pid $(cat /tmp/wbpm-build.pid))"
+        printf '%s' '{{ ghcr_token }}' | docker login ghcr.io -u '{{ ghcr_user }}' --password-stdin
 
-    - name: Aguardar o build terminar
-      # Cada tentativa é um comando curto — o polling é do lado do Ansible, de
-      # propósito, para nenhuma conexão precisar durar o build inteiro.
-      raw: "test -f /tmp/wbpm-build.status"
-      register: build_done
-      until: build_done.rc == 0
-      retries: "{{ (build_timeout | int / 10) | int }}"
-      delay: 10
-      failed_when: false
-      changed_when: false
-
-    - name: Falhar se o build falhou
+    - name: Baixar a imagem
       raw: |
-        if [ ! -f /tmp/wbpm-build.status ]; then
-          echo "ERRO: build passou de {{ build_timeout }}s sem terminar"
-          tail -25 /tmp/wbpm-build.log 2>/dev/null
-          exit 1
-        fi
-        CODE=$(cat /tmp/wbpm-build.status)
-        tail -25 /tmp/wbpm-build.log
+        cd {{ app_dir }}
+        timeout {{ pull_timeout }} docker pull '{{ image_ref }}' > /tmp/wbpm-pull.log 2>&1
+        CODE=$?
+        tail -15 /tmp/wbpm-pull.log
         if [ "$CODE" = "124" ]; then
-          echo "ERRO: build estourou o limite de {{ build_timeout }}s"
+          echo "ERRO: pull passou de {{ pull_timeout }}s"
           exit 1
         fi
         if [ "$CODE" != "0" ]; then
-          echo "ERRO: build falhou (exit $CODE) — log completo em /tmp/wbpm-build.log"
+          echo "ERRO: pull falhou (exit $CODE) — a imagem {{ image_ref }} existe e o token tem acesso?"
           exit "$CODE"
         fi
-        echo "build ok"
 
     - name: Recriar o container
       raw: |
         cd {{ app_dir }}
-        timeout {{ up_timeout }} docker compose -f {{ compose_file }} up -d --force-recreate > /tmp/wbpm-up.log 2>&1
+        APP_IMAGE='{{ image_ref }}' timeout {{ up_timeout }} docker compose -f {{ compose_file }} up -d --force-recreate > /tmp/wbpm-up.log 2>&1
         CODE=$?
         tail -20 /tmp/wbpm-up.log
         if [ "$CODE" != "0" ]; then
@@ -100,25 +71,38 @@
           exit "$CODE"
         fi
 
-    - name: Confirmar que o container é realmente o novo
-      # A checagem que faltava. Sem ela, um deploy que não trocasse a imagem
-      # ainda assim passaria no health check — respondido pelo container VELHO,
-      # que continua saudável. Verde não é o mesmo que atualizado.
+    - name: Encerrar a sessão no GHCR
+      when: ghcr_token | length > 0
+      raw: "docker logout ghcr.io > /dev/null 2>&1 || true"
+      changed_when: false
+
+    - name: Confirmar que o container roda a imagem esperada
+      # Verde não é o mesmo que atualizado: enquanto o container velho estiver
+      # de pé, é ELE que responde 200 no health check. Sem esta checagem, um
+      # deploy que não trocasse nada passaria limpo.
       raw: |
         set -e
+        cd {{ app_dir }}
+        WANT=$(docker image inspect '{{ image_ref }}' | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['Id'])")
+        GOT=$(docker inspect wb-project-manager | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['Image'])")
         STARTED=$(docker inspect wb-project-manager | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['State']['StartedAt'][:19])")
         AGE=$(( $(date -u +%s) - $(date -u -d "$STARTED" +%s) ))
-        echo "container iniciado há ${AGE}s (StartedAt=$STARTED)"
+        echo "imagem esperada: $WANT"
+        echo "imagem rodando:  $GOT"
+        echo "container iniciado há ${AGE}s"
+        if [ "$WANT" != "$GOT" ]; then
+          echo "ERRO: o container não está rodando a imagem do deploy"
+          exit 1
+        fi
         if [ "$AGE" -gt 600 ]; then
-          echo "ERRO: o container não foi recriado — está de pé há ${AGE}s, então segue servindo a imagem anterior"
+          echo "ERRO: o container não foi recriado (de pé há ${AGE}s)"
           exit 1
         fi
 
     - name: Health check
-      # Poll em vez de `sleep 20` fixo: retorna assim que sobe (a maior parte das
-      # vezes, bem antes de 20s) e espera mais quando a migração demora.
-      # E falha de verdade — a versão anterior só ecoava "WARNING" e retornava 0,
-      # então app quebrada era deploy bem-sucedido.
+      # Poll em vez de `sleep` fixo: retorna assim que sobe e espera mais quando
+      # a migração demora. E falha de verdade — antes só ecoava "WARNING" e
+      # retornava 0, então app quebrada era deploy bem-sucedido.
       raw: |
         for i in $(seq 1 45); do
           CODE=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:{{ app_port }}/api/health 2>/dev/null || true)

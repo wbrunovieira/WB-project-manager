@@ -1,8 +1,11 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # Imagem pronta, construída e publicada pelo CI — o servidor não compila
+    # mais nada. Compilar aqui levava ~25min e derrubava o próprio deploy
+    # (load average 22, SSH caindo no meio, BuildKit morrendo).
+    # O deploy passa a tag imutável do commit em APP_IMAGE; latest é só rede
+    # de segurança para um `up` manual.
+    image: ${APP_IMAGE:-ghcr.io/wbrunovieira/wb-project-manager:latest}
     container_name: wb-project-manager
     restart: unless-stopped
     ports:

@@ -8,6 +8,8 @@ name: CD
 #   3. Host key do VPS pinada em deploy/ci/known_hosts (sem TOFU/keyscan em runtime).
 #   4. Migrations rodam dentro do container no boot (docker-entrypoint.sh →
 #      prisma migrate deploy), então o quick-deploy já cobre schema changes.
+#   5. A imagem NÃO é construída aqui nem no VPS: vem pronta do GHCR, publicada
+#      pelo CI que a validou. Deploy = pull + up, em segundos.
 
 on:
   workflow_run:
@@ -18,6 +20,7 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 # Um deploy por vez; nunca cancela um deploy em andamento.
 concurrency:
@@ -70,6 +73,16 @@ jobs:
                 ansible_python_interpreter: /usr/bin/python3
           EOF
 
+      # A tag é o SHA que o CI construiu e validou — imutável, não `latest`.
+      # Num workflow_run é o head_sha do CI; num dispatch manual, o ref atual.
+      - name: Resolver a imagem a deployar
+        id: img
+        run: |
+          SHA='${{ github.event.workflow_run.head_sha || github.sha }}'
+          NAME="ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')"
+          echo "ref=$NAME:$SHA" >> "$GITHUB_OUTPUT"
+          echo "Deployando $NAME:$SHA"
+
       - name: Deploy (quick-deploy)
         working-directory: deploy/ansible
         env:
@@ -77,5 +90,8 @@ jobs:
         run: |
           printf '%s' "${{ secrets.ANSIBLE_VAULT_PASSWORD }}" > "$RUNNER_TEMP/vault-pass"
           ansible-playbook -i inventory/ci.yml playbooks/quick-deploy.yml \
-            --vault-password-file "$RUNNER_TEMP/vault-pass"
+            --vault-password-file "$RUNNER_TEMP/vault-pass" \
+            -e image_ref='${{ steps.img.outputs.ref }}' \
+            -e ghcr_user='${{ github.actor }}' \
+            -e ghcr_token='${{ secrets.GITHUB_TOKEN }}'
           rm -f "$RUNNER_TEMP/vault-pass"
