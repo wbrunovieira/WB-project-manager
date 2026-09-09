@@ -28,16 +28,45 @@
         git reset --hard origin/{{ git_branch }}
         echo "commit: $(git rev-parse --short HEAD) $(git log -1 --pretty=%s)"
 
-    - name: Construir a imagem
-      # Sem `set -e` aqui de propósito: o código de saída é capturado e tratado
-      # abaixo, para conseguir imprimir o fim do log antes de abortar.
+    # O build roda DESTACADO e é acompanhado por polling, em vez de prender uma
+    # conexão SSH por vários minutos. Um build fica minutos em silêncio no canal,
+    # e canal silencioso cai: já aconteceu de o Ansible morrer com "Shared
+    # connection closed" aos 4min enquanto o build seguia vivo no servidor —
+    # deploy vermelho, build órfão terminando sozinho. Aqui, cada checagem é um
+    # comando SSH curto, então queda de conexão não derruba mais o deploy.
+    - name: Iniciar o build em segundo plano
       raw: |
+        set -e
         cd {{ app_dir }}
-        timeout {{ build_timeout }} docker compose -f {{ compose_file }} build --pull {{ '--no-cache' if docker_no_cache | bool else '' }} > /tmp/wbpm-build.log 2>&1
-        CODE=$?
+        # Um build de uma tentativa anterior está compilando o código ANTIGO
+        # (o git reset já rodou), então não serve para nada e ainda disputa CPU.
+        pkill -f "docker compose -f {{ compose_file }} build" 2>/dev/null || true
+        rm -f /tmp/wbpm-build.log /tmp/wbpm-build.status
+        setsid bash -c 'cd {{ app_dir }} && timeout {{ build_timeout }} docker compose -f {{ compose_file }} build --pull {{ '--no-cache' if docker_no_cache | bool else '' }} > /tmp/wbpm-build.log 2>&1; echo $? > /tmp/wbpm-build.status' < /dev/null > /dev/null 2>&1 &
+        echo "build iniciado em segundo plano"
+
+    - name: Aguardar o build terminar
+      # Cada tentativa é um comando curto — o polling é do lado do Ansible, de
+      # propósito, para nenhuma conexão precisar durar o build inteiro.
+      raw: "test -f /tmp/wbpm-build.status"
+      register: build_done
+      until: build_done.rc == 0
+      retries: "{{ (build_timeout | int / 10) | int }}"
+      delay: 10
+      failed_when: false
+      changed_when: false
+
+    - name: Falhar se o build falhou
+      raw: |
+        if [ ! -f /tmp/wbpm-build.status ]; then
+          echo "ERRO: build passou de {{ build_timeout }}s sem terminar"
+          tail -25 /tmp/wbpm-build.log 2>/dev/null
+          exit 1
+        fi
+        CODE=$(cat /tmp/wbpm-build.status)
         tail -25 /tmp/wbpm-build.log
         if [ "$CODE" = "124" ]; then
-          echo "ERRO: build passou de {{ build_timeout }}s e foi interrompido"
+          echo "ERRO: build estourou o limite de {{ build_timeout }}s"
           exit 1
         fi
         if [ "$CODE" != "0" ]; then
