@@ -1,26 +1,91 @@
 ---
+# Deploy incremental: puxa o código, reconstrói a imagem e recria o container.
+#
+# Regra de ouro deste playbook: um passo que falhou tem de FALHAR. A versão
+# anterior mandava a saída para `| tail -20`, e num pipe o código de saída é o
+# do último comando — o do `tail`, sempre 0. Build quebrado virava tarefa verde.
+# Por isso aqui nenhum comando que importa passa por pipe: a saída vai para
+# arquivo e o código é conferido à mão.
 - name: Quick Deploy WB Project Manager
   hosts: production
   gather_facts: false
 
+  vars:
+    # O cache do Docker é por camada e já invalida sozinho quando o código muda;
+    # `--pull` cuida da imagem base ficar velha. Build do zero custa vários
+    # minutos a mais — ligue só ao desconfiar do cache:
+    #   ansible-playbook ... -e docker_no_cache=true
+    docker_no_cache: false
+    build_timeout: 1800
+    up_timeout: 300
+
   tasks:
-    - name: Pull latest code
-      raw: "cd {{ app_dir }} && git fetch origin && git reset --hard origin/{{ git_branch }}"
+    - name: Atualizar o código
+      raw: |
+        set -e
+        cd {{ app_dir }}
+        git fetch origin
+        git reset --hard origin/{{ git_branch }}
+        echo "commit: $(git rev-parse --short HEAD) $(git log -1 --pretty=%s)"
 
-    - name: Rebuild and restart
-      raw: "cd {{ app_dir }} && docker compose -f {{ compose_file }} up -d --build --force-recreate 2>&1 | tail -20"
+    - name: Construir a imagem
+      # Sem `set -e` aqui de propósito: o código de saída é capturado e tratado
+      # abaixo, para conseguir imprimir o fim do log antes de abortar.
+      raw: |
+        cd {{ app_dir }}
+        timeout {{ build_timeout }} docker compose -f {{ compose_file }} build --pull {{ '--no-cache' if docker_no_cache | bool else '' }} > /tmp/wbpm-build.log 2>&1
+        CODE=$?
+        tail -25 /tmp/wbpm-build.log
+        if [ "$CODE" = "124" ]; then
+          echo "ERRO: build passou de {{ build_timeout }}s e foi interrompido"
+          exit 1
+        fi
+        if [ "$CODE" != "0" ]; then
+          echo "ERRO: build falhou (exit $CODE) — log completo em /tmp/wbpm-build.log"
+          exit "$CODE"
+        fi
+        echo "build ok"
 
-    - name: Wait for services
-      raw: sleep 20
+    - name: Recriar o container
+      raw: |
+        cd {{ app_dir }}
+        timeout {{ up_timeout }} docker compose -f {{ compose_file }} up -d --force-recreate > /tmp/wbpm-up.log 2>&1
+        CODE=$?
+        tail -20 /tmp/wbpm-up.log
+        if [ "$CODE" != "0" ]; then
+          echo "ERRO: subir o container falhou (exit $CODE)"
+          exit "$CODE"
+        fi
+
+    - name: Confirmar que o container é realmente o novo
+      # A checagem que faltava. Sem ela, um deploy que não trocasse a imagem
+      # ainda assim passaria no health check — respondido pelo container VELHO,
+      # que continua saudável. Verde não é o mesmo que atualizado.
+      raw: |
+        set -e
+        STARTED=$(docker inspect wb-project-manager | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['State']['StartedAt'][:19])")
+        AGE=$(( $(date -u +%s) - $(date -u -d "$STARTED" +%s) ))
+        echo "container iniciado há ${AGE}s (StartedAt=$STARTED)"
+        if [ "$AGE" -gt 600 ]; then
+          echo "ERRO: o container não foi recriado — está de pé há ${AGE}s, então segue servindo a imagem anterior"
+          exit 1
+        fi
 
     - name: Health check
+      # Poll em vez de `sleep 20` fixo: retorna assim que sobe (a maior parte das
+      # vezes, bem antes de 20s) e espera mais quando a migração demora.
+      # E falha de verdade — a versão anterior só ecoava "WARNING" e retornava 0,
+      # então app quebrada era deploy bem-sucedido.
       raw: |
-        HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:{{ app_port }}/api/health)
-        echo "Health check: $HTTP_CODE"
-        if [ "$HTTP_CODE" = "200" ]; then
-          echo "Quick deploy successful!"
-        else
-          echo "WARNING: Health check returned $HTTP_CODE"
-          docker logs wb-project-manager --tail 30
-        fi
+        for i in $(seq 1 45); do
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:{{ app_port }}/api/health 2>/dev/null || true)
+          if [ "$CODE" = "200" ]; then
+            echo "health check OK depois de $((i * 2))s"
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "ERRO: health check terminou em '${CODE:-sem resposta}' após 90s"
+        docker logs wb-project-manager --tail 40
+        exit 1
       changed_when: false
