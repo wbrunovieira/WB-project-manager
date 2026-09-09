@@ -12,3 +12,16 @@ __tests__
 npm-debug.log*
 .vscode
 .idea
+
+# Nada abaixo entra na imagem — mas tudo isso entrava no CONTEXTO, e o
+# `COPY . .` do stage builder derruba a camada a cada byte que muda. Na
+# prática: um deploy que só mexia no playbook do Ansible pagava um
+# `next build` inteiro (~13 min) sem alterar uma linha da aplicação.
+# (scripts/ e openapi.yaml ficam: o prebuild roda scripts/build-openapi.ts.)
+deploy
+.claude
+.github
+**/*.md
+vitest.config.ts
+vitest.e2e.config.ts
+vitest.setup.ts
