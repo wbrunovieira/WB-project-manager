@@ -38,12 +38,26 @@
       raw: |
         set -e
         cd {{ app_dir }}
-        # Um build de uma tentativa anterior está compilando o código ANTIGO
-        # (o git reset já rodou), então não serve para nada e ainda disputa CPU.
-        pkill -f "docker compose -f {{ compose_file }} build" 2>/dev/null || true
-        rm -f /tmp/wbpm-build.log /tmp/wbpm-build.status
+        # Encerra o build de uma tentativa anterior: depois do `git reset --hard`
+        # ele está compilando código velho e só disputa CPU com o novo.
+        #
+        # Pelo PID gravado, nunca por `pkill -f <padrão>`: o padrão casaria com a
+        # linha de comando desta própria sessão SSH (o script inteiro vai nela),
+        # e a task se mataria — o deploy morria em meio segundo com
+        # "Shared connection closed". O sinal vai para o grupo, com `setsid`
+        # abaixo garantindo que o build tenha um grupo só dele.
+        if [ -f /tmp/wbpm-build.pid ]; then
+          OLD=$(cat /tmp/wbpm-build.pid)
+          if [ -n "$OLD" ] && kill -0 "$OLD" 2>/dev/null; then
+            echo "encerrando build anterior (pgid $OLD)"
+            kill -TERM -"$OLD" 2>/dev/null || kill -TERM "$OLD" 2>/dev/null || true
+            sleep 3
+          fi
+        fi
+        rm -f /tmp/wbpm-build.log /tmp/wbpm-build.status /tmp/wbpm-build.pid
         setsid bash -c 'cd {{ app_dir }} && timeout {{ build_timeout }} docker compose -f {{ compose_file }} build --pull {{ '--no-cache' if docker_no_cache | bool else '' }} > /tmp/wbpm-build.log 2>&1; echo $? > /tmp/wbpm-build.status' < /dev/null > /dev/null 2>&1 &
-        echo "build iniciado em segundo plano"
+        echo $! > /tmp/wbpm-build.pid
+        echo "build iniciado em segundo plano (pid $(cat /tmp/wbpm-build.pid))"
 
     - name: Aguardar o build terminar
       # Cada tentativa é um comando curto — o polling é do lado do Ansible, de
