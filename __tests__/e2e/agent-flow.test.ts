@@ -211,3 +211,42 @@ describe('fluxo de agente via API key (e2e)', () => {
     expect(res.headers.get('access-control-allow-headers')).toContain('Authorization')
   })
 })
+
+/**
+ * Nenhuma página do app pode responder sem sessão.
+ *
+ * Isto existe porque `/` era a exceção: o middleware a excluía de propósito e
+ * ela devolvia 200 com uma landing, enquanto todas as outras já redirecionavam.
+ * Na produção isso só não ficava exposto porque a Authelia estava na frente — e
+ * o app está saindo dela, então a proteção tem de ser dele. Medido aqui contra
+ * servidor real, que é como o problema foi descoberto em produção.
+ */
+describe('proteção de rotas sem sessão (e2e)', () => {
+  const paginas = [
+    '/',
+    '/dashboard',
+    '/projects',
+    '/my-issues',
+    '/workspaces',
+    '/time-tracking',
+    '/maintenance',
+  ]
+
+  test.each(paginas)('%s sem sessão → redireciona para /login', async (pathname) => {
+    const res = await fetch(`${e2e.baseUrl}${pathname}`, { redirect: 'manual' })
+
+    expect(res.status).toBeGreaterThanOrEqual(300)
+    expect(res.status).toBeLessThan(400)
+    expect(res.headers.get('location')).toContain('/login')
+  })
+
+  test('/login continua pública — senão ninguém entra', async () => {
+    const res = await fetch(`${e2e.baseUrl}/login`, { redirect: 'manual' })
+    expect(res.status).toBe(200)
+  })
+
+  test('/api/health continua pública — é o health check do deploy', async () => {
+    const res = await fetch(`${e2e.baseUrl}/api/health`)
+    expect(res.status).toBe(200)
+  })
+})

@@ -13,7 +13,10 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  if (!isLoggedIn && req.nextUrl.pathname !== "/") {
+  // Sem exceção para "/": era a única rota que respondia sem sessão, e só não
+  // ficava exposta porque a Authelia estava na frente. Com o app saindo da
+  // Authelia, a proteção tem de ser dele.
+  if (!isLoggedIn) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 

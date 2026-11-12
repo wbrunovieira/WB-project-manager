@@ -1,33 +1,16 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 
-export default async function LandingPage() {
+/**
+ * A raiz é só um roteador: entra quem está logado, vai para o login quem não está.
+ *
+ * Antes havia aqui uma landing — e ela era a ÚNICA rota do app que respondia 200
+ * sem sessão (o middleware a excluía de propósito). Só não aparecia na internet
+ * porque a Authelia estava na frente; medindo direto no app, `/` devolvia 200
+ * enquanto todas as outras páginas já redirecionavam sozinhas. Esta é uma
+ * ferramenta interna, então a landing não tinha para quem falar.
+ */
+export default async function RootPage() {
   const session = await auth();
-
-  // If user is logged in, redirect to main app
-  if (session?.user) {
-    redirect("/dashboard");
-  }
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Linear Clone
-        </h1>
-        <p className="text-gray-600 mb-8">
-          Modern project management tool built with Next.js, Prisma, and SQLite
-        </p>
-        <div className="flex gap-4 justify-center">
-          <Link
-            href="/login"
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-          >
-            Get Started
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
+  redirect(session?.user ? "/dashboard" : "/login");
 }
