@@ -76,6 +76,11 @@ pnpm test:e2e                                      # E2E: real standalone server
    - Seed user credentials (`SEED_USER_NAME`, `SEED_USER_EMAIL`, `SEED_USER_PASSWORD`)
    - `ALLOWED_ORIGIN` — For CORS if integrating external apps
    - `API_KEY` / `API_KEY_USER_ID` — For API key authentication
+   - `ALLOW_REGISTRATION` — Public sign-up. **Defaults to closed**: only the exact
+     string `"true"` opens it. `POST /api/auth/register` answers 403 otherwise, and
+     the login page hides the sign-up link. To add someone: flip it on, let them
+     register, flip it back. Until the app left Authelia, that gate was the only
+     thing keeping the internet off this route.
 
 2. Run Prisma migrations and seed:
 ```bash
