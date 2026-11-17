@@ -34,15 +34,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const { email, password } = validated.data;
 
-        // Força bruta era barrada pela Authelia, na porta. Saindo dela, é aqui.
-        // Duas chaves: por IP (um atacante varrendo senhas) e por e-mail (um
-        // botnet distribuído martelando a MESMA conta de vários IPs). Qualquer
-        // uma estourando já recusa.
+        // Força bruta era barrada pela Authelia, na porta; saindo dela, é aqui.
+        //
+        // O limite é POR IP, e só. Uma versão anterior também bloqueava por
+        // e-mail, antes de verificar a senha — e isso dava a qualquer um que
+        // soubesse o e-mail do dono (está no git log, repo público) o poder de
+        // errar 5 senhas a cada 15 min e trancar o único usuário para fora, de
+        // qualquer IP, de graça. Trocava um ataque improvável (botnet contra
+        // senha forte) por um DoS trivial.
+        //
+        // O que isto protege: um atacante varrendo senhas de um IP é contido, e
+        // o servidor não gasta bcrypt à toa.
+        // O que NÃO protege: ataque distribuído contra uma conta específica,
+        // onde cada IP tenta poucas vezes. A defesa ali é a força da senha (e,
+        // se um dia fizer sentido, 2FA) — não um contador que também serviria
+        // para trancar o dono.
         const ip = clientIp(new Headers(request?.headers));
         const byIp = `login:ip:${ip}`;
-        const byEmail = `login:email:${email.toLowerCase()}`;
 
-        if (!loginLimiter.check(byIp).allowed || !loginLimiter.check(byEmail).allowed) {
+        if (!loginLimiter.check(byIp).allowed) {
           return null;
         }
 
@@ -60,10 +70,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
-        // Entrou: zera as contagens, para o uso legítimo não acumular com as
-        // tentativas erradas de antes.
+        // Entrou: zera o contador do IP, para erros de digitação anteriores não
+        // se somarem ao uso legítimo seguinte.
         loginLimiter.reset(byIp);
-        loginLimiter.reset(byEmail);
 
         return {
           id: user.id,
