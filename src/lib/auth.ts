@@ -4,6 +4,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { clientIp, loginLimiter } from "@/lib/rate-limit";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -24,7 +25,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const validated = loginSchema.safeParse(credentials);
 
         if (!validated.success) {
@@ -32,6 +33,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         const { email, password } = validated.data;
+
+        // Força bruta era barrada pela Authelia, na porta. Saindo dela, é aqui.
+        // Duas chaves: por IP (um atacante varrendo senhas) e por e-mail (um
+        // botnet distribuído martelando a MESMA conta de vários IPs). Qualquer
+        // uma estourando já recusa.
+        const ip = clientIp(new Headers(request?.headers));
+        const byIp = `login:ip:${ip}`;
+        const byEmail = `login:email:${email.toLowerCase()}`;
+
+        if (!loginLimiter.check(byIp).allowed || !loginLimiter.check(byEmail).allowed) {
+          return null;
+        }
 
         const user = await prisma.user.findUnique({
           where: { email },
@@ -46,6 +59,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!isPasswordValid) {
           return null;
         }
+
+        // Entrou: zera as contagens, para o uso legítimo não acumular com as
+        // tentativas erradas de antes.
+        loginLimiter.reset(byIp);
+        loginLimiter.reset(byEmail);
 
         return {
           id: user.id,

@@ -14,7 +14,10 @@ import type { TestProject } from 'vitest/node'
  * 5. Espera /api/health == 200; teardown mata o processo e apaga o banco
  */
 
-const PORT = 3100
+// 3100 é porta disputada: outros projetos na mesma máquina sobem dev server
+// nela, e aí o e2e falha com "timeout esperando /api/health == 200" — erro que
+// parece do app e é só colisão. E2E_PORT permite desviar sem editar código.
+const PORT = Number(process.env.E2E_PORT ?? 3157)
 const BASE_URL = `http://127.0.0.1:${PORT}`
 const API_KEY = 'e2e-test-key'
 
