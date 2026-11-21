@@ -12,6 +12,13 @@ vi.mock('@/lib/prisma', () => ({
     workspaceMember: {
       findUnique: vi.fn(),
     },
+    // Chave inexistente no banco: estes testes cobrem o caminho da chave de
+    // ambiente (legado) e as recusas. A busca no modelo ApiKey precisa existir
+    // e devolver nada, senão o wrapper estoura antes de chegar ao 401.
+    apiKey: {
+      findUnique: vi.fn().mockResolvedValue(null),
+      update: vi.fn(),
+    },
   },
 }));
 

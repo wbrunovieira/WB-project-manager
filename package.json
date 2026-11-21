@@ -17,7 +17,8 @@
     "test:unit": "vitest __tests__/unit",
     "test:integration": "vitest __tests__/integration",
     "test:api": "vitest __tests__/api",
-    "test:e2e": "vitest run --config vitest.e2e.config.ts"
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "api-key": "tsx scripts/api-key.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

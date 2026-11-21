@@ -26,8 +26,39 @@ model User {
   assignedIssues Issue[]           @relation("IssueAssignee")
   comments       Comment[]
   timeEntries    TimeEntry[]
+  apiKeys        ApiKey[]
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
+}
+
+/// Chave de API por usuário.
+///
+/// Antes havia UMA chave no sistema, presa a um usuário por env (API_KEY +
+/// API_KEY_USER_ID): quem a usasse ERA aquele usuário. Isso impede qualquer
+/// colaboração — um segundo agente com a chave agiria como o dono, e nenhuma
+/// restrição por projeto ou assignee se aplicaria a ele.
+///
+/// Guarda só o SHA-256 da chave, nunca o valor: vazar o banco não vaza acesso.
+/// Hash simples (e não bcrypt) é adequado aqui porque a chave é gerada com
+/// alta entropia — não é senha escolhida por humano, não há dicionário a
+/// proteger, e a verificação acontece a cada request.
+model ApiKey {
+  id         String    @id @default(cuid())
+  /// Para quem é esta chave ("Claude do Tatame", "dev colaborador") — some o
+  /// anonimato de ter várias chaves iguais e permite revogar a certa.
+  name       String
+  /// SHA-256 em hex. Único, então a busca é por igualdade e não varre tabela.
+  hash       String    @unique
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  /// Auditoria: qual chave ainda está viva. Gravado com folga (ver api-auth),
+  /// para não escrever no banco a cada request.
+  lastUsedAt DateTime?
+  /// Revogação é soft: manter a linha preserva o histórico de uso.
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
 }
 
 model Workspace {
