@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth, withCors } from "@/lib/api-auth";
+import { scopeWhereFor } from "@/lib/access";
 import { z } from "zod";
 
 const createProjectSchema = z.object({
@@ -20,27 +21,24 @@ export const GET = withAuth(async (req: NextRequest, userId: string) => {
     const workspaceId = searchParams.get("workspaceId");
     const status = searchParams.get("status");
 
-    // Get user's workspaces
-    const workspaceMemberships = await prisma.workspaceMember.findMany({
-      where: { userId },
-      select: { workspaceId: true },
-    });
+    // Escopo do usuário (workspaces + projetos concedidos um a um).
+    const scope = await scopeWhereFor(userId);
 
-    const accessibleWorkspaceIds = workspaceMemberships.map(
-      (wm) => wm.workspaceId
-    );
-
-    const where: Record<string, unknown> = {
-      workspaceId: { in: accessibleWorkspaceIds },
-    };
+    // Os parâmetros da consulta só RESTRINGEM. Antes dividiam o objeto com o
+    // filtro de acesso, e `where.workspaceId = workspaceId` o sobrescrevia:
+    // bastava pedir ?workspaceId=<alheio> para listar projetos de um workspace
+    // do qual não se é membro (#3113).
+    const filtros: Record<string, unknown> = {};
 
     if (workspaceId) {
-      where.workspaceId = workspaceId;
+      filtros.workspaceId = workspaceId;
     }
 
     if (status) {
-      where.status = status;
+      filtros.status = status;
     }
+
+    const where = { AND: [scope, filtros] };
 
     const projects = await prisma.project.findMany({
       where,

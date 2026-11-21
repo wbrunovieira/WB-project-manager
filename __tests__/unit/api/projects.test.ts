@@ -50,6 +50,7 @@ describe('GET /api/projects', () => {
     vi.mocked(prisma.workspaceMember.findMany).mockResolvedValue([
       { workspaceId: 'ws-1' },
     ] as never);
+    vi.mocked(prisma.projectMember.findMany).mockResolvedValue([] as never);
     vi.mocked(prisma.project.findMany).mockResolvedValue([baseProject] as never);
   }
 
@@ -64,6 +65,55 @@ describe('GET /api/projects', () => {
     expect(response.status).toBe(200);
     expect(prisma.workspaceMember.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { userId: API_USER_ID } })
+    );
+  });
+
+  // Regressão #3113: o parâmetro de consulta sobrescrevia a restrição de
+  // acesso, então ?workspaceId=<alheio> listava os projetos daquele workspace
+  // sem o usuário ser membro.
+  test('workspaceId da query NÃO pode anular a restrição de acesso', async () => {
+    mockHappyPath(); // membro apenas de ws-1
+
+    const req = new NextRequest(
+      'http://localhost:3000/api/projects?workspaceId=ws-alheio',
+      { headers: bearerHeaders() }
+    );
+    await listProjects(req);
+
+    const where = vi.mocked(prisma.project.findMany).mock.calls[0][0]?.where;
+
+    // O escopo do usuário tem de sobreviver ao lado do filtro pedido
+    expect(JSON.stringify(where)).toContain('ws-1');
+  });
+
+  test('usuário sem acesso nenhum não lista projeto algum', async () => {
+    vi.mocked(prisma.workspaceMember.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.projectMember.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.project.findMany).mockResolvedValue([] as never);
+
+    const req = new NextRequest('http://localhost:3000/api/projects', {
+      headers: bearerHeaders(),
+    });
+    await listProjects(req);
+
+    const where = vi.mocked(prisma.project.findMany).mock.calls[0][0]?.where;
+    expect(JSON.stringify(where)).toContain('"id":{"in":[]}');
+  });
+
+  test('colaborador só de projeto enxerga o projeto concedido', async () => {
+    vi.mocked(prisma.workspaceMember.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.projectMember.findMany).mockResolvedValue([
+      { projectId: 'tatame' },
+    ] as never);
+    vi.mocked(prisma.project.findMany).mockResolvedValue([] as never);
+
+    const req = new NextRequest('http://localhost:3000/api/projects', {
+      headers: bearerHeaders(),
+    });
+    await listProjects(req);
+
+    expect(JSON.stringify(vi.mocked(prisma.project.findMany).mock.calls[0][0]?.where)).toContain(
+      'tatame'
     );
   });
 
