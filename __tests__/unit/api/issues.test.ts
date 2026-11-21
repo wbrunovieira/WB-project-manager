@@ -59,6 +59,7 @@ describe('GET /api/issues', () => {
     vi.mocked(prisma.workspaceMember.findMany).mockResolvedValue([
       { workspaceId: 'ws-1' },
     ] as never);
+    vi.mocked(prisma.projectMember.findMany).mockResolvedValue([] as never);
     vi.mocked(prisma.issue.findMany).mockResolvedValue([
       { id: 'issue-1', title: 'Issue 1' },
     ] as never);
@@ -89,6 +90,63 @@ describe('GET /api/issues', () => {
     expect(prisma.issue.findMany).not.toHaveBeenCalled();
   });
 
+  // Regressão #3112: o parâmetro de consulta sobrescrevia a restrição de
+  // acesso, então pedir ?workspaceId=<alheio> devolvia as issues daquele
+  // workspace mesmo sem ser membro.
+  test('workspaceId da query NÃO pode anular a restrição de acesso', async () => {
+    mockHappyPath(); // usuário é membro só de ws-1
+
+    const req = new NextRequest(
+      'http://localhost:3000/api/issues?workspaceId=ws-alheio',
+      { headers: bearerHeaders() }
+    );
+    await listIssues(req);
+
+    const where = vi.mocked(prisma.issue.findMany).mock.calls[0][0]?.where as Record<
+      string,
+      unknown
+    >;
+
+    // O escopo do usuário tem de continuar presente, ao lado do filtro pedido
+    expect(where).toHaveProperty('AND');
+    const serializado = JSON.stringify(where);
+    expect(serializado).toContain('ws-1');
+    expect(serializado).toContain('ws-alheio');
+  });
+
+  test('usuário sem acesso nenhum recebe cláusula que não casa com nada', async () => {
+    vi.mocked(prisma.workspaceMember.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.projectMember.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.issue.findMany).mockResolvedValue([] as never);
+
+    const req = new NextRequest('http://localhost:3000/api/issues', {
+      headers: bearerHeaders(),
+    });
+    await listIssues(req);
+
+    const where = vi.mocked(prisma.issue.findMany).mock.calls[0][0]?.where;
+    expect(JSON.stringify(where)).toContain('"id":{"in":[]}');
+  });
+
+  test('colaborador só de projeto enxerga pelo projeto, sem workspace', async () => {
+    vi.mocked(prisma.workspaceMember.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.projectMember.findMany).mockResolvedValue([
+      { projectId: 'tatame' },
+    ] as never);
+    vi.mocked(prisma.issue.findMany).mockResolvedValue([] as never);
+
+    const req = new NextRequest('http://localhost:3000/api/issues', {
+      headers: bearerHeaders(),
+    });
+    await listIssues(req);
+
+    const where = JSON.stringify(
+      vi.mocked(prisma.issue.findMany).mock.calls[0][0]?.where
+    );
+    expect(where).toContain('tatame');
+    expect(where).not.toContain('workspaceId');
+  });
+
   test('sessão válida continua funcionando', async () => {
     mockSession();
     mockHappyPath();
@@ -112,11 +170,16 @@ describe('GET /api/issues', () => {
     const response = await listIssues(req);
 
     expect(response.status).toBe(200);
-    expect(prisma.issue.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ workspaceId: 'ws-1', priority: 'HIGH' }),
-      })
-    );
+
+    // O formato mudou de propósito: o filtro pedido vive ao LADO do escopo de
+    // acesso, sob AND, em vez de dividir o mesmo objeto — onde um podia
+    // sobrescrever o outro (#3112).
+    const where = vi.mocked(prisma.issue.findMany).mock.calls[0][0]?.where as {
+      AND: Record<string, unknown>[];
+    };
+
+    expect(where.AND[1]).toEqual({ workspaceId: 'ws-1', priority: 'HIGH' });
+    expect(JSON.stringify(where.AND[0])).toContain('ws-1');
   });
 });
 

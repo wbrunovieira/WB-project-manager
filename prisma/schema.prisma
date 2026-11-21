@@ -27,6 +27,7 @@ model User {
   comments       Comment[]
   timeEntries    TimeEntry[]
   apiKeys        ApiKey[]
+  projectMemberships ProjectMember[]
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 }
@@ -115,6 +116,7 @@ model Project {
   milestones  Milestone[]
   features    Feature[]
   slaConfig   SLAConfig[]
+  members     ProjectMember[]
   sortOrder   Int           @default(0)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
@@ -340,4 +342,27 @@ model SLAConfig {
   @@index([projectId])
   @@index([issueType])
   @@index([priority])
+}
+
+/// Acesso a UM projeto, para quem não deve enxergar o workspace inteiro.
+///
+/// O modelo só tinha WorkspaceMember, e toda consulta filtrava por workspace —
+/// então a menor unidade de acesso era o workspace inteiro. Medido em
+/// 21/11/2026: dar acesso a um colaborador para ver um projeto o faria ver 29
+/// projetos e 3080 issues, incluindo clientes sem relação com ele (#3106).
+///
+/// É ADITIVO: quem é membro do workspace continua vendo tudo dele. Esta tabela
+/// serve a quem NÃO é membro do workspace e precisa de um projeto só.
+model ProjectMember {
+  id        String   @id @default(cuid())
+  role      Role     @default(MEMBER)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, projectId])
+  @@index([userId])
+  @@index([projectId])
 }

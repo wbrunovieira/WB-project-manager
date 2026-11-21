@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth, withCors } from "@/lib/api-auth";
+import { scopeWhereFor } from "@/lib/access";
 import { z } from "zod";
 
 const createIssueSchema = z.object({
@@ -48,37 +49,38 @@ export const GET = withAuth(async (req: NextRequest, userId: string) => {
     const status = searchParams.get("status");
     const priority = searchParams.get("priority");
 
-    // Get user's workspaces
-    const workspaceMemberships = await prisma.workspaceMember.findMany({
-      where: { userId },
-      select: { workspaceId: true },
-    });
+    // Escopo do usuário (workspaces + projetos concedidos um a um) — a regra
+    // mora em @/lib/access, não copiada aqui.
+    const scope = await scopeWhereFor(userId);
 
-    const accessibleWorkspaceIds = workspaceMemberships.map((wm) => wm.workspaceId);
-
-    const where: Record<string, unknown> = {
-      workspaceId: { in: accessibleWorkspaceIds },
-    };
+    // Os parâmetros da consulta só RESTRINGEM. Antes eles eram atribuídos ao
+    // mesmo objeto do filtro de acesso, e `where.workspaceId = workspaceId`
+    // SOBRESCREVIA a restrição: bastava pedir ?workspaceId=<qualquer> para ler
+    // as issues de um workspace alheio (#3112). Com AND, filtro de usuário e
+    // filtro de acesso não podem mais se anular.
+    const filtros: Record<string, unknown> = {};
 
     if (workspaceId) {
-      where.workspaceId = workspaceId;
+      filtros.workspaceId = workspaceId;
     }
 
     if (projectId) {
-      where.projectId = projectId;
+      filtros.projectId = projectId;
     }
 
     if (assigneeId) {
-      where.assigneeId = assigneeId;
+      filtros.assigneeId = assigneeId;
     }
 
     if (status) {
-      where.status = { type: status };
+      filtros.status = { type: status };
     }
 
     if (priority) {
-      where.priority = priority;
+      filtros.priority = priority;
     }
+
+    const where = { AND: [scope, filtros] };
 
     const issues = await prisma.issue.findMany({
       where,
